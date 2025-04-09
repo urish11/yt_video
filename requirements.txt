@@ -5,7 +5,7 @@ pandas
 yt-dlp
 openai
 boto3
-moviepy
+moviepy==1.0.3
 pydub
 Pillow
 numpy
