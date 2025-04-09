@@ -91,11 +91,10 @@ def get_yt_dlp_info(video_url):
 
             
             format = [item for item in json_formats if item.get("format_id") == "18"]
-            format_url =format[0]['url']
-            st.text(format_url)
-            input()
+            format_vid_url =format[0]['url']
+   
 
-            direct_url = info.get('url') # The direct URL for the chosen format
+            direct_url = format_vid_url # The direct URL for the chosen format
             format_note = info.get('format_note')
             format_id = info.get('format_id')
             ext = info.get('ext')
