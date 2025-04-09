@@ -87,11 +87,11 @@ def get_yt_dlp_info(video_url):
 
             # st.text(type(ydl.sanitize_info(info)))
             # st.text(json_formats.get("formats"))
-            json_formats= ydl.sanitize_info(info)["formats"][0]
+            json_formats= ydl.sanitize_info(info)["formats"]
 
             
             format = [item for item in json_formats if item.get("format_id") == "18"]
-            format_url =format
+            format_url =format[0]
             st.text(format_url)
             input()
 
