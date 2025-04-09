@@ -354,6 +354,7 @@ def generate_audio_with_timestamps(text, client, voice_id="sage"):
 
         word_timings = []
         # Check based on object attribute access first
+        st.text(transcribe_data)
         if hasattr(transcribe_data, 'words') and transcribe_data.words:
             for word_info in transcribe_data.words:
                 word_timings.append({
@@ -389,7 +390,7 @@ def generate_audio_with_timestamps(text, client, voice_id="sage"):
         return temp_audio_path, valid_timings
 
     except Exception as e:
-        st.text(f"Error in TTS/Timestamp generation: {e} {transcribe_data}")
+        st.text(f"Error in TTS/Timestamp generation: {e} ")
         time.sleep(200) # Optional delay for user experience
         # Cleanup temp file if it exists and an error occurred
         if temp_audio_path and os.path.exists(temp_audio_path):
