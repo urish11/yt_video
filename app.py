@@ -39,45 +39,40 @@ SUBTITLE_BG_COLOR = 'rgba(0, 0, 0, 0.6)' # Semi-transparent black
 st.set_page_config(layout="wide", page_title="YouTube Select & Generate")
 
 # --- Load Secrets ---
-try:
-    youtube_api_key_secret = st.secrets["YOUTUBE_API_KEY"] # Assuming key name in secrets
-    openai_api_key = st.secrets["GPT_API_KEY1 "]
-    aws_access_key = st.secrets["AWS_ACCESS_KEY_ID "]
-    aws_secret_key = st.secrets["AWS_SECRET_ACCESS_KEY "]
-    s3_bucket_name = st.secrets["S3_BUCKET_NAME "]
-    s3_region = st.secrets["AWS_REGION "]
 
-    # --- Initialize Clients ---
-    @st.cache_resource
-    def get_openai_client():
-        return OpenAI(api_key=openai_api_key)
+youtube_api_key_secret = st.secrets["YOUTUBE_API_KEY"] # Assuming key name in secrets
+openai_api_key = st.secrets["GPT_API_KEY1 "]
+aws_access_key = st.secrets["AWS_ACCESS_KEY_ID "]
+aws_secret_key = st.secrets["AWS_SECRET_ACCESS_KEY "]
+s3_bucket_name = st.secrets["S3_BUCKET_NAME "]
+s3_region = st.secrets["AWS_REGION "]
 
-    openai_client = get_openai_client()
+# --- Initialize Clients ---
+@st.cache_resource
+def get_openai_client():
+    return OpenAI(api_key=openai_api_key)
 
-    @st.cache_resource
-    def get_s3_client():
-         try:
-             return boto3.client(
-                 's3',
-                 aws_access_key_id=aws_access_key,
-                 aws_secret_access_key=aws_secret_key,
-                 region_name=s3_region
-             )
-         except NoCredentialsError:
-             st.error("AWS Credentials not found or invalid in secrets.", icon="🚨")
-             return None
-         except Exception as e:
-             st.error(f"Error initializing S3 client: {e}", icon="🚨")
-             return None
+openai_client = get_openai_client()
 
-    s3_client = get_s3_client()
+@st.cache_resource
+def get_s3_client():
+        try:
+            return boto3.client(
+                's3',
+                aws_access_key_id=aws_access_key,
+                aws_secret_access_key=aws_secret_key,
+                region_name=s3_region
+            )
+        except NoCredentialsError:
+            st.error("AWS Credentials not found or invalid in secrets.", icon="🚨")
+            return None
+        except Exception as e:
+            st.error(f"Error initializing S3 client: {e}", icon="🚨")
+            return None
 
-except KeyError as e:
-    st.error(f"Missing secret key: {e}. Please configure it in Streamlit secrets.", icon="🚨")
-    st.stop()
-except Exception as e:
-    st.error(f"An error occurred during initialization: {e}", icon="🚨")
-    st.stop()
+s3_client = get_s3_client()
+
+
 
 # --- Patched Resizer (from second script - if needed, MoviePy versions vary) ---
 # This attempts to fix potential issues with MoviePy's default resizer
