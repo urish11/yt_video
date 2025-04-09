@@ -1351,7 +1351,7 @@ if st.session_state.batch_processing_active and st.session_state.generation_queu
                         st.write(f"1/5: Generating script for topic: '{topic}'...")
 
                         # --- Step 2: Generate Script (Text Only) ---
-                        script_prompt = f"Create a short, engaging voiceover script (roughly 5-7 seconds long, maybe 1-2 sentences) about '{topic}'. The tone should be informative yet conversational, suitable for a voice like '{DEFAULT_TTS_VOICE}'. Focus on clarity and smooth flow. Just provide the script text, nothing else."
+                        script_prompt = f"Create a short, engaging voiceover script (roughly 10-15 seconds long, maybe 2-3 sentences) about '{topic}'. The tone should be informative yet conversational, '. Focus on clarity and smooth flow. Just provide the script text, nothing else. create intriguing and engaging script."
                         script_text = chatGPT(script_prompt, client=openai_client)
                         if not script_text:
                             raise ValueError("Failed to generate script text from OpenAI.")
