@@ -10,3 +10,4 @@ pydub
 Pillow
 numpy
 ffmpeg-python 
+anthropic
