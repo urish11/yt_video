@@ -33,7 +33,7 @@ def search_youtube(api_key, query, max_results=5):
                     video_id = item['id']['videoId']
                     title = item['snippet']['title']
                     # Use the standard watch URL - yt-dlp and st.video work well with this
-                    video_url = f"youtube.com{video_id}"
+                    video_url = f"{video_id}"
                     videos.append({
                         'title': title,
                         'videoId': video_id,
@@ -214,7 +214,7 @@ if st.session_state.search_triggered:
                         video_id = video['videoId']
                         video_title = video['title']
                         # Use standard URL for display and yt-dlp input
-                        standard_video_url = video['url']
+                        standard_video_url = "https://www.youtube.com/watch?v=" + video['url']
                         unique_key = f"select_{term}_{video_id}"
 
                         col_vid, col_btn = st.columns([4, 1])
