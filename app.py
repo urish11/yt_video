@@ -82,7 +82,7 @@ def get_yt_dlp_info(video_url):
     try:
         with yt_dlp.YoutubeDL(YDL_OPTS) as ydl:
             info = ydl.extract_info(video_url, download=False)
-            st.text(info)
+            st.text(json.dumps(ydl.sanitize_info(info)))
             input()
 
             direct_url = info.get('url') # The direct URL for the chosen format
