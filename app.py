@@ -1490,7 +1490,28 @@ if st.session_state.selected_videos:
     selected_list = list(st.session_state.selected_videos.values())
     if selected_list: # Check if list is not empty
         df_selected = pd.DataFrame(selected_list)
-        # ... (rest of your existing code to prepare and display df_selected_display) ...
+
+        # Define desired columns and order, including the new 'Status'
+        display_columns = [
+            'Status', 'Video Title', 'Topic', 'Search Term', 'Video ID',
+            'Format Details', 'yt_dlp_error', 'Generation Error',
+             'Generated S3 URL', #'Direct URL', 'Standard URL' # Keep URLs less prominent maybe
+        ]
+
+        # Ensure all display columns exist, fill missing
+        for col in display_columns:
+            if col not in df_selected.columns:
+                df_selected[col] = "N/A" # Use N/A string
+
+        # Fill specific NaN/None values for better display
+        df_selected['Status'] = df_selected['Status'].fillna('Unknown')
+        df_selected['yt_dlp_error'] = df_selected['yt_dlp_error'].fillna('OK')
+        df_selected['Generation Error'] = df_selected['Generation Error'].fillna('OK')
+        df_selected.fillna("N/A", inplace=True) # Fill remaining NAs
+
+
+        # Reorder DataFrame columns for display
+        df_selected_display = df_selected[display_columns]
 
         st.sidebar.dataframe(
             df_selected,
