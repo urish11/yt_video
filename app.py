@@ -493,7 +493,7 @@ def create_text_image(text, fontsize, color, bg_color, font_path, video_width):
 
         # --- Configuration ---
         padding_x = 25  # Horizontal padding for the background
-        padding_y = 15  # Vertical padding for the background
+        padding_y = 500  # Vertical padding for the background
         bg_radius = 15  # Corner radius for the background
         # Calculate max width for the text itself inside the video frame
         max_text_width = video_width - (2 * padding_x) - 30
