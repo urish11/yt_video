@@ -13,7 +13,7 @@ import tempfile
 from io import BytesIO
 import moviepy
 import numpy as np
-from moviepy.editor import (
+from moviepy import (
     VideoFileClip, AudioFileClip, CompositeVideoClip, ImageClip, concatenate_videoclips, TextClip
 )
 import moviepy.video.fx.all as vfx
