@@ -1153,7 +1153,7 @@ if st.session_state.api_search_results:
                             if is_currently_processing:
                                 status_container.info("⚙️ Processing...", icon="⏳")
                             elif is_in_queue:
-                                 status_container.info("🕒 Queued", icon=" 🕒 ")
+                                 status_container.info("🕒 Queued", icon="🕒")
                             elif is_completed:
                                 status_container.success("✔️ Generated!", icon="🎉")
                                 st.link_button("View on S3", url=s3_url, use_container_width=True)
