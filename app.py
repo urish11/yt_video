@@ -297,6 +297,7 @@ def chatGPT(prompt, client, model="gpt-4o", temperature=0.7):
         return None
 
 # --- Helper Function: Generate TTS Audio & Timestamps ---
+de# --- Helper Function: Generate TTS Audio & Timestamps ---
 def generate_audio_with_timestamps(text, client, voice_id="sage"):
     """Generates TTS audio using OpenAI, saves it, and gets word timestamps."""
     temp_audio_file = None
@@ -306,6 +307,7 @@ def generate_audio_with_timestamps(text, client, voice_id="sage"):
         if not text or not text.strip():
             raise ValueError("Input text for TTS cannot be empty.")
 
+        # Generate TTS audio
         response = client.audio.speech.create(
                 model="tts-1-hd", # Use HD for better quality
                 voice=voice_id,
@@ -318,7 +320,6 @@ def generate_audio_with_timestamps(text, client, voice_id="sage"):
         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp_audio_file_obj:
              temp_audio_path = temp_audio_file_obj.name
              temp_audio_file_obj.write(response.content)
-             # temp_audio_file_obj.close() # No need to close within 'with'
 
         # --- Volume Boost (Optional but often helpful) ---
         try:
@@ -335,70 +336,110 @@ def generate_audio_with_timestamps(text, client, voice_id="sage"):
              transcribe_response = client.audio.transcriptions.create(
                 file=audio_file_rb,
                 model="whisper-1",
-                response_format="verbose_json",
-                timestamp_granularities=["word"]
+                response_format="verbose_json", # Necessary for word timestamps
+                timestamp_granularities=["word"] # Request word-level timestamps
             )
 
-        # Note: transcribe_response might not be directly json.loads-able depending on SDK version
-        # Accessing attributes directly is safer if it's an object
-        if hasattr(transcribe_response, 'words'):
-            transcribe_data = transcribe_response
-        else:
-            # Fallback if it seems to be JSON-like string (less common now)
-            try:
-                transcribe_data = json.loads(transcribe_response.to_json())
-            except: # Handle cases where it's neither direct attribute nor valid json
-                st.error("Could not parse Whisper transcription response.", icon="🎧")
-                raise ValueError("Invalid transcription response format.")
-
-
+        # --- Process Transcription Response ---
+        # The response object (from OpenAI SDK v1.x+) directly has attributes like 'words'
+        # 'words' contains a list of TranscriptionWord objects
         word_timings = []
-        # Check based on object attribute access first
-        st.text(transcribe_data)
-        if hasattr(transcribe_data, 'words') and transcribe_data.words:
-            for word_info in transcribe_data.words:
+        if hasattr(transcribe_response, 'words') and transcribe_response.words:
+            # transcribe_response.words is a list of TranscriptionWord objects
+            # Access attributes directly using dot notation (e.g., word_info.word)
+            for word_info in transcribe_response.words:
                 word_timings.append({
-                    "word": word_info.get('word', ''), # Use .get for safety
-                    "start": word_info.get('start'),
-                    "end": word_info.get('end')
-                })
-        # Fallback for dict access (if json.loads was used)
-        elif isinstance(transcribe_data, dict) and 'words' in transcribe_data:
-            for word_info in transcribe_data['words']:
-                 word_timings.append({
-                    "word": word_info.get("word", ''),
-                    "start": word_info.get("start"),
-                    "end": word_info.get("end")
+                    # Safely access attributes, default to None or empty string if needed
+                    "word": getattr(word_info, 'word', ''),
+                    "start": getattr(word_info, 'start', None),
+                    "end": getattr(word_info, 'end', None)
                 })
         else:
-             st.warning("Whisper did not return word timestamps.", icon="⏱️")
-             # Fallback: maybe generate sentence-level timestamps if needed later
+             # Handle cases where the response might be different or empty
+             st.warning("Whisper did not return word timestamps in the expected format.", icon="⏱️")
+             # Log the response structure for debugging if necessary
+             # print("Unexpected transcription response structure:", transcribe_response)
+             # Fallback: could try parsing as JSON if it's an older SDK or different structure
+             try:
+                 # This fallback might be needed if the response isn't the expected object
+                 if isinstance(transcribe_response, str):
+                     transcribe_data = json.loads(transcribe_response)
+                 elif hasattr(transcribe_response, 'to_dict'): # Some SDK objects have to_dict()
+                     transcribe_data = transcribe_response.to_dict()
+                 elif isinstance(transcribe_response, dict):
+                     transcribe_data = transcribe_response
+                 else:
+                     transcribe_data = {} # Cannot parse
 
-        # Ensure start/end times are valid floats
+                 if isinstance(transcribe_data, dict) and 'words' in transcribe_data:
+                     st.warning("Parsing Whisper response via fallback method.", icon="⚙️")
+                     for word_info_dict in transcribe_data['words']:
+                         word_timings.append({
+                            "word": word_info_dict.get("word", ''),
+                            "start": word_info_dict.get("start"),
+                            "end": word_info_dict.get("end")
+                         })
+                 else:
+                    st.warning("Whisper response parsed, but no 'words' list found.", icon="⏱️")
+
+             except Exception as parse_err:
+                 st.error(f"Could not parse Whisper transcription response: {parse_err}", icon="🎧")
+                 # If parsing fails, word_timings remains empty or partially filled
+
+        # --- Validate Timestamps ---
         valid_timings = []
         for wt in word_timings:
-            if wt['start'] is not None and wt['end'] is not None:
+            # Check if start and end are not None before attempting float conversion
+            if wt.get('start') is not None and wt.get('end') is not None:
                  try:
-                     wt['start'] = float(wt['start'])
-                     wt['end'] = float(wt['end'])
-                     valid_timings.append(wt)
-                 except (ValueError, TypeError):
-                      st.warning(f"Skipping invalid timestamp for word '{wt['word']}'", icon="⏱️")
+                     start_time = float(wt['start'])
+                     end_time = float(wt['end'])
+                     # Ensure end time is after start time
+                     if end_time >= start_time:
+                         valid_timings.append({
+                             "word": wt.get('word', ''),
+                             "start": start_time,
+                             "end": end_time
+                         })
+                     else:
+                        st.warning(f"Skipping invalid time range (end <= start) for word '{wt.get('word')}': start={start_time}, end={end_time}", icon="⏱️")
+
+                 except (ValueError, TypeError) as conv_err:
+                      st.warning(f"Skipping invalid timestamp format for word '{wt.get('word')}': start={wt['start']}, end={wt['end']} ({conv_err})", icon="⏱️")
             else:
-                 st.warning(f"Missing start/end time for word '{wt['word']}'", icon="⏱️")
+                 st.warning(f"Missing start/end time for word '{wt.get('word')}'", icon="⏱️")
 
-        return temp_audio_path, valid_timings
+        if not valid_timings and word_timings: # If validation removed all timings
+             st.warning("No valid word timings could be extracted after validation.", icon="⚠️")
 
+
+        return temp_audio_path, valid_timings # Return the validated list
+
+    except OpenAI.APIError as api_err:
+        st.error(f"OpenAI API Error in TTS/Timestamp: {api_err}", icon="🤖")
+    except ValueError as ve: # Catch specific errors like empty text
+        st.error(f"Value Error in TTS/Timestamp: {ve}", icon="📄")
     except Exception as e:
-        st.text(f"Error in TTS/Timestamp generation: {e} ")
-        time.sleep(3) # Optional delay for user experience
-        # Cleanup temp file if it exists and an error occurred
-        if temp_audio_path and os.path.exists(temp_audio_path):
+        # Use repr(e) to get more details potentially, like the exact error type
+        st.error(f"Unexpected error in TTS/Timestamp generation: {repr(e)}", icon="💥")
+        import traceback
+        traceback.print_exc() # Print full traceback to Streamlit logs for debugging
+    finally:
+        # Cleanup temp file if it exists and an error occurred OR if successful
+        # Note: The file needs to exist until MoviePy uses it if processing happens later.
+        # Consider moving cleanup *after* video processing.
+        # If returning the path, the caller must handle cleanup.
+        # For now, let's assume caller will clean up 'temp_audio_path' if it's returned.
+        # We only clean up here if the function itself fails and returns None.
+        if temp_audio_path and os.path.exists(temp_audio_path) and not valid_timings: # Clean up only on *failure* within this func
             try:
                 os.remove(temp_audio_path)
+                # print(f"Cleaned up temp audio file on error: {temp_audio_path}") # Debug log
             except Exception as rm_err:
-                st.warning(f"Could not remove temp audio file {temp_audio_path}: {rm_err}")
-        return None, None
+                st.warning(f"Could not remove temp audio file {temp_audio_path} during error handling: {rm_err}")
+
+    # Ensure function returns two values even on error
+    return None, None
 
 # --- Helper Function: Group Word Timings ---
 def group_words_with_timing(word_timings, words_per_group=2):
