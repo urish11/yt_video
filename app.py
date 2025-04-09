@@ -645,7 +645,7 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic):
         # Consider downloading locally first if direct URL access is flaky
         try:
             # Let MoviePy handle the URL directly
-            base_video = VideoFileClip(base_video_url, audio=False) # Target 720p vertical
+            base_video = VideoFileClip(base_video_url, audio=False, target_resolution=(720, 1280)) # Target 720p vertical
             # Or download first if direct URL fails often:
             # with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as temp_vid_file:
             #     response = requests.get(base_video_url, stream=True)
@@ -679,9 +679,9 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic):
         try:
             # Use crop for resizing while maintaining aspect ratio and centering
             # This will zoom in if the aspect ratio doesn't match
-            resized_base_video = base_video.fx(vfx.crop, width=target_w, height=target_h, x_center=w/2, y_center=h/2)
+            # resized_base_video = base_video.fx(vfx.crop, width=target_w, height=target_h, x_center=w/2, y_center=h/2)
             # Alternative: Simple resize (might distort if aspect ratio differs)
-            # resized_base_video = base_video.resize(newsize=(target_w, target_h))
+            resized_base_video = base_video.resize(newsize=(target_w, target_h))
             st.write(f"✔️ Video resized.")
         except Exception as resize_err:
             st.warning(f"Could not resize video: {resize_err}. Using original dimensions.", icon="⚠️")
