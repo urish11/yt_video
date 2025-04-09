@@ -493,7 +493,7 @@ def create_text_image(text, fontsize, color, bg_color, font_path, video_width):
 
         # --- Configuration ---
         padding_x = 25  # Horizontal padding for the background
-        padding_y = 500  # Vertical padding for the background
+        padding_y = 15  # Vertical padding for the background
         bg_radius = 15  # Corner radius for the background
         # Calculate max width for the text itself inside the video frame
         max_text_width = video_width - (2 * padding_x) - 30
@@ -753,7 +753,7 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic):
                 subtitle_img_clip = ImageClip(text_img_array)\
                     .set_start(start)\
                     .set_duration(sub_duration)\
-                    .set_position(('center', 0.6)) # Position: Center horizontally, 60% down vertically
+                    .set_position(('center', 'center')) # Position: Center horizontally, 60% down vertically
 
                 subtitle_clips_list.append(subtitle_img_clip)
                 sub_progress_bar.progress((i + 1) / total_subs)
