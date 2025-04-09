@@ -892,7 +892,7 @@ if st.session_state.video_to_generate:
             gen_placeholder.status(f"1/5: Generating script for topic: '{topic}'...", state="running", expanded=True)
 
             # --- Step 2: Generate Script (Text Only) ---
-            script_prompt = f"Create a short, engaging voiceover script (roughly 15-45 seconds long, maybe 3-6 sentences) about '{topic}'. The tone should be informative yet conversational, suitable for a voice like 'sage'. Focus on clarity and smooth flow. Just provide the script text, nothing else."
+            script_prompt = f"Create a short, engaging voiceover script (roughly 5 seconds long, maybe 1 sentences) about '{topic}'. The tone should be informative yet conversational, suitable for a voice like 'sage'. Focus on clarity and smooth flow. Just provide the script text, nothing else."
             script_text = chatGPT(script_prompt, client=openai_client)
             if not script_text:
                  raise ValueError("Failed to generate script text from OpenAI.")
