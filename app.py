@@ -1472,8 +1472,8 @@ if st.session_state.selected_videos:
         # ... (rest of your existing code to prepare and display df_selected_display) ...
 
         st.sidebar.dataframe(
-            df_selected_display,
-            # ... (your existing column config) ...
+            df_selected,
+            
             hide_index=True
         )
 
