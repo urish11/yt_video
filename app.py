@@ -551,6 +551,7 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic):
 
     except Exception as e:
         st.error(f"Error during video processing: {e}", icon="🎬")
+        st.stop()
         # Clean up clips if they exist
         if 'base_video' in locals() and base_video: base_video.close()
         if 'tts_audio' in locals() and tts_audio: tts_audio.close()
