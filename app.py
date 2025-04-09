@@ -82,7 +82,6 @@ def get_yt_dlp_info(video_url):
     try:
         with yt_dlp.YoutubeDL(YDL_OPTS) as ydl:
             info = ydl.extract_info(video_url, download=False)
-            os.write(info)
 
             direct_url = info.get('url') # The direct URL for the chosen format
             format_note = info.get('format_note')
@@ -121,6 +120,7 @@ def get_yt_dlp_info(video_url):
         # Indicate a more severe failure
         return None # Or return {'error': 'Unexpected critical error'}
 
+    st.markdown(info)
 
 # --- Streamlit App ---
 st.set_page_config(layout="wide")
