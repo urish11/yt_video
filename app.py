@@ -965,7 +965,7 @@ if 'api_search_results' not in st.session_state:
 # Input DataFrame for search terms and topics
 if 'search_data' not in st.session_state:
     st.session_state.search_data = pd.DataFrame([
-        {'Topic': 'sofa sale', 'Search Term': 'sofa #shorts' , 'Video Results': 5, 'Language' : 'English'}
+        {'Topic': 'sofa sale', 'Search Term': 'sofa #shorts' ,'Language' : 'English, 'Video Results': 5'}
    
         
     ])
