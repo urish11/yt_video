@@ -9,4 +9,4 @@ moviepy
 pydub
 Pillow
 numpy
-ffmpeg-python
+ffmpeg-python 
