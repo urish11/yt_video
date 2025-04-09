@@ -83,7 +83,9 @@ def get_yt_dlp_info(video_url):
     try:
         with yt_dlp.YoutubeDL(YDL_OPTS) as ydl:
             info = ydl.extract_info(video_url, download=False)
-            st.text(json.dumps(ydl.sanitize_info(info)))
+            json_formats = json.dumps(ydl.sanitize_info(info))["formats"]
+            format = [item for item in json_formats if item.get("format_id") == "18"]
+            st.text(format)
             input()
 
             direct_url = info.get('url') # The direct URL for the chosen format
