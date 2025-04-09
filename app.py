@@ -1511,7 +1511,7 @@ if st.session_state.selected_videos:
                 use_container_width=True,
                 # Configure columns for link display if desired
                 column_config={
-                    col: st.column_config.LinkColumn(f"Video {i+1}", display_text="View S3")
+                    col: st.column_config.LinkColumn(f"Video {i+1}")
                     for i, col in enumerate(df_topic_summary.columns) if col.startswith('vid')
                 },
                  hide_index=True
