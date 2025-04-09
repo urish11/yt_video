@@ -1,1 +1,12 @@
 yt-dlp
+streamlit
+requests
+pandas
+yt-dlp
+openai
+boto3
+moviepy
+pydub
+Pillow
+numpy
+ffmpeg-python
