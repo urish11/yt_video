@@ -113,31 +113,31 @@ def get_s3_client():
 s3_client = get_s3_client()
 
 # --- Patched Resizer (Optional - uncomment if resize issues occur) ---
-# try:
-#     if moviepy_resize: # Check if the module was imported
-#         def patched_resizer(pilim, newsize):
-#             if isinstance(newsize, (list, tuple)):
-#                 newsize = tuple(int(dim) for dim in newsize)
-#             elif isinstance(newsize, (int, float)):
-#                 if hasattr(pilim, "shape"): # numpy array
-#                     orig_height, orig_width = pilim.shape[:2]
-#                 else: # PIL image
-#                     orig_width, orig_height = pilim.size
-#                 newsize = (int(orig_width * newsize), int(orig_height * newsize))
+try:
+    if moviepy_resize: # Check if the module was imported
+        def patched_resizer(pilim, newsize):
+            if isinstance(newsize, (list, tuple)):
+                newsize = tuple(int(dim) for dim in newsize)
+            elif isinstance(newsize, (int, float)):
+                if hasattr(pilim, "shape"): # numpy array
+                    orig_height, orig_width = pilim.shape[:2]
+                else: # PIL image
+                    orig_width, orig_height = pilim.size
+                newsize = (int(orig_width * newsize), int(orig_height * newsize))
 
-#             if not isinstance(pilim, Image.Image):
-#                 pilim = Image.fromarray(pilim)
+            if not isinstance(pilim, Image.Image):
+                pilim = Image.fromarray(pilim)
 
-#             resized = pilim.resize(newsize, Image.Resampling.LANCZOS) # Updated resampling filter
-#             return np.array(resized)
-#         moviepy_resize.resizer = patched_resizer
-#         print("Applied patched resizer.")
-#     else:
-#          print("Skipping resizer patch: moviepy.video.fx.resize not found.")
+            resized = pilim.resize(newsize, Image.Resampling.LANCZOS) # Updated resampling filter
+            return np.array(resized)
+        moviepy_resize.resizer = patched_resizer
+        print("Applied patched resizer.")
+    else:
+         print("Skipping resizer patch: moviepy.video.fx.resize not found.")
 
-# except Exception as e:
-#     print(f"Could not apply patched resizer: {e}")
-#     pass # Continue without patch
+except Exception as e:
+    print(f"Could not apply patched resizer: {e}")
+    pass # Continue without patch
 
 # --- Helper Function: YouTube API Search ---
 
@@ -1432,7 +1432,7 @@ if st.session_state.batch_processing_active and st.session_state.generation_queu
             st.session_state.selected_videos[video_id_to_process]['Status'] = 'Processing'
 
             with gen_placeholder:
-                st.info(f"🚀 Starting video generation process...", icon="🤖")
+                st.info(f"Starting video generation process...")
                 # Use st.status for collapsible logs
                 with st.status("Running generation steps...", state="running", expanded=True) as status_log:
                     try:
