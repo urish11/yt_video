@@ -3,7 +3,7 @@ import requests
 import pandas as pd
 import time
 import yt_dlp # Import the yt-dlp library
-
+import os
 # --- Configuration ---
 YOUTUBE_API_BASE_URL = "https://www.googleapis.com/youtube/v3/search"
 MAX_RESULTS_PER_QUERY = 3 # Reduce results per query slightly to manage load
@@ -82,7 +82,7 @@ def get_yt_dlp_info(video_url):
     try:
         with yt_dlp.YoutubeDL(YDL_OPTS) as ydl:
             info = ydl.extract_info(video_url, download=False)
-            print(info)
+            os.write(info)
 
             direct_url = info.get('url') # The direct URL for the chosen format
             format_note = info.get('format_note')
