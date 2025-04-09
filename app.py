@@ -999,7 +999,8 @@ edited_df = st.sidebar.data_editor(
     num_rows="dynamic",
     column_config={
         "Search Term": st.column_config.TextColumn("YouTube Search Term", required=True),
-        "Topic": st.column_config.TextColumn("Topic for TTS Script", required=True)
+        "Topic": st.column_config.TextColumn("Topic for TTS Script", required=True),
+        "Video Results": st.column_config.TextColumn("How Many to Fetch?", required=True)
     },
     use_container_width=True,
     key="search_topic_editor",
@@ -1114,10 +1115,11 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
     for i, item in enumerate(search_items):
         term = item['Search Term']
         topic = item['Topic'] # Keep topic associated
+        count = int(item['Video Results'])
         status_text_api.text(f"Searching for: '{term}'...")
 
         if term not in results_cache: # Avoid re-searching same term in one go
-            videos = search_youtube(youtube_api_key_secret, term, MAX_RESULTS_PER_QUERY)
+            videos = search_youtube(youtube_api_key_secret, term, count)
 
             if videos is None: # Critical API error (e.g., 403)
                 st.error(f"Stopping search due to critical API issue (check key/quota) for term: '{term}'.", icon="🚫")
