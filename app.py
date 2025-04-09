@@ -391,7 +391,7 @@ def generate_audio_with_timestamps(text, client, voice_id="sage"):
 
     except Exception as e:
         st.text(f"Error in TTS/Timestamp generation: {e} ")
-        time.sleep(200) # Optional delay for user experience
+        time.sleep(3) # Optional delay for user experience
         # Cleanup temp file if it exists and an error occurred
         if temp_audio_path and os.path.exists(temp_audio_path):
             try:
