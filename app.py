@@ -16,7 +16,7 @@ import numpy as np
 from moviepy import (
     VideoFileClip, AudioFileClip, CompositeVideoClip, ImageClip, concatenate_videoclips, TextClip
 )
-import moviepy.video.fx.all as vfx
+# import moviepy.video.fx.all as vfx
 # import moviepy.video.fx.resize as resize # Using patched version below
 from pydub import AudioSegment
 from PIL import Image, ImageDraw, ImageFont
