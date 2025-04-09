@@ -349,13 +349,25 @@ def get_yt_dlp_info(video_url):
 def chatGPT(prompt, client, model="gpt-4o", temperature=1):
     """Generates text using OpenAI Chat Completion."""
     try:
-        response = client.chat.completions.create(
+
+        if model == "o1":
+            response = client.chat.completions.create(
             model=model,
             temperature=temperature,
             messages=[{'role': 'user', 'content': prompt}]
         )
-        content = response.choices[0].message.content.strip()
-        return content
+            content = response.choices[0].message.content.strip()
+            return content
+
+
+        else:
+            response = client.chat.completions.create(
+                model=model,
+                temperature=temperature,
+                messages=[{'role': 'user', 'content': prompt}]
+            )
+            content = response.choices[0].message.content.strip()
+            return content
     except Exception as e:
         st.error(f"Error calling OpenAI (ChatGPT): {e}", icon="🤖")
         return None
@@ -1361,7 +1373,7 @@ if st.session_state.batch_processing_active and st.session_state.generation_queu
 
                         # --- Step 2: Generate Script (Text Only) ---
                         script_prompt = f"Create a short, engaging voiceover script for FB viral   video (roughly 15-20 seconds long, maybe 2-3 sentences) about '{topic}' in language {lang}. The tone should be informative yet conversational, '.  smooth flow. Just provide the script text, nothing else. create intriguing and engaging script, sell the topic to the audience ,make them click in and the topic very attractive. be very causal and not 'advertisement' style vibe. end with a call to action  .the text needs to be retentive and highly engaging. "
-                        script_text = chatGPT(script_prompt,model="gpt-4", client=openai_client)
+                        script_text = chatGPT(script_prompt,model="o1", client=openai_client)
                         if not script_text:
                             raise ValueError("Failed to generate script text from OpenAI.")
                         st.text_area("Generated Script:", script_text, height=100, disabled=True, key=f"script_{video_id_to_process}")
