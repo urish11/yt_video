@@ -965,7 +965,7 @@ if 'api_search_results' not in st.session_state:
 # Input DataFrame for search terms and topics
 if 'search_data' not in st.session_state:
     st.session_state.search_data = pd.DataFrame([
-        {'Topic': 'sofa sale', 'Search Term': 'sofa #shorts' , 'Video Results': 5}
+        {'Topic': 'sofa sale', 'Search Term': 'sofa #shorts' , 'Video Results': 5, 'Language' : 'English'}
    
         
     ])
@@ -1117,6 +1117,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
         term = item['Search Term']
         topic = item['Topic'] # Keep topic associated
         count = int(item['Video Results'])
+        lang = item['Language'] # Language for search
         status_text_api.text(f"Searching for: '{term}'...")
 
         if term not in results_cache: # Avoid re-searching same term in one go
@@ -1128,7 +1129,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
                 break # Stop processing further terms
 
             # Store results along with the topic
-            results_cache[term] = {'videos': videos, 'topic': topic}
+            results_cache[term] = {'videos': videos, 'topic': topic} , 'lang' : lang}
             time.sleep(0.1) # Small delay between API calls
         progress_bar.progress((i + 1) / len(search_items))
 
@@ -1166,6 +1167,7 @@ if st.session_state.api_search_results:
     for term, result_data in st.session_state.api_search_results.items():
         videos = result_data['videos']
         topic = result_data['topic'] # Retrieve the associated topic
+        lang = result_data['lang'] # Retrieve the associated language
         container = st.container(border=True)
         with container:
             st.subheader(f"Results for: \"{term}\" (Topic: \"{topic}\")")
@@ -1235,6 +1237,7 @@ if st.session_state.api_search_results:
                             st.session_state.selected_videos[video_id] = {
                                 'Search Term': term,
                                 'Topic': topic, # Store the topic
+                                'Language': lang, # Store the language
                                 'Video Title': video_title,
                                 'Video ID': video_id,
                                 'Standard URL': standard_video_url,
@@ -1351,10 +1354,11 @@ if st.session_state.batch_processing_active and st.session_state.generation_queu
                     try:
                         # --- Step 1: Get Topic ---
                         topic = video_data.get('Topic', 'the selected video') # Fallback topic
+                        lang = video_data.get('Language', 'English') # Fallback language
                         st.write(f"1/5: Generating script for topic: '{topic}'...")
 
                         # --- Step 2: Generate Script (Text Only) ---
-                        script_prompt = f"Create a short, engaging voiceover script (roughly 10-15 seconds long, maybe 2-3 sentences) about '{topic}'. The tone should be informative yet conversational, '. Focus on clarity and smooth flow. Just provide the script text, nothing else. create intriguing and engaging script."
+                        script_prompt = f"Create a short, engaging voiceover script (roughly 10-15 seconds long, maybe 2-3 sentences) about '{topic}' in language {lang}. The tone should be informative yet conversational, '. Focus on clarity and smooth flow. Just provide the script text, nothing else. create intriguing and engaging script."
                         script_text = chatGPT(script_prompt, client=openai_client)
                         if not script_text:
                             raise ValueError("Failed to generate script text from OpenAI.")
