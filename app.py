@@ -9,6 +9,7 @@ import random
 import string
 import datetime
 import urllib.parse
+import textwrap
 import tempfile
 from io import BytesIO
 import moviepy
@@ -348,13 +349,15 @@ def group_words_with_timing(word_timings, words_per_group=2):
     return grouped_timings
 
 # --- Helper Function: Create Text Image for Subtitles ---
-def create_text_image(text, fontsize, color, bg_color, font_path):
-    """Creates a transparent PNG image with text and rounded background."""
+def create_text_image(text, fontsize, color, bg_color, font_path, video_width):
+    """
+    Creates a transparent PNG image with text and rounded background,
+    wrapping text to fit video width and centering it.
+    """
     try:
-        # Check if font file exists
+        # --- Font Loading ---
         if not os.path.exists(font_path):
              st.warning(f"Subtitle font not found at {font_path}. Using default.", icon="⚠️")
-             # Fallback to a basic PIL font if custom font is missing
              try:
                  font = ImageFont.load_default(size=fontsize) # Request size
              except AttributeError: # Older PIL/Pillow might not support size
@@ -362,80 +365,157 @@ def create_text_image(text, fontsize, color, bg_color, font_path):
         else:
              font = ImageFont.truetype(font_path, fontsize)
 
-        # Simple approximation for bounding box if getbbox is not available or buggy
-        # Use textlength which gives width in pixels. Height is approx fontsize.
+        # --- Configuration ---
+        padding_x = 25  # Horizontal padding for the background
+        padding_y = 15  # Vertical padding for the background
+        bg_radius = 15  # Corner radius for the background
+        # Calculate max width for the text itself inside the video frame
+        # Subtract padding and a bit more margin for safety
+        max_text_width = video_width - (2 * padding_x) - 30
+        if max_text_width <= 0: max_text_width = video_width // 2 # Safety net if padding is too large
+
+        # --- Text Wrapping ---
+        lines = []
+        # Estimate average char width for textwrap (can be inaccurate)
+        # avg_char_width = font.getlength("ABCDEFGHIJ") / 10
+        # wrap_width_chars = int(max_text_width / avg_char_width) if avg_char_width > 0 else 30
+        # wrapped_lines = textwrap.wrap(text, width=wrap_width_chars, replace_whitespace=False)
+
+        # Manual wrapping based on pixel width (more reliable)
+        words = text.split()
+        if not words:
+            return np.zeros((10, 10, 4), dtype=np.uint8) # Handle empty text
+
+        current_line = ""
+        for word in words:
+            test_line = f"{current_line} {word}".strip()
+            # Check width using getlength (simpler than bbox for wrapping)
+            line_width = font.getlength(test_line)
+
+            if line_width <= max_text_width:
+                current_line = test_line
+            else:
+                # Word makes it too long, push current_line (if any)
+                if current_line:
+                    lines.append(current_line)
+                # Start new line with the word. Check if word itself is too long
+                word_width = font.getlength(word)
+                if word_width <= max_text_width:
+                    current_line = word
+                else:
+                    # Word is too long: Add previous line, add the long word on its own line
+                    # TODO: Could implement character-level wrapping here if needed
+                    if current_line: # Ensure previous line isn't added twice
+                       pass # Already added above
+                    elif not lines: # If it's the very first word and it's too long
+                       pass
+                    lines.append(word) # Add the long word as its own line
+                    current_line = "" # Reset current line as the long word is handled
+
+        if current_line: # Add the last line
+            lines.append(current_line)
+
+        wrapped_text = "\n".join(lines)
+        if not wrapped_text: wrapped_text = text # Fallback if wrapping fails
+
+        # --- Calculate Text Block Dimensions ---
+        # Use a dummy draw object to get multiline bbox without creating full image yet
+        dummy_img = Image.new("RGBA", (1, 1))
+        dummy_draw = ImageDraw.Draw(dummy_img)
         try:
-            bbox = font.getbbox(text)
+            # Get bounding box for the whole text block when drawn
+            # Use align='left' for accurate width calculation of the longest line
+            bbox = dummy_draw.multiline_textbbox((0, 0), wrapped_text, font=font, spacing=4, align='left')
             text_width = bbox[2] - bbox[0]
             text_height = bbox[3] - bbox[1]
-            ascent, descent = font.getmetrics()
-            text_actual_height = ascent + descent # More accurate height
+            # Get offset needed for positioning later
             bbox_y_offset = bbox[1]
+            # Ensure minimum size
+            text_width = max(text_width, 1)
+            text_height = max(text_height, 1)
+
         except AttributeError:
-             # Fallback for older PIL/Pillow or if getbbox fails
-             text_width = int(font.getlength(text))
-             text_height = fontsize # Approximate height
-             text_actual_height = fontsize
-             bbox_y_offset = -int(fontsize * 0.2) # Rough estimate for baseline offset
+             # Fallback for older PIL/Pillow without multiline_textbbox
+             st.warning("Using fallback subtitle dimension calculation (update Pillow recommended).", icon=" PIL ")
+             text_width = 0
+             for line in lines:
+                  text_width = max(text_width, int(font.getlength(line)))
+             ascent, descent = font.getmetrics()
+             line_height = ascent + descent + 4 # Add spacing
+             text_height = len(lines) * line_height
+             bbox_y_offset = -int(fontsize * 0.1) # Rough guess
+             text_width = max(text_width, 1)
+             text_height = max(text_height, 1)
 
-        padding_x = 25 # Horizontal padding
-        padding_y = 10 # Vertical padding
 
+        # --- Create Final Image ---
         img_width = text_width + 2 * padding_x
-        img_height = text_actual_height + 2 * padding_y
-        radius = 15 # Corner radius
+        img_height = text_height + 2 * padding_y
 
-        # Create image with transparent background
-        img = Image.new("RGBA", (img_width, img_height), (0, 0, 0, 0))
+        img = Image.new("RGBA", (int(img_width), int(img_height)), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
 
-        # Draw rounded rectangle background using the provided RGBA color string
+        # --- Draw Background ---
         try:
-            # PIL expects a tuple for color, convert rgba string
-            # Example: 'rgba(0, 0, 0, 0.6)' -> (0, 0, 0, int(0.6*255))
             if isinstance(bg_color, str) and bg_color.startswith('rgba'):
                 parts = bg_color.strip('rgba()').split(',')
                 r, g, b = map(int, parts[:3])
                 a = int(float(parts[3]) * 255)
                 fill_color_tuple = (r, g, b, a)
-            elif isinstance(bg_color, str): # Assume hex or name, let PIL handle
+            elif isinstance(bg_color, str): # hex or name
                  fill_color_tuple = bg_color
-            else: # Assume it's already a tuple
+            else: # assume tuple
                  fill_color_tuple = bg_color
 
-            draw.rounded_rectangle([(0, 0), (img_width, img_height)], radius=radius, fill=fill_color_tuple)
+            draw.rounded_rectangle([(0, 0), (img_width, img_height)], radius=bg_radius, fill=fill_color_tuple)
         except Exception as draw_err:
              st.warning(f"Could not draw rounded rect: {draw_err}. Using simple rect.", icon="🎨")
              draw.rectangle([(0,0), (img_width, img_height)], fill=fill_color_tuple)
 
 
-        # Calculate text position (centered)
+        # --- Draw Text ---
+        # Calculate position to center the text block within the padded area
+        # (Padding X, Padding Y) should be the top-left corner of the text *area*
+        # The text itself will be aligned center within that area by multiline_text
         text_x = padding_x
-        # Adjust y position based on PIL version / bbox availability
-        text_y = padding_y - bbox_y_offset # Try to align based on bbox baseline
+        text_y = padding_y - bbox_y_offset # Adjust vertical position based on bbox calculation
 
-        draw.text((text_x, text_y), text, font=font, fill=color)
+        # Draw the possibly multi-lined text, centered horizontally within its block
+        draw.multiline_text(
+            (text_x, text_y),
+            wrapped_text,
+            font=font,
+            fill=color,
+            align="center",  # Center align the lines relative to each other
+            spacing=4       # Add a little space between lines
+        )
 
         return np.array(img)
 
     except Exception as e:
-        st.error(f"Error creating text image for '{text}': {e}", icon="🎨")
+        st.error(f"Error creating text image for '{text[:50]}...': {e}", icon="🎨")
         # Return a small transparent pixel as fallback
         return np.zeros((10, 10, 4), dtype=np.uint8)
 
 
+
 # --- Helper Function: Process Video with TTS and Subtitles ---
 def process_video_with_tts(base_video_url, audio_path, word_timings, topic):
-    """Loads video, adds TTS audio, loops if necessary, adds subtitles."""
+    """Loads video, adds TTS audio, loops if necessary, adds subtitles centered with wrapping."""
     final_video_clip = None
     temp_output_path = None
+    base_video = None # Initialize for cleanup
+    tts_audio = None
+    looped_video = None
+    processed_video = None
+    subtitle_clips_list = [] # Use a different name to avoid scope issues
 
     try:
         # Load base video
         st.write(f"⏳ Loading base video from URL...")
         base_video = VideoFileClip(base_video_url, audio=False) # Load without original audio
         video_duration = base_video.duration
-        w, h = base_video.size
+        w, h = base_video.size # <<< Get video width and height HERE
         st.write(f"✔️ Base video loaded: {w}x{h}, Duration: {video_duration:.2f}s")
 
         # Load TTS audio
@@ -445,14 +525,12 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic):
         st.write(f"✔️ TTS audio loaded: Duration: {audio_duration:.2f}s")
 
         # --- Video Looping/Trimming ---
-        processed_video = base_video
+        processed_video = base_video # Start with base_video
         if video_duration < audio_duration:
             st.write(f"⏳ Looping video to match audio duration...")
             num_loops = int(np.ceil(audio_duration / video_duration))
-            # Use concatenate_videoclips for looping
-            clips_to_loop = [base_video] * num_loops
+            clips_to_loop = [base_video.copy() for _ in range(num_loops)] # Use copies for safety
             looped_video = concatenate_videoclips(clips_to_loop)
-            # Trim the looped video to the exact audio duration
             processed_video = looped_video.subclip(0, audio_duration)
             st.write(f"✔️ Video looped {num_loops} times and trimmed to {audio_duration:.2f}s")
         elif video_duration > audio_duration:
@@ -463,11 +541,11 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic):
             st.write("✔️ Video duration matches audio duration.")
 
         # Set the TTS audio to the processed video
-        final_video_clip = processed_video.set_audio(tts_audio)
+        # Ensure processed_video has the correct dimensions
+        final_video_clip = processed_video.set_audio(tts_audio).set_duration(audio_duration).resize(newsize=(w, h))
 
         # --- Subtitle Generation ---
         st.write(f"⏳ Generating subtitles...")
-        subtitle_clips = []
         grouped_subs = group_words_with_timing(word_timings, words_per_group=SUBTITLE_WORDS_PER_GROUP)
 
         if grouped_subs:
@@ -479,36 +557,43 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic):
                 end = sub_data['end']
                 sub_duration = end - start
 
-                # Skip empty text or excessively short durations
                 if not text.strip() or sub_duration <= 0.05:
                     continue
 
-                # Create subtitle image
+                # --- Create subtitle image WITH video_width ---
                 text_img_array = create_text_image(
                     text.upper(), # Make subtitles uppercase
                     fontsize=SUBTITLE_FONT_SIZE,
                     color=SUBTITLE_COLOR,
                     bg_color=SUBTITLE_BG_COLOR,
-                    font_path=SUBTITLE_FONT_PATH
+                    font_path=SUBTITLE_FONT_PATH,
+                    video_width=w # <<< Pass video width here
                 )
 
-                # Create ImageClip
+                # Check if image creation failed (returned tiny array)
+                if text_img_array.shape[0] <= 10 or text_img_array.shape[1] <= 10:
+                     st.warning(f"Skipping subtitle due to image creation error for: '{text[:30]}...'")
+                     continue
+
+                # --- Create ImageClip and CENTER it ---
                 subtitle_img_clip = ImageClip(text_img_array)\
                     .set_start(start)\
                     .set_duration(sub_duration)\
-                    .set_position(('center', 'bottom'), relative=True) # Position relative to video
-                    #.margin(bottom=int(h * 0.08), opacity=0) # Add margin from bottom (8%)
+                    .set_position(('center', 'center')) # <<< Set position to CENTER, CENTER
 
-                subtitle_clips.append(subtitle_img_clip)
+                subtitle_clips_list.append(subtitle_img_clip) # Append to our list
                 sub_progress.progress((i + 1) / total_subs)
-            st.write(f"✔️ Generated {len(subtitle_clips)} subtitle clips.")
+            st.write(f"✔️ Generated {len(subtitle_clips_list)} subtitle clips.")
         else:
             st.warning("No word timings available to generate subtitles.", icon="⏱️")
 
         # Composite final video with subtitles
-        if subtitle_clips:
+        if subtitle_clips_list: # Check if the list has clips
             st.write("⏳ Compositing video and subtitles...")
-            final_video_clip = CompositeVideoClip([final_video_clip] + subtitle_clips, size=final_video_clip.size)
+            # Ensure the final_video_clip is the first element
+            clips_for_composite = [final_video_clip] + subtitle_clips_list
+            # Explicitly set the size for CompositeVideoClip using the video's dimensions
+            final_video_clip = CompositeVideoClip(clips_for_composite, size=(w, h))
             st.write("✔️ Compositing complete.")
         else:
             st.write("ℹ️ No subtitles added.")
@@ -516,59 +601,54 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic):
 
         # --- Export Final Video ---
         st.write("⏳ Exporting final video...")
-        # Create a unique temporary filename
         timestamp = int(datetime.datetime.now().timestamp())
         safe_topic = urllib.parse.quote(topic.replace(' ', '_')[:30], safe='')
         temp_output_filename = f"final_{safe_topic}_{timestamp}.mp4"
-        temp_output_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4", prefix=f"final_{safe_topic}_")
-        temp_output_path = temp_output_file.name
-        temp_output_file.close() # Close handle before moviepy writes to it
 
-        # Write video file (use standard codecs)
-        # Consider presets: 'ultrafast', 'fast', 'medium', 'slow'
-        # threads=4 might speed up encoding on multi-core CPUs
+        # Use tempfile correctly for the path
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4", prefix=f"final_{safe_topic}_") as temp_output_file_obj:
+             temp_output_path = temp_output_file_obj.name
+
+        # Make sure final_video_clip is valid before writing
+        if not isinstance(final_video_clip, moviepy.video.VideoClip.VideoClip):
+             raise TypeError("Cannot write final video: Invalid clip object.")
+
         final_video_clip.write_videofile(
             temp_output_path,
             codec='libx264',
             audio_codec='aac',
             temp_audiofile=f'temp-audio-{timestamp}.m4a', # Explicit temp audio file
-            remove_temp=True, # Remove temp audio file after processing
-            fps=base_video.fps or 24, # Use original fps or default to 24
-            preset='medium', # Balance speed and quality
-            threads=4, # Use multiple threads if available
-            logger='bar' # Show progress bar in console/logs
+            remove_temp=True,
+            fps=base_video.fps or 24,
+            preset='medium',
+            threads=4,
+            logger='bar'
         )
         st.write(f"✔️ Final video exported to temporary path: {temp_output_path}")
-
-        # Clean up loaded clips to free memory
-        base_video.close()
-        tts_audio.close()
-        if 'looped_video' in locals(): looped_video.close()
-        processed_video.close()
-        final_video_clip.close() # Close the final composite clip
-        for sub_clip in subtitle_clips: sub_clip.close()
-
 
         return temp_output_path, temp_output_filename # Return path and suggested S3 filename
 
     except Exception as e:
         st.error(f"Error during video processing: {e}", icon="🎬")
-        st.stop()
-        # Clean up clips if they exist
-        if 'base_video' in locals() and base_video: base_video.close()
-        if 'tts_audio' in locals() and tts_audio: tts_audio.close()
-        if 'looped_video' in locals() and 'looped_video' in locals(): looped_video.close()
-        if 'processed_video' in locals() and processed_video: processed_video.close()
-        if 'final_video_clip' in locals() and final_video_clip: final_video_clip.close()
-        if 'subtitle_clips' in locals():
-            for sub_clip in subtitle_clips: sub_clip.close()
-        # Attempt to remove temp output file if it exists on error
-        if temp_output_path and os.path.exists(temp_output_path):
-            try:
-                os.remove(temp_output_path)
-            except Exception as rm_err:
-                st.warning(f"Could not remove temp video file on error: {rm_err}")
-        return None, None
+        # st.stop() # Avoid stopping the whole app if possible, handled by caller
+
+        # Explicitly re-raise or return None to signal failure
+        raise # Re-raise the exception to be caught by the caller
+
+    finally:
+        # --- Cleanup ---
+        st.write("🧹 Cleaning up video processing resources...")
+        if base_video: base_video.close()
+        if tts_audio: tts_audio.close()
+        if looped_video: looped_video.close()
+        # Check if processed_video is different from base_video or looped_video before closing
+        if processed_video and processed_video is not base_video and processed_video is not looped_video:
+             processed_video.close()
+        if final_video_clip: final_video_clip.close() # Close the final composite clip
+        for sub_clip in subtitle_clips_list: # Close individual subtitle clips
+              sub_clip.close()
+        st.write("🧹 Cleanup finished.")
+
 
 # --- Helper Function: Upload Video to S3 ---
 def upload_vid_to_s3(s3_cli, video_path, bucket_name, object_name, region_name):
