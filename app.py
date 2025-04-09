@@ -85,8 +85,9 @@ def get_yt_dlp_info(video_url):
             info = ydl.extract_info(video_url, download=False)
             # json_formats = json.loads(ydl.sanitize_info(info))
 
-            st.text(type(ydl.sanitize_info(info)))
+            # st.text(type(ydl.sanitize_info(info)))
             # st.text(json_formats.get("formats"))
+            st.text(ydl.sanitize_info(info))['formats'])
             input()
 
             
