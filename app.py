@@ -77,31 +77,31 @@ s3_client = get_s3_client()
 
 
 
-# --- Patched Resizer (from second script - if needed, MoviePy versions vary) ---
-# This attempts to fix potential issues with MoviePy's default resizer
-# If you encounter resize errors, uncomment and test this. Otherwise, keep it commented.
-# try:
-#     from moviepy.video.fx import resize as moviepy_resize
-#     def patched_resizer(pilim, newsize):
-#         if isinstance(newsize, (list, tuple)):
-#             newsize = tuple(int(dim) for dim in newsize)
-#         elif isinstance(newsize, (int, float)):
-#             if hasattr(pilim, "shape"):
-#                 orig_height, orig_width = pilim.shape[:2]
-#             else:
-#                 orig_width, orig_height = pilim.size
-#             newsize = (int(orig_width * newsize), int(orig_height * newsize))
+--- Patched Resizer (from second script - if needed, MoviePy versions vary) ---
+This attempts to fix potential issues with MoviePy's default resizer
+If you encounter resize errors, uncomment and test this. Otherwise, keep it commented.
+try:
+    from moviepy.video.fx import resize as moviepy_resize
+    def patched_resizer(pilim, newsize):
+        if isinstance(newsize, (list, tuple)):
+            newsize = tuple(int(dim) for dim in newsize)
+        elif isinstance(newsize, (int, float)):
+            if hasattr(pilim, "shape"):
+                orig_height, orig_width = pilim.shape[:2]
+            else:
+                orig_width, orig_height = pilim.size
+            newsize = (int(orig_width * newsize), int(orig_height * newsize))
 
-#         if not isinstance(pilim, Image.Image):
-#             pilim = Image.fromarray(pilim)
+        if not isinstance(pilim, Image.Image):
+            pilim = Image.fromarray(pilim)
 
-#         resized = pilim.resize(newsize, Image.Resampling.LANCZOS) # Updated resampling filter
-#         return np.array(resized)
-#     moviepy_resize.resizer = patched_resizer
-#     print("Applied patched resizer.")
-# except Exception as e:
-#     print(f"Could not apply patched resizer: {e}")
-#     pass # Continue without patch
+        resized = pilim.resize(newsize, Image.Resampling.LANCZOS) # Updated resampling filter
+        return np.array(resized)
+    moviepy_resize.resizer = patched_resizer
+    print("Applied patched resizer.")
+except Exception as e:
+    print(f"Could not apply patched resizer: {e}")
+    pass # Continue without patch
 
 # --- Helper Function: YouTube API Search ---
 def search_youtube(api_key, query, max_results=5):
