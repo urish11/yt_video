@@ -965,8 +965,9 @@ if 'api_search_results' not in st.session_state:
 # Input DataFrame for search terms and topics
 if 'search_data' not in st.session_state:
     st.session_state.search_data = pd.DataFrame([
-        {'Search Term': 'satisfying cleaning', 'Topic': 'the satisfaction of a clean space'},
-        {'Search Term': 'drone nature footage', 'Topic': 'exploring remote landscapes from above'}
+        {'Topic': 'sofa sale', 'Search Term': 'sofa #shorts' , 'Video Results': 5}
+   
+        
     ])
 
 # Flag to indicate if a search has been run
