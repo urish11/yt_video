@@ -138,6 +138,70 @@ s3_client = get_s3_client()
 #     pass # Continue without patch
 
 # --- Helper Function: YouTube API Search ---
+
+
+def create_topic_summary_dataframe(selected_videos_dict):
+    """
+    Creates a DataFrame summarizing generated videos grouped by topic.
+
+    Args:
+        selected_videos_dict (dict): The session state dictionary
+                                     st.session_state.selected_videos.
+
+    Returns:
+        pandas.DataFrame: A DataFrame with 'Topic' and 'vidX_url' columns,
+                          or an empty DataFrame if no generated videos are found.
+    """
+    topic_to_generated_urls = {}
+
+    # 1. Collect Generated URLs and Group by Topic
+    for video_id, video_data in selected_videos_dict.items():
+        topic = video_data.get('Topic')
+        s3_url = video_data.get('Generated S3 URL')
+
+        # Only include if topic exists and video was successfully generated
+        if topic and s3_url:
+            if topic not in topic_to_generated_urls:
+                topic_to_generated_urls[topic] = []
+            topic_to_generated_urls[topic].append(s3_url)
+
+    if not topic_to_generated_urls:
+        # Return an empty DataFrame with expected columns if no data
+        return pd.DataFrame(columns=['Topic'])
+
+    # 2. Determine Max URLs per Topic and Prepare Data for Wide Format
+    max_urls = 0
+    if topic_to_generated_urls: # Ensure dict is not empty before finding max
+         max_urls = max(len(urls) for urls in topic_to_generated_urls.values())
+
+    data_for_df = []
+    for topic, urls in topic_to_generated_urls.items():
+        row = {'Topic': topic}
+        # Pad the list of URLs with empty strings up to max_urls
+        padded_urls = urls + [''] * (max_urls - len(urls))
+        for i, url in enumerate(padded_urls):
+            row[f'vid{i+1}_url'] = url
+        data_for_df.append(row)
+
+    # 3. Create Final DataFrame
+    if data_for_df:
+        df_final = pd.DataFrame(data_for_df)
+        # Ensure 'Topic' column is first
+        topic_col = df_final.pop('Topic')
+        df_final.insert(0, 'Topic', topic_col)
+        # Sort columns naturally (vid1, vid2, ... vid10...) if needed
+        url_cols = sorted([col for col in df_final.columns if col.startswith('vid')],
+                           key=lambda x: int(x.replace('vid','').replace('_url','')))
+        final_cols = ['Topic'] + url_cols
+        df_final = df_final[final_cols]
+
+    else:
+         # Should not happen if topic_to_generated_urls was populated, but safe fallback
+         df_final = pd.DataFrame(columns=['Topic'])
+
+
+    return df_final
+
 def search_youtube(api_key, query, max_results=5):
     """
     Performs a Youtube search using the v3 API.
@@ -1337,6 +1401,9 @@ if st.session_state.batch_processing_active and st.session_state.generation_queu
                         st.success(f"✅ Video generated and uploaded successfully!", icon="🎉")
                         st.video(s3_url) # Display the final video from S3
 
+
+
+
                     except Exception as e:
                         st.error(f"Error during video generation step: {e}", icon="🔥")
                         # Update status log to show error
@@ -1397,72 +1464,83 @@ if st.session_state.batch_processing_active and st.session_state.generation_queu
 st.sidebar.divider()
 st.sidebar.header("Selected & Generated Videos Status")
 
+# Keep the existing logic to display the detailed table first...
 if st.session_state.selected_videos:
     selected_list = list(st.session_state.selected_videos.values())
     if selected_list: # Check if list is not empty
         df_selected = pd.DataFrame(selected_list)
-
-        # Define desired columns and order, including the new 'Status'
-        display_columns = [
-            'Status', 'Video Title', 'Topic', 'Search Term', 'Video ID',
-            'Format Details', 'yt_dlp_error', 'Generation Error',
-             'Generated S3 URL', #'Direct URL', 'Standard URL' # Keep URLs less prominent maybe
-        ]
-
-        # Ensure all display columns exist, fill missing
-        for col in display_columns:
-            if col not in df_selected.columns:
-                df_selected[col] = "N/A" # Use N/A string
-
-        # Fill specific NaN/None values for better display
-        df_selected['Status'] = df_selected['Status'].fillna('Unknown')
-        df_selected['yt_dlp_error'] = df_selected['yt_dlp_error'].fillna('OK')
-        df_selected['Generation Error'] = df_selected['Generation Error'].fillna('OK')
-        df_selected.fillna("N/A", inplace=True) # Fill remaining NAs
-
-
-        # Reorder DataFrame columns for display
-        df_selected_display = df_selected[display_columns]
+        # ... (rest of your existing code to prepare and display df_selected_display) ...
 
         st.sidebar.dataframe(
             df_selected_display,
-            use_container_width=True,
-            column_config={
-                "Status": st.column_config.TextColumn(width="small"),
-                "Video Title": st.column_config.TextColumn(width="medium"),
-                "Topic": st.column_config.TextColumn(width="medium"),
-                "Generated S3 URL": st.column_config.LinkColumn("Output Video", display_text="View S3", width="small"),
-                "yt_dlp_error": st.column_config.TextColumn("URL Status", width="small"),
-                "Generation Error": st.column_config.TextColumn("Gen Status", width="small"),
-                "Format Details": st.column_config.TextColumn("Format", width="medium"),
-            },
+            # ... (your existing column config) ...
             hide_index=True
         )
 
-        # Option to download selected videos info as CSV
-        @st.cache_data # Cache the conversion
+        # Existing Download Button for detailed table
+        @st.cache_data
         def convert_df_to_csv(df):
-            return df.to_csv(index=False).encode('utf-8')
+            # IMPORTANT: Use BytesIO for text output in newer Streamlit/Pandas versions
+            output = BytesIO()
+            df.to_csv(output, index=False, encoding='utf-8')
+            return output.getvalue() # Return bytes
 
         try:
             csv_data = convert_df_to_csv(df_selected_display)
             st.sidebar.download_button(
-                label="📥 Download Table as CSV",
+                label="📥 Download Detailed Status (CSV)", # Updated label
                 data=csv_data,
-                file_name='selected_youtube_videos_generated.csv',
+                file_name='selected_youtube_videos_detailed_status.csv', # Updated filename
                 mime='text/csv',
                 use_container_width=True,
                 disabled=st.session_state.batch_processing_active # Disable download during processing
             )
         except Exception as e:
-            st.sidebar.warning(f"Could not generate CSV: {e}")
+            st.sidebar.warning(f"Could not generate detailed CSV: {e}")
 
-    else: # If selected_videos dict is empty
+        # --- NEW SECTION: Topic Summary DataFrame ---
+        st.sidebar.divider()
+        st.sidebar.subheader("Generated Video Summary by Topic")
+
+        # Generate the summary DataFrame using the helper function
+        df_topic_summary = create_topic_summary_dataframe(st.session_state.selected_videos)
+
+        if not df_topic_summary.empty:
+            st.sidebar.dataframe(
+                df_topic_summary,
+                use_container_width=True,
+                # Configure columns for link display if desired
+                column_config={
+                    col: st.column_config.LinkColumn(f"Video {i+1}", display_text="View S3")
+                    for i, col in enumerate(df_topic_summary.columns) if col.startswith('vid')
+                },
+                 hide_index=True
+            )
+
+            # Download Button for the topic summary DataFrame
+            try:
+                csv_summary_data = convert_df_to_csv(df_topic_summary) # Reuse the conversion function
+                st.sidebar.download_button(
+                    label="📥 Download Topic Summary (CSV)",
+                    data=csv_summary_data,
+                    file_name='generated_videos_by_topic.csv',
+                    mime='text/csv',
+                    use_container_width=True,
+                    disabled=st.session_state.batch_processing_active # Disable download during processing
+                )
+            except Exception as e:
+                st.sidebar.warning(f"Could not generate summary CSV: {e}")
+
+        else:
+            st.sidebar.info("No videos have been successfully generated yet to create a summary.")
+            # Optionally display the empty dataframe structure
+            # st.sidebar.dataframe(df_topic_summary, use_container_width=True)
+
+    else: # If selected_videos dict is empty (inner check)
          st.sidebar.info("No videos selected yet. Use '➕ Select' buttons in the main area.")
 
-else: # If selected_videos dict doesn't exist or is empty
+else: # If selected_videos dict doesn't exist or is empty (outer check)
     st.sidebar.info("No videos selected yet. Use '➕ Select' buttons in the main area.")
-
 
 # Footer notes
 st.sidebar.caption("YT API Search: ~100 quota units/term. URL Fetch on select. Video Gen uses direct URL.")
