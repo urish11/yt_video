@@ -346,7 +346,7 @@ def get_yt_dlp_info(video_url):
 
 
 # --- Helper Function: Generate Script with ChatGPT ---
-def chatGPT(prompt, client, model="gpt-4o", temperature=0.7):
+def chatGPT(prompt, client, model="gpt-4o", temperature=1):
     """Generates text using OpenAI Chat Completion."""
     try:
         response = client.chat.completions.create(
