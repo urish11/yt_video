@@ -11,8 +11,7 @@ import datetime
 import urllib.parse
 import tempfile
 from io import BytesIO
-
-# --- Core Video/Audio/Text Processing ---
+import moviepy
 import numpy as np
 from moviepy.editor import (
     VideoFileClip, AudioFileClip, CompositeVideoClip, ImageClip, concatenate_videoclips, TextClip
