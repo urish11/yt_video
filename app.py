@@ -13,6 +13,8 @@ import urllib.parse
 import textwrap
 import tempfile
 from io import BytesIO
+import anthropic
+
 # Ensure MoviePy is installed: pip install moviepy
 # Ensure Pillow is installed: pip install Pillow
 # Ensure pydub is installed: pip install pydub
@@ -371,6 +373,74 @@ def chatGPT(prompt, client, model="gpt-4o", temperature=1):
     except Exception as e:
         st.error(f"Error calling OpenAI (ChatGPT): {e}", icon="🤖")
         return None
+
+
+def claude(prompt , model = "claude-3-7-sonnet-20250219", temperature=1 , is_thinking = False, max_retries = 10):
+    tries = 0
+
+    while tries < max_retries:
+        try:
+        
+        
+        
+            client = anthropic.Anthropic(
+            # defaults to os.environ.get("ANTHROPIC_API_KEY")
+            api_key=st.secrets["ANTHROPIC_API_KEY"])
+        
+            if is_thinking == False:
+                    
+                message = client.messages.create(
+                    
+                model=model,
+                max_tokens=20000,
+                temperature=temperature,
+                
+                top_p= 0.8,
+
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": prompt
+                            }
+                        ]
+                    }
+                ]
+            )
+                return message.content[0].text
+            if is_thinking == True:
+                message = client.messages.create(
+                    
+                model=model,
+                max_tokens=20000,
+                temperature=temperature,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": prompt
+                            }
+                        ]
+                    }
+                ],
+                thinking = { "type": "enabled",
+                "budget_tokens": 16000}
+            )
+                return message.content[1].text
+        
+        
+        
+            print(message)
+            return message.content[0].text
+
+        except Exception as e:
+            st.text(e)
+            tries += 1 
+            time.sleep(5)
 
 # --- Helper Function: Generate TTS Audio & Timestamps ---
 #  --- Helper Function: Generate TTS Audio & Timestamps ---
@@ -1373,7 +1443,9 @@ if st.session_state.batch_processing_active and st.session_state.generation_queu
 
                         # --- Step 2: Generate Script (Text Only) ---
                         script_prompt = f"Create a short, engaging voiceover script for FB viral   video (roughly 15-20 seconds long, maybe 2-3 sentences) about '{topic}' in language {lang}. The tone should be informative yet conversational, '.  smooth flow. Just provide the script text, nothing else. create intriguing and engaging script, sell the topic to the audience ,make them click in and the topic very attractive. be very causal and not 'advertisement' style vibe. end with a call to action  .the text needs to be retentive and highly engaging. "
-                        script_text = chatGPT(script_prompt,model="o1", client=openai_client)
+                        # script_text = chatGPT(script_prompt,model="o1", client=openai_client)
+                        script_text = claude(script_prompt,is_thinking=True)
+
                         if not script_text:
                             raise ValueError("Failed to generate script text from OpenAI.")
                         st.text_area("Generated Script:", script_text, height=100, disabled=True, key=f"script_{video_id_to_process}")
