@@ -297,7 +297,7 @@ def chatGPT(prompt, client, model="gpt-4o", temperature=0.7):
         return None
 
 # --- Helper Function: Generate TTS Audio & Timestamps ---
-de# --- Helper Function: Generate TTS Audio & Timestamps ---
+#  --- Helper Function: Generate TTS Audio & Timestamps ---
 def generate_audio_with_timestamps(text, client, voice_id="sage"):
     """Generates TTS audio using OpenAI, saves it, and gets word timestamps."""
     temp_audio_file = None
