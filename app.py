@@ -1129,7 +1129,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
                 break # Stop processing further terms
 
             # Store results along with the topic
-            results_cache[term] = {'videos': videos, 'topic': topic} , 'lang' : lang}
+            results_cache[term] = {'videos': videos, 'topic': topic , 'lang' : lang}
             time.sleep(0.1) # Small delay between API calls
         progress_bar.progress((i + 1) / len(search_items))
 
