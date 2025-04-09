@@ -36,11 +36,12 @@ SUBTITLE_FONT_SIZE = 50 # Adjust as needed
 SUBTITLE_WORDS_PER_GROUP = 2 # Group words for subtitles
 SUBTITLE_COLOR = '#FFFF00' # Yellow
 SUBTITLE_BG_COLOR = 'rgba(0, 0, 0, 0.6)' # Semi-transparent black
+st.set_page_config(layout="wide", page_title="YouTube Select & Generate")
 
 # --- Load Secrets ---
 try:
     youtube_api_key_secret = st.secrets["YOUTUBE_API_KEY"] # Assuming key name in secrets
-    # openai_api_key = st.secrets["GPT_API_KEY1 "]
+    openai_api_key = st.secrets["GPT_API_KEY1 "]
     aws_access_key = st.secrets["AWS_ACCESS_KEY_ID "]
     aws_secret_key = st.secrets["AWS_SECRET_ACCESS_KEY "]
     s3_bucket_name = st.secrets["S3_BUCKET_NAME "]
@@ -602,7 +603,6 @@ def upload_vid_to_s3(s3_cli, video_path, bucket_name, object_name, region_name):
 
 
 # --- Streamlit App ---
-st.set_page_config(layout="wide", page_title="YouTube Select & Generate")
 st.title("🎬 YouTube Video Selector & TTS Generator")
 st.caption("Search YouTube, select a video, generate TTS script, create subtitled video, and upload to S3.")
 
