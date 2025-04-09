@@ -78,8 +78,8 @@ s3_client = get_s3_client()
 
 
 --- Patched Resizer (from second script - if needed, MoviePy versions vary) ---
-This attempts to fix potential issues with MoviePy's default resizer
-If you encounter resize errors, uncomment and test this. Otherwise, keep it commented.
+# This attempts to fix potential issues with MoviePy's default resizer
+# If you encounter resize errors, uncomment and test this. Otherwise, keep it commented.
 try:
     from moviepy.video.fx import resize as moviepy_resize
     def patched_resizer(pilim, newsize):
