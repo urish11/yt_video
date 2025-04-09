@@ -41,7 +41,7 @@ st.set_page_config(layout="wide", page_title="YouTube Select & Generate")
 # --- Load Secrets ---
 
 youtube_api_key_secret = st.secrets["YOUTUBE_API_KEY"] # Assuming key name in secrets
-openai_api_key = st.secrets["GPT_API_KEY1 "]
+openai_api_key = st.secrets["GPT_API_KEY1"]
 aws_access_key = st.secrets["AWS_ACCESS_KEY_ID "]
 aws_secret_key = st.secrets["AWS_SECRET_ACCESS_KEY "]
 s3_bucket_name = st.secrets["S3_BUCKET_NAME "]
