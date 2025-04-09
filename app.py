@@ -1001,10 +1001,10 @@ edited_df = st.sidebar.data_editor(
     column_config={
         "Search Term": st.column_config.TextColumn("YouTube Search Term", required=True),
         "Topic": st.column_config.TextColumn("Topic for TTS Script", required=True),
-        "Language": st.column_config.TextColumn("Language", required=True)
-        "Video Results": st.column_config.NumberColumn("Vid Results", required=True),
+        "Language": st.column_config.TextColumn("Language", required=True),
+        "Video Results": st.column_config.NumberColumn("Vid Results", required=True)
         
-    }
+    },
     use_container_width=True,
     key="search_topic_editor",
     # Disable editing while processing? Maybe not necessary for the input table.
