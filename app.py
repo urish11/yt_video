@@ -40,11 +40,11 @@ SUBTITLE_BG_COLOR = 'rgba(0, 0, 0, 0.6)' # Semi-transparent black
 # --- Load Secrets ---
 try:
     youtube_api_key_secret = st.secrets["YOUTUBE_API_KEY"] # Assuming key name in secrets
-    openai_api_key = st.secrets["openai_api_key"]
-    aws_access_key = st.secrets["aws_access_key"]
-    aws_secret_key = st.secrets["aws_secret_key"]
-    s3_bucket_name = st.secrets["s3_bucket_name"]
-    s3_region = st.secrets["s3_region"]
+    openai_api_key = st.secrets["GPT_API_KEY "]
+    aws_access_key = st.secrets["AWS_ACCESS_KEY_ID "]
+    aws_secret_key = st.secrets["AWS_SECRET_ACCESS_KEY "]
+    s3_bucket_name = st.secrets["S3_BUCKET_NAME "]
+    s3_region = st.secrets["AWS_REGION "]
 
     # --- Initialize Clients ---
     @st.cache_resource
