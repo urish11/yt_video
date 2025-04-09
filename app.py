@@ -645,7 +645,7 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic):
         # Consider downloading locally first if direct URL access is flaky
         try:
             # Let MoviePy handle the URL directly
-            base_video = VideoFileClip(base_video_url, audio=False, target_resolution=(360, 640)) # Target 720p vertical
+            base_video = VideoFileClip(base_video_url, audio=False) # Target 720p vertical
             # Or download first if direct URL fails often:
             # with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as temp_vid_file:
             #     response = requests.get(base_video_url, stream=True)
