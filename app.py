@@ -918,6 +918,7 @@ if st.session_state.video_to_generate:
             )
             if not final_video_path:
                 raise ValueError("Video processing (MoviePy) failed.")
+                input()
             gen_placeholder.status(f"4/5: Uploading final video '{final_filename}' to S3...", state="running", expanded=True)
 
 
