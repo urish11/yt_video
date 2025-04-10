@@ -73,7 +73,7 @@ SUBTITLE_FONT_SIZE = 50 # Adjust as needed
 SUBTITLE_WORDS_PER_GROUP = 2 # Group words for subtitles
 SUBTITLE_COLOR = '#FFFF00' # Yellow
 SUBTITLE_BG_COLOR = 'rgba(0, 0, 0, 0.6)' # Semi-transparent black
-st.set_page_config(layout="wide", page_title="YouTube Select & Generate")
+st.set_page_config(layout="wide", page_title="YouTube Video Generator", page_icon="🎥")
 
 # --- Load Secrets ---
 try:
@@ -1080,13 +1080,13 @@ st.sidebar.write("Enter Search Terms and Topics:")
 edited_df = st.sidebar.data_editor(
     st.session_state.search_data,
     num_rows="dynamic",
-    column_config={
-        "Search Term": st.column_config.TextColumn("YouTube Search Term", required=True),
-        "Topic": st.column_config.TextColumn("Topic for TTS Script", required=True),
-        "Language": st.column_config.TextColumn("Language", required=True),
-        "Video Results": st.column_config.NumberColumn("Vid Results", required=True)
+    # column_config={
+    #     "Search Term": st.column_config.TextColumn("YouTube Search Term", required=True),
+    #     "Topic": st.column_config.TextColumn("Topic for TTS Script", required=True),
+    #     "Language": st.column_config.TextColumn("Language", required=True),
+    #     "Video Results": st.column_config.NumberColumn("Vid Results", required=True)
         
-    },
+    # },
     use_container_width=True,
     key="search_topic_editor",
     # Disable editing while processing? Maybe not necessary for the input table.
