@@ -1182,14 +1182,14 @@ st.sidebar.warning("Video generation can take several minutes per video.", icon=
 if search_button:
     # Validate input data
     valid_input = True
-    if edited_df.empty:
+    if st.session_state.search_data.empty:
         st.sidebar.warning("Please add at least one Search Term and Topic.", icon="⚠️")
         valid_input = False
     # Use .ne('') for checking empty strings in pandas
-    if edited_df['Search Term'].isnull().any() or edited_df['Search Term'].eq('').any():
+    if st.session_state.search_data['Search Term'].isnull().any() or edited_df['Search Term'].eq('').any():
         st.sidebar.warning("Search Term cannot be empty.", icon="⚠️")
         valid_input = False
-    if edited_df['Topic'].isnull().any() or edited_df['Topic'].eq('').any():
+    if st.session_state.search_data['Topic'].isnull().any() or edited_df['Topic'].eq('').any():
         st.sidebar.warning("Topic cannot be empty.", icon="⚠️")
         valid_input = False
 
