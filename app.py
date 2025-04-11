@@ -1084,16 +1084,16 @@ def sync_search_data():
     clean_data = [row for row in raw_data if isinstance(row, dict)]
 
     # Remove fully empty rows (all values are empty/None)
-    clean_data = [row for row in clean_data if any(v not in [None, '', []] for v in row.values())]
+    # clean_data = [row for row in clean_data if any(v not in [None, '', []] for v in row.values())]
 
     # If table is completely cleared, add a default row
-    if not clean_data:
-        clean_data = [{
-            "Topic": "",
-            "Search Term": "",
-            "Language": "English",
-            "Video Results": 5
-        }]
+    # if not clean_data:
+    #     clean_data = [{
+    #         "Topic": "",
+    #         "Search Term": "",
+    #         "Language": "English",
+    #         "Video Results": 5
+    #     }]
 
     # Enforce column order and types
     df = pd.DataFrame(clean_data)
