@@ -1093,7 +1093,8 @@ edited_df = st.sidebar.data_editor(
     # disabled=st.session_state.batch_processing_active
 )
 # Update session state with edited data
-st.session_state.search_data = edited_df
+if edited_df.equals(st.session_state.search_data) is False:
+    st.session_state.search_data = edited_df.copy()
 
 # --- Action Buttons (Sidebar) ---
 col1, col2 = st.sidebar.columns(2)
