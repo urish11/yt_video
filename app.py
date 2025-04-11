@@ -1203,8 +1203,22 @@ if search_button:
         st.session_state.batch_total_count = 0
         st.session_state.batch_processed_count = 0
         # Store the dataframe used for this search
-        st.session_state.current_search_df = st.session_state.search_data.copy()
-        st.rerun() # Rerun to start the search process below
+        raw_data = st.session_state.search_topic_editor
+        
+        # Clean + convert directly here
+        clean_data = [row for row in raw_data if isinstance(row, dict)]
+        clean_data = [row for row in clean_data if any(v not in [None, '', []] for v in row.values())]
+        df = pd.DataFrame(clean_data)
+        
+        # Ensure column order and fill
+        expected_cols = ["Topic", "Search Term", "Language", "Video Results"]
+        for col in expected_cols:
+            if col not in df.columns:
+                df[col] = ""
+        df = df[expected_cols]
+
+# Store clean version for the search process
+st.session_state.current_search_df = df        st.rerun() # Rerun to start the search process below
     else:
         st.session_state.search_triggered = False # Ensure search doesn't proceed
 
