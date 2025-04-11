@@ -1078,7 +1078,8 @@ st.sidebar.header("Inputs & Actions")
 
 st.sidebar.write("Enter Search Terms and Topics:")
 def sync_search_data():
-    st.session_state.search_data = st.session_state.search_topic_editor.copy()
+    st.session_state.search_data = pd.DataFrame(st.session_state.search_topic_editor)
+
 
 # Use data_editor with on_change callback
 st.sidebar.data_editor(
