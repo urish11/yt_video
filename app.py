@@ -1077,21 +1077,18 @@ st.sidebar.header("Inputs & Actions")
 # API key is handled via secrets
 
 st.sidebar.write("Enter Search Terms and Topics:")
-edited_df = st.sidebar.data_editor(
+def sync_search_data():
+    st.session_state.search_data = st.session_state.search_topic_editor.copy()
+
+# Use data_editor with on_change callback
+st.sidebar.data_editor(
     st.session_state.search_data,
     num_rows="dynamic",
-    # column_config={
-    #     "Search Term": st.column_config.TextColumn("YouTube Search Term", required=True),
-    #     "Topic": st.column_config.TextColumn("Topic for TTS Script", required=True),
-    #     "Language": st.column_config.TextColumn("Language", required=True),
-    #     "Video Results": st.column_config.NumberColumn("Vid Results", required=True)
-        
-    # },
     use_container_width=True,
     key="search_topic_editor",
-    # Disable editing while processing? Maybe not necessary for the input table.
-    # disabled=st.session_state.batch_processing_active
+    on_change=sync_search_data
 )
+
 # Update session state with edited data
 if edited_df.equals(st.session_state.search_data) is False:
     st.session_state.search_data = edited_df.copy()
