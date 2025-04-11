@@ -1090,7 +1090,7 @@ st.sidebar.data_editor(
 )
 
 # Update session state with edited data
-st.session_state.search_data = edited_df
+# st.session_state.search_data = edited_df
 
 # --- Action Buttons (Sidebar) ---
 col1, col2 = st.sidebar.columns(2)
