@@ -1082,7 +1082,7 @@ def sync_search_data():
 
     # Keep only dicts
     clean_data = [row for row in raw_data if isinstance(row, dict)]
-
+    st.text(clean_data)
     # Remove fully empty rows (all values are empty/None)
     # clean_data = [row for row in clean_data if any(v not in [None, '', []] for v in row.values())]
 
