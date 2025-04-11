@@ -1186,10 +1186,10 @@ if search_button:
         st.sidebar.warning("Please add at least one Search Term and Topic.", icon="⚠️")
         valid_input = False
     # Use .ne('') for checking empty strings in pandas
-    if st.session_state.search_data['Search Term'].isnull().any() or edited_df['Search Term'].eq('').any():
+    if st.session_state.search_data['Search Term'].isnull().any() or st.session_state.search_data['Search Term'].eq('').any():
         st.sidebar.warning("Search Term cannot be empty.", icon="⚠️")
         valid_input = False
-    if st.session_state.search_data['Topic'].isnull().any() or edited_df['Topic'].eq('').any():
+    if st.session_state.search_data['Topic'].isnull().any() or st.session_state.search_data['Topic'].eq('').any():
         st.sidebar.warning("Topic cannot be empty.", icon="⚠️")
         valid_input = False
 
