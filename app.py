@@ -1078,7 +1078,16 @@ st.sidebar.header("Inputs & Actions")
 
 st.sidebar.write("Enter Search Terms and Topics:")
 def sync_search_data():
-    st.session_state.search_data = pd.DataFrame(st.session_state.search_topic_editor)
+    raw_data = st.session_state.search_topic_editor
+
+    # Filter out anything that isn't a dictionary
+    clean_data = [row for row in raw_data if isinstance(row, dict)]
+
+    # Optional: Drop empty rows where all values are blank
+    clean_data = [row for row in clean_data if any(v not in [None, '', []] for v in row.values())]
+
+    st.session_state.search_data = pd.DataFrame(clean_data)
+
 
 
 # Use data_editor with on_change callback
