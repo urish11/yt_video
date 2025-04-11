@@ -1182,6 +1182,7 @@ st.sidebar.warning("Video generation can take several minutes per video.", icon=
 if search_button:
     # Validate input data
     valid_input = True
+    sync_search_data()
     # if st.session_state.search_data.empty:
     #     st.sidebar.warning("Please add at least one Search Term and Topic.", icon="⚠️")
     #     valid_input = False
