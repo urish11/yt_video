@@ -1114,7 +1114,7 @@ st.sidebar.data_editor(
     num_rows="dynamic",
     use_container_width=True,
     key="search_topic_editor",
-    on_change=sync_search_data
+    # on_change=sync_search_data
 )
 
 # Update session state with edited data
@@ -1181,49 +1181,86 @@ st.sidebar.warning("Video generation can take several minutes per video.", icon=
 
 # 1. Handle Search Button Click
 if search_button:
-    # Validate input data
-    valid_input = True
-    sync_search_data()
-    # if st.session_state.search_data.empty:
-    #     st.sidebar.warning("Please add at least one Search Term and Topic.", icon="⚠️")
-    #     valid_input = False
-    # # Use .ne('') for checking empty strings in pandas
-    # if st.session_state.search_data['Search Term'].isnull().any() or st.session_state.search_data['Search Term'].eq('').any():
-    #     st.sidebar.warning("Search Term cannot be empty.", icon="⚠️")
-    #     valid_input = False
-    # if st.session_state.search_data['Topic'].isnull().any() or st.session_state.search_data['Topic'].eq('').any():
-    #     st.sidebar.warning("Topic cannot be empty.", icon="⚠️")
-    #     valid_input = False
+    # --- Get data DIRECTLY from the editor's state ---
+    raw_data = st.session_state.search_topic_editor
 
+    # --- Perform Validation and Cleaning HERE ---
+    valid_input = True
+    search_df = pd.DataFrame() # Initialize empty DataFrame
+
+    if not raw_data: # Check if the editor state is empty
+         st.sidebar.warning("Please add at least one Search Term and Topic.", icon="⚠️")
+         valid_input = False
+    else:
+        # Keep only dicts (robustness)
+        clean_data = [row for row in raw_data if isinstance(row, dict)]
+
+        # Remove fully empty rows (all values are empty/None/empty list)
+        clean_data = [row for row in clean_data if any(v not in [None, '', []] for v in row.values())]
+
+        if not clean_data:
+             st.sidebar.warning("Please add at least one non-empty Search Term and Topic row.", icon="⚠️")
+             valid_input = False
+        else:
+            search_df = pd.DataFrame(clean_data)
+
+            # Ensure required columns exist and set order
+            expected_cols = ["Topic", "Search Term", "Language", "Video Results"]
+            for col in expected_cols:
+                if col not in search_df.columns:
+                    # Decide how to handle missing columns, e.g., add with default
+                    if col == "Language":
+                        search_df[col] = "English"
+                    elif col == "Video Results":
+                         search_df[col] = 5 # Default number of results
+                    else:
+                         search_df[col] = "" # Default empty string
+
+            # Ensure correct data types (especially for 'Video Results')
+            try:
+                # Attempt conversion, coerce errors to NaN, fill NaN with 5, convert to int
+                search_df['Video Results'] = pd.to_numeric(search_df['Video Results'], errors='coerce').fillna(5).astype(int)
+                # Ensure results are at least 1
+                search_df['Video Results'] = search_df['Video Results'].apply(lambda x: max(1, x))
+            except Exception as e:
+                st.sidebar.warning(f"Could not process 'Video Results' column, using default (5). Error: {e}", icon="⚠️")
+                search_df['Video Results'] = 5 # Fallback default on error
+
+            # Ensure column order
+            search_df = search_df[expected_cols]
+
+            # --- Add specific validation checks ---
+            if search_df['Search Term'].isnull().any() or search_df['Search Term'].astype(str).str.strip().eq('').any():
+                st.sidebar.warning("Search Term cannot be empty.", icon="⚠️")
+                valid_input = False
+            if search_df['Topic'].isnull().any() or search_df['Topic'].astype(str).str.strip().eq('').any():
+                st.sidebar.warning("Topic cannot be empty.", icon="⚠️")
+                valid_input = False
+            # Add more validation if needed (e.g., check language values)
+
+    # --- Proceed if input is valid ---
     if valid_input:
         st.session_state.search_triggered = True
-        st.session_state.api_search_results = {} # Clear previous API results on new search
-        # Don't clear selected videos on new search
-        # Reset generation state if a new search is performed
+        st.session_state.api_search_results = {} # Clear previous API results
+        # Reset generation state
         st.session_state.generation_queue = []
         st.session_state.batch_processing_active = False
         st.session_state.batch_total_count = 0
         st.session_state.batch_processed_count = 0
-        # Store the dataframe used for this search
-        raw_data = st.session_state.search_topic_editor
-        
-        # Clean + convert directly here
-        clean_data = [row for row in raw_data if isinstance(row, dict)]
-        clean_data = [row for row in clean_data if any(v not in [None, '', []] for v in row.values())]
-        df = pd.DataFrame(clean_data)
-        
-        # Ensure column order and fill
-        expected_cols = ["Topic", "Search Term", "Language", "Video Results"]
-        for col in expected_cols:
-            if col not in df.columns:
-                df[col] = ""
-        df = df[expected_cols]
 
-        # Store clean version for the search process
-        st.session_state.current_search_df = df 
-        st.rerun() # Rerun to start the search process below
+        # Store the CLEANED and VALIDATED dataframe for the search process
+        st.session_state.current_search_df = search_df
+
+        # OPTIONAL: Update search_data if you need the cleaned version to persist
+        # in the editor for the next run (might cause a visual flicker).
+        # Often better to just let the editor keep its raw state until next search.
+        # st.session_state.search_data = search_df
+
+        st.rerun() # Rerun to start the search process
     else:
-        st.session_state.search_triggered = False # Ensure search doesn't proceed
+        # Ensure search doesn't proceed if validation fails
+        st.session_state.search_triggered = False
+
 
 
 # 2. Perform API Search if Triggered
