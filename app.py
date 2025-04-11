@@ -1181,106 +1181,162 @@ st.sidebar.warning("Video generation can take several minutes per video.", icon=
 
 # 1. Handle Search Button Click
 if search_button:
-    # --- Get data DIRECTLY from the editor's state ---
-    raw_data = st.session_state.search_topic_editor
+    # --- Get data from the editor's state (changes) AND the original data ---
+    editor_changes = st.session_state.search_topic_editor # Dict with added/edited/deleted
+    # Get the DataFrame used to initialize the editor in the *previous* run
+    # Ensure it's a DataFrame, provide default if it's the very first run
+    if 'search_data' not in st.session_state or not isinstance(st.session_state.search_data, pd.DataFrame):
+         st.session_state.search_data = pd.DataFrame(columns=["Topic", "Search Term", "Language", "Video Results"]) # Ensure columns exist
+    original_df = st.session_state.search_data
 
     # --- Add Debugging Output ---
     st.sidebar.write("--- Debugging Input ---")
-    st.sidebar.write("Raw data from editor (`st.session_state.search_topic_editor`):")
-    st.sidebar.json(raw_data if raw_data is not None else "None") # Display raw data
+    st.sidebar.write("Original DataFrame used for Editor (`st.session_state.search_data`):")
+    st.sidebar.dataframe(original_df)
+    st.sidebar.write("Editor Changes Dict (`st.session_state.search_topic_editor`):")
+    st.sidebar.json(editor_changes if editor_changes is not None else "None")
     st.sidebar.write("------------------------")
     # --- End Debugging Output ---
 
-
     valid_input = True
-    search_df = pd.DataFrame() # Initialize
+    current_rows_list = [] # Initialize list to hold the reconstructed rows
 
-    # Check if raw_data is fundamentally empty or not a list
-    if not raw_data or not isinstance(raw_data, list):
-        st.sidebar.warning("Please add at least one row to the search table.", icon="⚠️")
-        valid_input = False
-    else:
-        # Basic filter: ensure it's a list of dictionaries
-        potential_data = [row for row in raw_data if isinstance(row, dict)]
-
-        if not potential_data:
-             st.sidebar.warning("Table data is not in the expected format (list of dicts).", icon="⚠️")
-             valid_input = False
+    # --- Reconstruct the current state of the table ---
+    try:
+        # Start with the original data as a list of dicts
+        # Handle potential empty initial DataFrame
+        if not original_df.empty:
+            current_rows_list = original_df.to_dict('records')
         else:
-            # --- Create DataFrame FIRST ---
+            current_rows_list = []
+
+        # --- Apply Changes ---
+        # It's often easier to work with a DataFrame for applying indices
+        temp_df = original_df.copy()
+
+        # Apply deletions (indices are relative to the DataFrame *before* additions/edits of this cycle)
+        indices_to_delete = editor_changes.get("deleted_rows", [])
+        if indices_to_delete:
+             # Ensure indices are valid before dropping
+             valid_indices_to_delete = [idx for idx in indices_to_delete if idx < len(temp_df)]
+             if len(valid_indices_to_delete) != len(indices_to_delete):
+                  st.sidebar.warning("Some deleted row indices were invalid.")
+             if valid_indices_to_delete:
+                  temp_df = temp_df.drop(index=valid_indices_to_delete).reset_index(drop=True)
+
+
+        # Apply edits (key is index string, value is dict of changed columns)
+        edits = editor_changes.get("edited_rows", {})
+        if edits:
+             for index_str, changes in edits.items():
+                 try:
+                      index = int(index_str)
+                      if 0 <= index < len(temp_df):
+                           for col, value in changes.items():
+                               if col in temp_df.columns:
+                                    temp_df.loc[index, col] = value
+                               else:
+                                    st.sidebar.warning(f"Attempted to edit non-existent column '{col}' at index {index}.")
+                      else:
+                           st.sidebar.warning(f"Attempted to edit non-existent index: {index}.")
+                 except ValueError:
+                      st.sidebar.warning(f"Invalid index format in edited_rows: {index_str}")
+
+
+        # Apply additions (list of new row dicts)
+        additions = editor_changes.get("added_rows", [])
+        if additions:
+             # Ensure added rows have expected columns, fill missing if necessary
+             processed_additions = []
+             expected_cols_set = set(["Topic", "Search Term", "Language", "Video Results"])
+             for new_row in additions:
+                 # Ensure it's a dict
+                 if isinstance(new_row, dict):
+                      # Add missing keys with default values
+                      for col in expected_cols_set:
+                           if col not in new_row:
+                               if col == "Language": new_row[col] = "English"
+                               elif col == "Video Results": new_row[col] = 5
+                               else: new_row[col] = ""
+                      processed_additions.append(new_row)
+                 else:
+                     st.sidebar.warning(f"Skipping invalid item in added_rows: {new_row}")
+
+             if processed_additions:
+                  add_df = pd.DataFrame(processed_additions)
+                  temp_df = pd.concat([temp_df, add_df], ignore_index=True)
+
+        # The final DataFrame reflecting the current state
+        final_current_df = temp_df
+
+    except Exception as e:
+        st.sidebar.error(f"Error reconstructing table state from changes: {e}", icon="🆘")
+        import traceback
+        st.sidebar.text(traceback.format_exc()) # More detailed error
+        valid_input = False
+
+
+    # --- Proceed with validation ONLY if reconstruction succeeded ---
+    if valid_input:
+        st.sidebar.write("--- Debugging Reconstructed Data ---")
+        st.sidebar.write("Reconstructed DataFrame (`final_current_df`):")
+        st.sidebar.dataframe(final_current_df)
+        st.sidebar.write("-----------------------------------")
+
+        # Check if the *reconstructed* DataFrame is empty
+        if final_current_df.empty:
+            st.sidebar.warning("The table appears empty after applying edits/additions/deletions.", icon="⚠️")
+            valid_input = False
+        else:
+            # --- Assign the reconstructed DF to search_df for further validation ---
+            search_df = final_current_df
+
+            # --- Perform subsequent validation steps (Column handling, Type Conversion, Empty Check, Final Validation) ---
+            # (Use the same robust validation block from the previous answer here, operating on 'search_df')
+            # Example snippet:
+            expected_cols = ["Topic", "Search Term", "Language", "Video Results"]
+            for col in expected_cols:
+                 if col not in search_df.columns:
+                     if col == "Language": search_df[col] = "English"
+                     elif col == "Video Results": search_df[col] = 5
+                     else: search_df[col] = ""
+            search_df = search_df[expected_cols]
             try:
-                search_df = pd.DataFrame(potential_data)
-            except Exception as df_err:
-                 st.sidebar.error(f"Error creating DataFrame from editor data: {df_err}", icon="🆘")
+                search_df['Video Results'] = pd.to_numeric(search_df['Video Results'], errors='coerce').fillna(5).astype(int)
+                search_df['Video Results'] = search_df['Video Results'].apply(lambda x: max(1, x))
+            except Exception as e:
+                search_df['Video Results'] = 5
+            search_df['Topic'] = search_df['Topic'].fillna('').astype(str)
+            search_df['Search Term'] = search_df['Search Term'].fillna('').astype(str)
+            is_row_meaningful = (search_df['Topic'].str.strip() != '') | (search_df['Search Term'].str.strip() != '')
+            search_df_filtered = search_df[is_row_meaningful].copy()
+            if search_df_filtered.empty:
+                 st.sidebar.warning("Please ensure at least one row has a non-empty value for 'Topic' or 'Search Term'.", icon="⚠️")
                  valid_input = False
-
-            if valid_input: # Proceed only if DataFrame creation succeeded
-                # --- Handle Columns and Defaults SECOND ---
-                expected_cols = ["Topic", "Search Term", "Language", "Video Results"]
-                for col in expected_cols:
-                    if col not in search_df.columns:
-                        # Assign defaults robustly
-                        if col == "Language": search_df[col] = "English"
-                        elif col == "Video Results": search_df[col] = 5
-                        else: search_df[col] = "" # Topic/Search Term default to empty string
-
-                # Select and order columns NOW
-                search_df = search_df[expected_cols]
-
-                # Convert types (BEFORE final non-empty check)
-                try:
-                    search_df['Video Results'] = pd.to_numeric(search_df['Video Results'], errors='coerce').fillna(5).astype(int)
-                    search_df['Video Results'] = search_df['Video Results'].apply(lambda x: max(1, x))
-                except Exception as e:
-                    st.sidebar.warning(f"Could not process 'Video Results', using default (5). Error: {e}", icon="⚠️")
-                    search_df['Video Results'] = 5
-
-                # Ensure Topic/Search Term are strings for stripping
-                search_df['Topic'] = search_df['Topic'].fillna('').astype(str)
-                search_df['Search Term'] = search_df['Search Term'].fillna('').astype(str)
-
-                # --- Filter Empty Rows based on CORE fields THIRD ---
-                # Define a row as non-empty if EITHER Topic OR Search Term has content after stripping
-                is_row_meaningful = (search_df['Topic'].str.strip() != '') | (search_df['Search Term'].str.strip() != '')
-                search_df_filtered = search_df[is_row_meaningful].copy() # Keep only meaningful rows
-
-                # --- Add Debugging Output ---
-                st.sidebar.write("--- Debugging Processed Data ---")
-                st.sidebar.write("DataFrame after handling defaults and types:")
-                st.sidebar.dataframe(search_df) # Show DF *before* final filtering
-                st.sidebar.write(f"Meaningful rows filter applied (Topic or Search Term non-empty after strip): Kept {len(search_df_filtered)} rows.")
-                st.sidebar.dataframe(search_df_filtered) # Show DF *after* final filtering
-                st.sidebar.write("-------------------------------")
-                # --- End Debugging Output ---
-
-
-                if search_df_filtered.empty:
-                    # THIS is the message that should trigger if *all* rows lack meaningful Topic/Search Term
-                    st.sidebar.warning("Please ensure at least one row has a non-empty value for 'Topic' or 'Search Term'.", icon="⚠️")
-                    valid_input = False
-                else:
-                    # Use the *filtered* DataFrame for final checks and the search
-                    search_df = search_df_filtered
-
-                    # --- Final Specific Validation FOURTH (on the filtered data) ---
-                    if search_df['Search Term'].str.strip().eq('').any():
-                        st.sidebar.warning("One or more valid rows have an empty Search Term.", icon="⚠️")
-                        valid_input = False
-                    if search_df['Topic'].str.strip().eq('').any():
-                        st.sidebar.warning("One or more valid rows have an empty Topic.", icon="⚠️")
-                        valid_input = False
+            else:
+                 search_df = search_df_filtered # Use filtered DF
+                 if search_df['Search Term'].str.strip().eq('').any():
+                     st.sidebar.warning("One or more valid rows have an empty Search Term.", icon="⚠️")
+                     valid_input = False
+                 if search_df['Topic'].str.strip().eq('').any():
+                     st.sidebar.warning("One or more valid rows have an empty Topic.", icon="⚠️")
+                     valid_input = False
+            # --- End example snippet ---
 
     # --- Proceed if input is valid ---
     if valid_input:
-        # ... (rest of your search triggering logic) ...
+        st.sidebar.success("Input valid, proceeding with search.") # Feedback
         st.session_state.search_triggered = True
         st.session_state.api_search_results = {}
         # ... reset generation state ...
         st.session_state.current_search_df = search_df # Use the final, validated DF
+
+        # **IMPORTANT**: Update the base data for the *next* initialization of the editor
+        st.session_state.search_data = search_df.copy() # Use .copy() for safety
+
         st.rerun()
     else:
         st.session_state.search_triggered = False # Ensure search doesn't proceed
-
 
 
 # 2. Perform API Search if Triggered
