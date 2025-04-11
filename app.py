@@ -1218,7 +1218,8 @@ if search_button:
         df = df[expected_cols]
 
 # Store clean version for the search process
-st.session_state.current_search_df = df        st.rerun() # Rerun to start the search process below
+st.session_state.current_search_df = df 
+st.rerun() # Rerun to start the search process below
     else:
         st.session_state.search_triggered = False # Ensure search doesn't proceed
 
