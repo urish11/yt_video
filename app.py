@@ -1203,7 +1203,7 @@ if search_button:
         st.session_state.batch_total_count = 0
         st.session_state.batch_processed_count = 0
         # Store the dataframe used for this search
-        st.session_state.current_search_df = session_state.search_data.copy()
+        st.session_state.current_search_df = st.session_state.search_data.copy()
         st.rerun() # Rerun to start the search process below
     else:
         st.session_state.search_triggered = False # Ensure search doesn't proceed
