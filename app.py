@@ -1103,6 +1103,7 @@ def sync_search_data():
             df[col] = ""
 
     st.session_state.search_data = df[expected_cols]
+    st.text(st.session_state.search_data)
 
 
 
