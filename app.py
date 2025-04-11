@@ -204,52 +204,6 @@ def create_topic_summary_dataframe(selected_videos_dict):
 
     return df_final
 
-def create_vertical_youtube_embed(video_id: str) -> str:
-    """Generates HTML/CSS for a responsive 9:16 YouTube embed."""
-    # Standard YouTube embed URL format
-    # Remove 'shorts/' prefix if present, as embed URL doesn't use it
-    clean_video_id = video_id.replace('shorts/', '')
-    embed_url = f"https://www.youtube.com/embed/{clean_video_id}"
-
-    # CSS trick for responsive aspect ratio (16:9 height is 56.25% of width)
-    # For 9:16, height is (16/9) * 100% = 177.777...% of the width
-    style_container = """
-        position: relative;
-        width: 100%; /* Fills the column width */
-        overflow: hidden;
-        padding-top: 177.78%; /* 16:9 aspect ratio */
-        background: #f0f0f0; /* Optional: subtle background */
-        border-radius: 8px; /* Optional: rounded corners */
-        margin-bottom: 10px; /* Space below embed */
-    """
-    style_iframe = """
-        position: absolute;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        right: 0;
-        width: 100%;
-        height: 100%;
-        border: none;
-    """
-    html_code = f"""
-    <div style="{style_container}">
-        <iframe
-            style="{style_iframe}"
-            src="{embed_url}"
-            title="YouTube video player {video_id}"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            referrerpolicy="strict-origin-when-cross-origin"
-            allowfullscreen>
-        </iframe>
-    </div>
-    """
-    return html_code
-
-
-
-
 def search_youtube(api_key, query, max_results=5):
     """
     Performs a Youtube search using the v3 API.
@@ -1446,130 +1400,126 @@ if st.session_state.batch_processing_active:
         st.progress(processed / total)
 
 
-# 3. Display Search Results (Modified for 3 columns, 9:16 embeds)
+# 3. Display Search Results
 if st.session_state.api_search_results:
     st.subheader("Search Results & Video Selection")
-
     # Display results from cache
     for term, result_data in st.session_state.api_search_results.items():
         videos = result_data['videos']
         topic = result_data['topic'] # Retrieve the associated topic
         lang = result_data['lang'] # Retrieve the associated language
-
-        # Use a container for each search term's results
-        with st.container(border=True):
+        container = st.container(border=True)
+        with container:
             st.subheader(f"Results for: \"{term}\" (Topic: \"{topic}\")")
-
             if not videos:
                 st.write("No videos found via API.")
                 continue
 
-            num_videos = len(videos)
-            # Iterate through videos in steps of 3 for rows
-            for i in range(0, num_videos, 3):
-                # Create 3 columns for the current row
-                cols = st.columns(3)
+            for video in videos:
+                video_id = video['videoId']
+                video_title = video['title']
+                standard_video_url = video['url'] # Use the standard URL from search results
+                unique_key_base = f"{term}_{video_id}" # More robust key
 
-                # Loop through the 3 potential videos for this row
-                for j in range(3):
-                    video_index = i + j
-                    # Check if the video index is valid
-                    if video_index < num_videos:
-                        video = videos[video_index]
-                        # Use the j-th column for this video
-                        with cols[j]:
-                            video_id = video['videoId']
-                            video_title = video['title']
-                            # Standard *watch* URL (might be needed for links)
-                            standard_watch_url = video['url']
-                            unique_key_base = f"{term}_{video_id}_{video_index}" # Make key more unique
+                # --- Check Video State ---
+                is_selected = video_id in st.session_state.selected_videos
+                video_state = st.session_state.selected_videos.get(video_id, {})
+                has_dlp_info = is_selected and video_state.get('Direct URL') and not video_state.get('yt_dlp_error')
+                is_fetching_dlp = is_selected and video_state.get('fetching_dlp', False)
+                dlp_error = video_state.get('yt_dlp_error')
 
-                            # --- Display 9:16 Embed ---
-                            st.markdown(create_vertical_youtube_embed(video_id), unsafe_allow_html=True)
+                # NEW: Check generation status (part of batch or completed/failed)
+                is_in_queue = video_id in st.session_state.generation_queue
+                is_currently_processing = st.session_state.batch_processing_active and st.session_state.generation_queue and st.session_state.generation_queue[0] == video_id # Check if it's the *next* item
+                generation_error = video_state.get('Generation Error')
+                s3_url = video_state.get('Generated S3 URL')
+                is_completed = bool(s3_url)
+                is_failed = bool(generation_error)
 
-                            # --- Display Title and Info ---
-                            st.write(f"**{video_title}**")
-                            st.caption(f"ID: {video_id} | [Watch on YouTube]({standard_watch_url})")
+                col_vid, col_actions = st.columns([3, 1])
 
-                            # --- Check Video State (Copied from original logic) ---
-                            is_selected = video_id in st.session_state.selected_videos
-                            video_state = st.session_state.selected_videos.get(video_id, {})
-                            has_dlp_info = is_selected and video_state.get('Direct URL') and not video_state.get('yt_dlp_error')
-                            is_fetching_dlp = is_selected and video_state.get('fetching_dlp', False)
-                            dlp_error = video_state.get('yt_dlp_error')
-                            is_in_queue = video_id in st.session_state.generation_queue
-                            is_currently_processing = st.session_state.batch_processing_active and st.session_state.generation_queue and st.session_state.generation_queue[0] == video_id
-                            generation_error = video_state.get('Generation Error')
-                            s3_url = video_state.get('Generated S3 URL')
-                            is_completed = bool(s3_url)
-                            is_failed = bool(generation_error)
+                with col_vid:
+                    st.write(f"**{video_title}**")
+                    st.caption(f"ID: {video_id} | [Watch on YouTube]({standard_video_url})")
+                    try:
+                        # Use st.video with the standard URL - works better generally
+                        st.video(standard_video_url)
+                    except Exception as e:
+                        st.warning(f"Could not embed video player: {standard_video_url}. Error: {e}", icon="🎬")
 
-                            # --- Select / Deselect Button (Copied from original logic) ---
-                            select_button_label = "???" # Placeholder
-                            select_button_type = "secondary"
-                            select_disabled = st.session_state.batch_processing_active # Disable during batch
+                with col_actions:
+                    # --- Select / Deselect Button ---
+                    select_button_label = "???" # Placeholder
+                    select_button_type = "secondary"
+                    select_disabled = st.session_state.batch_processing_active # Disable selection changes during batch processing
 
-                            if is_selected:
-                                select_button_label = "✅ Deselect"
-                                select_button_type = "secondary"
-                            elif is_fetching_dlp:
-                                 select_button_label = "⏳ Fetching..."
-                                 select_button_type = "secondary"
-                                 select_disabled = True # Also disable if fetching
+                    if is_selected:
+                        select_button_label = "✅ Deselect"
+                        select_button_type = "secondary"
+                    elif is_fetching_dlp:
+                         select_button_label = "⏳ Fetching..."
+                         select_button_type = "secondary"
+                         select_disabled = True # Also disable if fetching
+                    else:
+                        select_button_label = "➕ Select"
+                        select_button_type = "primary"
+
+                    if st.button(select_button_label, key=f"select_{unique_key_base}", type=select_button_type, use_container_width=True, disabled=select_disabled):
+                        if is_selected:
+                            del st.session_state.selected_videos[video_id]
+                            st.toast(f"Deselected: {video_title}", icon="➖")
+                            # Remove from queue if it was there
+                            if video_id in st.session_state.generation_queue:
+                                st.session_state.generation_queue.remove(video_id)
+                                st.session_state.batch_total_count = len(st.session_state.generation_queue) # Adjust total if needed? Or maybe keep original total? Let's keep original for now.
+                        else:
+                            # Mark as fetching and add basic info
+                            st.session_state.selected_videos[video_id] = {
+                                'Search Term': term,
+                                'Topic': topic, # Store the topic
+                                'Language': lang, # Store the language
+                                'Video Title': video_title,
+                                'Video ID': video_id,
+                                'Standard URL': standard_video_url,
+                                'fetching_dlp': True, # Mark as fetching
+                                'Direct URL': None,
+                                'Format Details': None,
+                                'yt_dlp_error': None,
+                                'Generated S3 URL': None,
+                                'Generation Error': None,
+                                'Status': 'Selected, Fetching URL...' # Add a general status
+                            }
+                            st.toast(f"Selected: {video_title}. Fetching direct URL...", icon="⏳")
+                        st.rerun()
+
+                    # --- Display Status (yt-dlp and Generation) ---
+                    status_container = st.container(border=False) # Use container for status messages
+                    if is_selected:
+                        if is_fetching_dlp:
+                             status_container.info("⏳ Fetching URL...", icon="📡")
+                        elif dlp_error:
+                             status_container.error(f"URL Error: {dlp_error}", icon="⚠️")
+                        elif not has_dlp_info and not is_fetching_dlp:
+                             status_container.warning("URL fetch incomplete.", icon="❓")
+                        elif has_dlp_info:
+                            # Now check generation status if URL is ready
+                            if is_currently_processing:
+                                status_container.info("⚙️ Processing...", icon="⏳")
+                            elif is_in_queue:
+                                 status_container.info("🕒 Queued", icon="🕒")
+                            elif is_completed:
+                                status_container.success("✔️ Generated!", icon="🎉")
+                                st.link_button("View on S3", url=s3_url, use_container_width=True)
+                            elif is_failed:
+                                status_container.error(f"❌ Failed: {generation_error[:50]}...", icon="🔥") # Show truncated error
                             else:
-                                select_button_label = "➕ Select"
-                                select_button_type = "primary"
+                                # Ready, but not processing/queued/done/failed yet
+                                status_container.success("✅ Ready to Process", icon="👍")
 
-                            if st.button(select_button_label, key=f"select_{unique_key_base}", type=select_button_type, use_container_width=True, disabled=select_disabled):
-                                if is_selected:
-                                    del st.session_state.selected_videos[video_id]
-                                    st.toast(f"Deselected: {video_title}", icon="➖")
-                                    if video_id in st.session_state.generation_queue:
-                                        st.session_state.generation_queue.remove(video_id)
-                                        # Consider if batch_total_count needs adjustment here
-                                else:
-                                    # Mark as fetching and add basic info
-                                    st.session_state.selected_videos[video_id] = {
-                                        'Search Term': term, 'Topic': topic, 'Language': lang,
-                                        'Video Title': video_title, 'Video ID': video_id,
-                                        'Standard URL': standard_watch_url, # Store watch URL
-                                        'fetching_dlp': True, 'Direct URL': None,
-                                        'Format Details': None, 'yt_dlp_error': None,
-                                        'Generated S3 URL': None, 'Generation Error': None,
-                                        'Status': 'Selected, Fetching URL...'
-                                    }
-                                    st.toast(f"Selected: {video_title}. Fetching direct URL...", icon="⏳")
-                                st.rerun()
 
-                            # --- Display Status (yt-dlp & Generation) (Copied from original logic) ---
-                            status_container = st.container(border=False)
-                            if is_selected:
-                                if is_fetching_dlp:
-                                     status_container.info("⏳ Fetching URL...", icon="📡")
-                                elif dlp_error:
-                                     status_container.error(f"URL Error: {dlp_error}", icon="⚠️")
-                                elif not has_dlp_info and not is_fetching_dlp:
-                                     status_container.warning("URL fetch needed.", icon="❓") # Changed message slightly
-                                elif has_dlp_info:
-                                    # Now check generation status if URL is ready
-                                    if is_currently_processing:
-                                        status_container.info("⚙️ Processing...", icon="⏳")
-                                    elif is_in_queue:
-                                         status_container.info("🕒 Queued", icon="🕒")
-                                    elif is_completed:
-                                        status_container.success("✔️ Generated!", icon="🎉")
-                                        # Link button might be too wide here, consider st.link_button smaller text or just URL
-                                        st.link_button("View S3", url=s3_url, use_container_width=True)
-                                    elif is_failed:
-                                        status_container.error(f"❌ Failed: {generation_error[:50]}...", icon="🔥")
-                                    else:
-                                        status_container.success("✅ Ready", icon="👍") # Shortened message
-                            # Add small space at bottom of column
-                            st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
+                    # REMOVED Individual Generate Button (now handled globally)
 
-                # Add a divider between rows of 3 videos inside the same search term results
-                st.divider()
-
+            st.divider()
 
 # --- yt-dlp Fetching Logic (runs after initial UI render if needed) ---
 # Check if batch processing is NOT active before fetching to avoid conflicts
