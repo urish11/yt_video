@@ -1090,8 +1090,7 @@ st.sidebar.data_editor(
 )
 
 # Update session state with edited data
-if edited_df.equals(st.session_state.search_data) is False:
-    st.session_state.search_data = edited_df.copy()
+st.session_state.search_data = edited_df
 
 # --- Action Buttons (Sidebar) ---
 col1, col2 = st.sidebar.columns(2)
