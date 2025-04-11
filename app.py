@@ -1182,16 +1182,16 @@ st.sidebar.warning("Video generation can take several minutes per video.", icon=
 if search_button:
     # Validate input data
     valid_input = True
-    if st.session_state.search_data.empty:
-        st.sidebar.warning("Please add at least one Search Term and Topic.", icon="⚠️")
-        valid_input = False
-    # Use .ne('') for checking empty strings in pandas
-    if st.session_state.search_data['Search Term'].isnull().any() or st.session_state.search_data['Search Term'].eq('').any():
-        st.sidebar.warning("Search Term cannot be empty.", icon="⚠️")
-        valid_input = False
-    if st.session_state.search_data['Topic'].isnull().any() or st.session_state.search_data['Topic'].eq('').any():
-        st.sidebar.warning("Topic cannot be empty.", icon="⚠️")
-        valid_input = False
+    # if st.session_state.search_data.empty:
+    #     st.sidebar.warning("Please add at least one Search Term and Topic.", icon="⚠️")
+    #     valid_input = False
+    # # Use .ne('') for checking empty strings in pandas
+    # if st.session_state.search_data['Search Term'].isnull().any() or st.session_state.search_data['Search Term'].eq('').any():
+    #     st.sidebar.warning("Search Term cannot be empty.", icon="⚠️")
+    #     valid_input = False
+    # if st.session_state.search_data['Topic'].isnull().any() or st.session_state.search_data['Topic'].eq('').any():
+    #     st.sidebar.warning("Topic cannot be empty.", icon="⚠️")
+    #     valid_input = False
 
     if valid_input:
         st.session_state.search_triggered = True
