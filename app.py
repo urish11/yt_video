@@ -1080,13 +1080,30 @@ st.sidebar.write("Enter Search Terms and Topics:")
 def sync_search_data():
     raw_data = st.session_state.search_topic_editor
 
-    # Filter out anything that isn't a dictionary
+    # Keep only dicts
     clean_data = [row for row in raw_data if isinstance(row, dict)]
 
-    # Optional: Drop empty rows where all values are blank
+    # Remove fully empty rows (all values are empty/None)
     clean_data = [row for row in clean_data if any(v not in [None, '', []] for v in row.values())]
 
-    st.session_state.search_data = pd.DataFrame(clean_data)
+    # If table is completely cleared, add a default row
+    if not clean_data:
+        clean_data = [{
+            "Topic": "",
+            "Search Term": "",
+            "Language": "English",
+            "Video Results": 5
+        }]
+
+    # Enforce column order and types
+    df = pd.DataFrame(clean_data)
+    expected_cols = ["Topic", "Search Term", "Language", "Video Results"]
+    for col in expected_cols:
+        if col not in df.columns:
+            df[col] = ""
+
+    st.session_state.search_data = df[expected_cols]
+
 
 
 
