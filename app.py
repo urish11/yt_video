@@ -1266,10 +1266,10 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
         st.warning("Search halted due to API error.", icon="⚠️")
         # Don't stop the app, just show the error. Rerun will display current state.
         st.rerun()
-    else:
-        # Don't necessarily reset trigger, allow results to display
-        # st.session_state.search_triggered = False # Reset trigger after successful search display
-        st.rerun() # Rerun to display results
+    # else:
+    #     # Don't necessarily reset trigger, allow results to display
+    #     # st.session_state.search_triggered = False # Reset trigger after successful search display
+    #     st.rerun() # Rerun to display results
 
 
 # --- Display Area ---
