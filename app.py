@@ -1353,10 +1353,33 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
 
     for i, item in enumerate(search_items):
         term = item['Search Term']
+    
         topic = item['Topic'] # Keep topic associated
         count = int(item['Video Results'])
         lang = item['Language'] # Language for search
         status_text_api.text(f"Searching for: '{term}'...")
+
+        if term == 'auto':
+            term = chatgpt("""I want concise, emotional, and visually-rich YouTube search keywords for a specific topic. These should feel like real titles users would upload — casual, vlog-style, and rooted in personal experiences or moments.
+
+            Avoid anything generic, commercial-sounding, or search-optimized like “best X” or “how to X.”
+            No listicles, guides, or reviews.
+            Showing the topic in positive light
+            
+            Instead, think in terms of reactions,vlog, life moments, surprises, reveals, or storytelling.
+            Imagine something someone would upload from their phone right after something big happened.
+            
+            Keep each keyword to 2–4 words. 
+            Each result should include “#shorts” at the end. In english.
+            return as 1 row | delimted
+            the main subject of the input must be in the output
+            
+            example:
+            Input: Parocīgu automašīnu piedāvājumi bez finansējuma – lūk, kā to izdarīt!
+            output: new car reveal #shorts 
+            
+            Here’s the topic: 
+            {topic}""")
 
         if term not in results_cache: # Avoid re-searching same term in one go
             videos = search_youtube(youtube_api_key_secret, term, count)
