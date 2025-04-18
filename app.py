@@ -245,7 +245,7 @@ def search_youtube(api_key, query, max_results=5):
                             'videoId': video_id,
                             'url': standard_url # Store the standard URL
                         })
-            return videos_res.append(videos)
+            videos_res.append(videos)
     
         except requests.exceptions.Timeout:
             st.error(f"API Request Timeout for query '{query}'.", icon="⏱️")
