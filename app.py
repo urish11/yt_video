@@ -1358,7 +1358,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
         count = int(item['Video Results'])
         lang = item['Language'] # Language for search
         status_text_api.text(f"Searching for: '{term}'...")
-
+        print(f"topic {topic}")
         if term == 'auto':
             term = chatGPT("""I want concise, emotional, and visually-rich YouTube search keywords for a specific topic. These should feel like real titles users would upload — casual, vlog-style, and rooted in personal experiences or moments.
 
