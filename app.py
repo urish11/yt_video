@@ -1382,7 +1382,7 @@ Imagine something someone would upload from their phone right after something bi
 Keep each keyword to 2–4 words. 
 Each result should include “#shorts” at the end. In english.
 return as 1 row | delimted
-the main subject of the input must be in the output
+the main subject of the input must be in the output!!! like the main product
 
 example:
 Input: Parocīgu automašīnu piedāvājumi bez finansējuma – lūk, kā to izdarīt!
