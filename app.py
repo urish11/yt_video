@@ -1360,7 +1360,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
         status_text_api.text(f"Searching for: '{term}'...")
 
         if term == 'auto':
-            term = chatgpt("""I want concise, emotional, and visually-rich YouTube search keywords for a specific topic. These should feel like real titles users would upload — casual, vlog-style, and rooted in personal experiences or moments.
+            term = chatGPT("""I want concise, emotional, and visually-rich YouTube search keywords for a specific topic. These should feel like real titles users would upload — casual, vlog-style, and rooted in personal experiences or moments.
 
             Avoid anything generic, commercial-sounding, or search-optimized like “best X” or “how to X.”
             No listicles, guides, or reviews.
