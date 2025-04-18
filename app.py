@@ -1372,6 +1372,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
             Keep each keyword to 2–4 words. 
             Each result should include “#shorts” at the end. In english.
             return as 1 row | delimted
+            1 search term best consice but still general
             the main subject of the input must be in the output
             
             example:
