@@ -214,6 +214,7 @@ def search_youtube(api_key, query, max_results=5):
     response = None # Initialize response to None
     if '|' in query:
         terms = query.split('|')
+        max_results = max_results//len(terms)+1
     else:
         term = [query]
     st.text(terms)
