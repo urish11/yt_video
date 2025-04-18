@@ -217,52 +217,57 @@ def search_youtube(api_key, query, max_results=5):
         'maxResults': max_results,
         'videoEmbeddable': 'true'
     }
-    videos = []
+    videos_res = []
     response = None # Initialize response to None
-    try:
-        response = requests.get(YOUTUBE_API_BASE_URL, params=params, timeout=15) # Increased timeout
-        response.raise_for_status() # Raises HTTPError for bad responses (4xx or 5xx)
-        results = response.json()
-
-        if 'items' in results:
-            for item in results['items']:
-                if item.get('id', {}).get('kind') == 'youtube#video' and 'videoId' in item['id']:
-                    video_id = item['id']['videoId']
-                    title = item['snippet'].get('title', 'No Title')
-                    # Standard watch URL is better for yt-dlp and st.video
-                    standard_url = f"https://www.youtube.com/watch?v={video_id}"
-                    videos.append({
-                        'title': title,
-                        'videoId': video_id,
-                        'url': standard_url # Store the standard URL
-                    })
-        return videos
-
-    except requests.exceptions.Timeout:
-        st.error(f"API Request Timeout for query '{query}'.", icon="⏱️")
-        return [] # Return empty list on timeout
-    except requests.exceptions.HTTPError as http_err:
-        st.error(f"API HTTP Error for query '{query}': {http_err}", icon="🔥")
-        if response is not None:
-            if response.status_code == 403:
-                st.error("Received status 403 Forbidden. Check API key validity and quota.", icon="🚫")
-                # Return None signals a critical API key/quota issue
-                return None
-            elif response.status_code == 400:
-                try:
-                    error_details = response.json()
-                    st.error(f"Received status 400 Bad Request. Details: {error_details}", icon="👎")
-                except json.JSONDecodeError:
-                    st.error(f"Received status 400 Bad Request. Response: {response.text}", icon="👎")
-            else:
-                 st.error(f"API Error Status Code: {response.status_code}. Response: {response.text}", icon="🔥")
-        return [] # Return empty list for non-critical HTTP errors
-    except requests.exceptions.RequestException as e:
-        st.error(f"API Request Error for query '{query}': {e}", icon="🌐")
-        return []
-    except Exception as e:
-        st.error(f"An unexpected error occurred during search for '{query}': {e}", icon="💥")
-        return []
+    if '|' in query:
+        terms = term.split('|')
+    for term in terms:
+            
+        try:
+            response = requests.get(YOUTUBE_API_BASE_URL, params=params, timeout=15) # Increased timeout
+            response.raise_for_status() # Raises HTTPError for bad responses (4xx or 5xx)
+            results = response.json()
+    
+            if 'items' in results:
+                for item in results['items']:
+                    if item.get('id', {}).get('kind') == 'youtube#video' and 'videoId' in item['id']:
+                        video_id = item['id']['videoId']
+                        title = item['snippet'].get('title', 'No Title')
+                        # Standard watch URL is better for yt-dlp and st.video
+                        standard_url = f"https://www.youtube.com/watch?v={video_id}"
+                        videos.append({
+                            'title': title,
+                            'videoId': video_id,
+                            'url': standard_url # Store the standard URL
+                        })
+            return videos_res.append(videos)
+    
+        except requests.exceptions.Timeout:
+            st.error(f"API Request Timeout for query '{query}'.", icon="⏱️")
+            return [] # Return empty list on timeout
+        except requests.exceptions.HTTPError as http_err:
+            st.error(f"API HTTP Error for query '{query}': {http_err}", icon="🔥")
+            if response is not None:
+                if response.status_code == 403:
+                    st.error("Received status 403 Forbidden. Check API key validity and quota.", icon="🚫")
+                    # Return None signals a critical API key/quota issue
+                    return None
+                elif response.status_code == 400:
+                    try:
+                        error_details = response.json()
+                        st.error(f"Received status 400 Bad Request. Details: {error_details}", icon="👎")
+                    except json.JSONDecodeError:
+                        st.error(f"Received status 400 Bad Request. Response: {response.text}", icon="👎")
+                else:
+                     st.error(f"API Error Status Code: {response.status_code}. Response: {response.text}", icon="🔥")
+            return [] # Return empty list for non-critical HTTP errors
+        except requests.exceptions.RequestException as e:
+            st.error(f"API Request Error for query '{query}': {e}", icon="🌐")
+            return []
+        except Exception as e:
+            st.error(f"An unexpected error occurred during search for '{query}': {e}", icon="💥")
+            return []
+    return videos_res
 
 # --- Helper Function: Get Info with yt-dlp ---
 def get_yt_dlp_info(video_url):
@@ -1362,23 +1367,23 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
         if term == 'auto':
             term = chatGPT(f"""I want concise, emotional, and visually-rich YouTube search keywords for a specific topic. These should feel like real titles users would upload — casual, vlog-style, and rooted in personal experiences or moments.
 
-            Avoid anything generic, commercial-sounding, or search-optimized like “best X” or “how to X.”
-            No listicles, guides, or reviews.
-            Showing the topic in positive light
-            
-            Instead, think in terms of reactions,vlog, life moments, surprises, reveals, or storytelling.
-            Imagine something someone would upload from their phone right after something big happened.
-            
-            Each result should include “#shorts” at the end. In english.
-            return as 1 row | delimted
-            1 search term best consice but still general
-            the main subject of the input must be in the output
-            
-            example:
-            Input: Parocīgu automašīnu piedāvājumi bez finansējuma – lūk, kā to izdarīt!
-            output: new car reveal #shorts 
-            
-            Here’s the topic: 
+Avoid anything generic, commercial-sounding, or search-optimized like “best X” or “how to X.”
+No listicles, guides, or reviews.
+Showing the topic in positive light
+
+Instead, think in terms of reactions,vlog, life moments, surprises, reveals, or storytelling.
+Imagine something someone would upload from their phone right after something big happened.
+
+Keep each keyword to 2–4 words. 
+Each result should include “#shorts” at the end. In english.
+return as 1 row | delimted
+the main subject of the input must be in the output
+
+example:
+Input: Parocīgu automašīnu piedāvājumi bez finansējuma – lūk, kā to izdarīt!
+output: new car reveal #shorts 
+
+Here’s the topic: 
             {topic}""",client=openai_client)
 
         if term not in results_cache: # Avoid re-searching same term in one go
