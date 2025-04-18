@@ -1369,7 +1369,6 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
             Instead, think in terms of reactions,vlog, life moments, surprises, reveals, or storytelling.
             Imagine something someone would upload from their phone right after something big happened.
             
-            Keep each keyword to 2–4 words. 
             Each result should include “#shorts” at the end. In english.
             return as 1 row | delimted
             1 search term best consice but still general
