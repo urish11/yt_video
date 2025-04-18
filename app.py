@@ -216,7 +216,7 @@ def search_youtube(api_key, query, max_results=5):
         terms = query.split('|')
         max_results = int(max_results/len(terms)+1)
     else:
-        term = [query]
+        terms = [query]
     st.text(terms)
     for term in terms:
         params = {
