@@ -215,8 +215,6 @@ def search_youtube(api_key, query, max_results=5):
     if '|' in query:
         terms = query.split('|')
         max_results = int(max_results/len(terms)+1)
-        st.text(max_results)
-        input()
     else:
         term = [query]
     st.text(terms)
@@ -233,6 +231,8 @@ def search_youtube(api_key, query, max_results=5):
             
         try:
             response = requests.get(YOUTUBE_API_BASE_URL, params=params, timeout=15) # Increased timeout
+            input()
+
             response.raise_for_status() # Raises HTTPError for bad responses (4xx or 5xx)
             results = response.json()
     
