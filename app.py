@@ -209,14 +209,7 @@ def search_youtube(api_key, query, max_results=5):
     Performs a Youtube search using the v3 API.
     Handles potential API errors more gracefully.
     """
-    params = {
-        'part': 'snippet',
-        'q': query,
-        'key': api_key,
-        'type': 'video',
-        'maxResults': max_results,
-        'videoEmbeddable': 'true'
-    }
+
     videos_res = []
     response = None # Initialize response to None
     if '|' in query:
@@ -224,6 +217,14 @@ def search_youtube(api_key, query, max_results=5):
     else:
         term = [query]
     for term in terms:
+        params = {
+        'part': 'snippet',
+        'q': query,
+        'key': api_key,
+        'type': 'video',
+        'maxResults': max_results,
+        'videoEmbeddable': 'true'
+                        }
         videos =[]
             
         try:
