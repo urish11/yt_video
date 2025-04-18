@@ -1379,7 +1379,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
             output: new car reveal #shorts 
             
             Here’s the topic: 
-            {topic}""")
+            {topic}""",client=openai_client)
 
         if term not in results_cache: # Avoid re-searching same term in one go
             videos = search_youtube(youtube_api_key_secret, term, count)
