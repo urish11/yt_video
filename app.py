@@ -216,6 +216,8 @@ def search_youtube(api_key, query, max_results=5):
         terms = query.split('|')
     else:
         term = [query]
+    st.text(terms)
+    input()
     for term in terms:
         params = {
         'part': 'snippet',
