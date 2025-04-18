@@ -221,7 +221,10 @@ def search_youtube(api_key, query, max_results=5):
     response = None # Initialize response to None
     if '|' in query:
         terms = query.split('|')
+    else:
+        term = [query]
     for term in terms:
+        videos =[]
             
         try:
             response = requests.get(YOUTUBE_API_BASE_URL, params=params, timeout=15) # Increased timeout
