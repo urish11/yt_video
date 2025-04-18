@@ -1447,7 +1447,8 @@ if st.session_state.api_search_results:
             if not videos:
                 st.write("No videos found via API.")
                 continue
-
+            st.text(videos)
+            input()
             for video in videos:
                 video_id = video['videoId']
                 video_title = video['title']
