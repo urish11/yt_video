@@ -1478,7 +1478,7 @@ if st.session_state.api_search_results:
                     st.caption(f"ID: {video_id} | [Watch on YouTube]({standard_video_url})")
                     try:
                         # Use st.video with the standard URL - works better generally
-                        thumbnail_url = f"https://img.youtube.com/vi/{video_id}/sddefault.jpg"
+                        thumbnail_url = f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
                         st.image(thumbnail_url, caption=video_title, use_container_width=True)
                         
                         with st.expander("▶️ Watch Video"):
