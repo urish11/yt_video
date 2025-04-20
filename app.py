@@ -1494,7 +1494,7 @@ if st.session_state.api_search_results:
                                 try:
                                     # Video player will take the width of the column
                                     st.video(standard_video_url)
-                                else:
+                                except:
                                     st.error("Video failed to load.") # Placeholder error
                             else:
                                 st.image(thumbnail_url, use_container_width=True) # Make image fill column width
