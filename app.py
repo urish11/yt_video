@@ -1518,7 +1518,7 @@ if st.session_state.api_search_results:
                                 key=f"toggle_vid_btn_{unique_key_base}",
                                 help="Show/hide the video preview",
                                 use_container_width=True
-                            ):
+                            ) or 1==1:
                                 st.session_state[show_video_key] = not st.session_state[show_video_key]
                                 st.rerun()
 
