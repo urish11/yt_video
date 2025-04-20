@@ -1059,7 +1059,7 @@ if 'api_search_results' not in st.session_state:
 # Input DataFrame for search terms and topics
 if 'search_data' not in st.session_state:
     st.session_state.search_data = pd.DataFrame([
-        {'Topic': 'sofa sale', 'Search Term': 'auto' ,'Language' : 'English', 'Video Results': 5}
+        {'Topic': 'sofa sale', 'Search Term': 'sofa unboxing #shorts' ,'Language' : 'English', 'Video Results': 5}
    
         
     ])
@@ -1476,7 +1476,7 @@ if st.session_state.api_search_results:
 
                             # --- State for controlling video player visibility ---
                             show_video_key = f"show_player_{unique_key_base}"
-                            # if show_video_key not in st.session_state:
+                            if show_video_key not in st.session_state:
                             #     st.session_state[show_video_key] = False
 
                             # --- Other states (selection, generation, etc.) ---
