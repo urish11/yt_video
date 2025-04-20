@@ -1523,11 +1523,32 @@ if st.session_state.api_search_results:
                                 st.rerun()
 
                             # Select / Deselect Button
-                            select_button_label = "✅ Deselect" if is_selected else "➕ Select" # Simplified example
-                            select_button_type = "secondary" if is_selected else "primary"
-                            select_disabled = st.session_state.batch_processing_active # Example condition
-                            # Add more conditions for label/disabled state as needed
-
+                           # States for yt-dlp and generation
+                            is_fetching_dlp = video_state.get('fetching_dlp', False)
+                            dlp_error = video_state.get('yt_dlp_error')
+                            has_dlp_info = bool(video_state.get('Direct URL'))
+                            is_in_queue = video_id in st.session_state.generation_queue
+                            is_completed = bool(video_state.get('Generated S3 URL'))
+                            is_failed = bool(video_state.get('Generation Error'))
+                            is_currently_processing = video_state.get('Status') == 'Processing'
+                            s3_url = video_state.get('Generated S3 URL')
+                            generation_error = video_state.get('Generation Error', '')
+                            
+                            # Determine button label and type
+                            if is_selected:
+                                select_button_label = "✅ Deselect"
+                                select_button_type = "secondary"
+                                select_disabled = False
+                            elif is_fetching_dlp:
+                                select_button_label = "⏳ Fetching..."
+                                select_button_type = "secondary"
+                                select_disabled = True
+                            else:
+                                select_button_label = "➕ Select"
+                                select_button_type = "primary"
+                                select_disabled = st.session_state.batch_processing_active
+                            
+                            # Select/Deselect Button
                             if st.button(
                                 select_button_label,
                                 key=f"select_{unique_key_base}",
@@ -1535,26 +1556,52 @@ if st.session_state.api_search_results:
                                 use_container_width=True,
                                 disabled=select_disabled
                             ):
-                                # ... [keep existing select/deselect logic] ...
+                                if is_selected:
+                                    del st.session_state.selected_videos[video_id]
+                                    st.toast(f"Deselected: {video_title}", icon="➖")
+                                    if video_id in st.session_state.generation_queue:
+                                        st.session_state.generation_queue.remove(video_id)
+                                        st.session_state.batch_total_count = len(st.session_state.generation_queue)
+                                else:
+                                    st.session_state.selected_videos[video_id] = {
+                                        'Search Term': term,
+                                        'Topic': topic,
+                                        'Language': lang,
+                                        'Video Title': video_title,
+                                        'Video ID': video_id,
+                                        'Standard URL': standard_video_url,
+                                        'fetching_dlp': True,
+                                        'Direct URL': None,
+                                        'Format Details': None,
+                                        'yt_dlp_error': None,
+                                        'Generated S3 URL': None,
+                                        'Generation Error': None,
+                                        'Status': 'Selected, Fetching URL...'
+                                    }
+                                    st.toast(f"Selected: {video_title}. Fetching direct URL...", icon="⏳")
                                 st.rerun()
-
-                            # --- Display Status (Optional, might clutter grid) ---
-                            # status_container = st.container(border=False)
-                            # if is_selected:
-                            #     # ... [status display logic, keep it concise] ...
-                            #     status_container.info("Selected", icon="✅") # Example
-                            #     pass
-
-                    # else: # Optional: Handle the last row if it's not full
-                    #    with cols[j]:
-                    #        st.empty() # Leave the grid cell empty
-
-            # --- REMOVED the old single-video-per-row loop structure ---
-            # --- REMOVED the old st.columns([3,1]) structure ---
-            # --- REMOVED st.divider() between videos, as columns provide separation ---
-
-        # Keep the divider between different search term results
-        # st.divider() # Optional: Or rely on the container border
+                            
+                            # Status Display Block
+                            status_container = st.container()
+                            if is_selected:
+                                if is_fetching_dlp:
+                                    status_container.info("⏳ Fetching URL...", icon="📡")
+                                elif dlp_error:
+                                    status_container.error(f"URL Error: {dlp_error}", icon="⚠️")
+                                elif not has_dlp_info:
+                                    status_container.warning("URL fetch incomplete.", icon="❓")
+                                elif has_dlp_info:
+                                    if is_currently_processing:
+                                        status_container.info("⚙️ Processing...", icon="⏳")
+                                    elif is_in_queue:
+                                        status_container.info("🕒 Queued", icon="🕒")
+                                    elif is_completed:
+                                        status_container.success("✔️ Generated!", icon="🎉")
+                                        st.link_button("View on S3", url=s3_url, use_container_width=True)
+                                    elif is_failed:
+                                        status_container.error(f"❌ Failed: {generation_error[:50]}...", icon="🔥")
+                                    else:
+                                        status_container.success("✅ Ready to Process", icon="👍")
 
 # --- yt-dlp Fetching Logic (runs after initial UI render if needed) ---
 # Check if batch processing is NOT active before fetching to avoid conflicts
