@@ -1454,54 +1454,55 @@ if st.session_state.api_search_results:
                 video_id = video['videoId']
                 video_title = video['title']
                 standard_video_url = video['url']
+                # We need the thumbnail URL again for the initial display
                 thumbnail_url = f"https://img.youtube.com/vi/{video_id}/sddefault.jpg"
                 unique_key_base = f"{term}_{video_id}"
 
-                # --- Video player state ---
+                # --- State for controlling video player visibility ---
                 show_video_key = f"show_player_{unique_key_base}"
                 if show_video_key not in st.session_state:
-                    st.session_state[show_video_key] = False
+                    st.session_state[show_video_key] = False # Default to False (show thumbnail)
 
-                # --- Other states (selection, generation, etc.) ---
+                # --- Other states (selection, generation, etc. - Keep these) ---
                 is_selected = video_id in st.session_state.selected_videos
                 video_state = st.session_state.selected_videos.get(video_id, {})
                 # ... [keep existing state checks like has_dlp_info, is_fetching_dlp, dlp_error, etc.] ...
                 is_in_queue = video_id in st.session_state.generation_queue
                 # ... [keep existing generation status checks] ...
 
-
                 col_vid, col_actions = st.columns([3, 1])
 
-                # --- Column 1: Video Info & Conditional Player ---
+                # --- Column 1: Video Info & Conditional Player/Thumbnail ---
                 with col_vid:
                     st.write(f"**{video_title}**")
                     st.caption(f"ID: {video_id} | [Watch on YouTube]({standard_video_url})")
-                    st.image(thumbnail_url, caption="Video Preview", use_container_width=True) # Adjusted caption
 
-                    # --- Conditionally Display Video ---
-                    # This logic STAYS in col_vid, controlled by the button in col_actions
+                    # --- Conditionally Display Video Player OR Thumbnail ---
                     if st.session_state[show_video_key]:
+                        # State is True: Show Video Player
                         try:
-                            # Add some space above the video when it appears
-                            st.empty() # Creates a small vertical gap
                             st.video(standard_video_url)
                         except Exception as e:
                             st.warning(f"Could not embed video player: {standard_video_url}. Error: {e}", icon="🎬")
+                    else:
+                        # State is False: Show Image Thumbnail
+                        st.image(thumbnail_url, caption="Click 'Show Preview' button to load video -->", use_container_width=True) # Updated caption
 
                 # --- Column 2: Actions ---
                 with col_actions:
-                    # --- Button to Toggle Video Player (MOVED HERE) ---
-                    toggle_label = "🔼 Hide" if st.session_state[show_video_key] else "▶️ Show" # Shorter label
+                    # --- Button to Toggle Video Player Visibility ---
+                    # This button controls the if/else rendering in col_vid
+                    toggle_label = "🔼 Hide Preview" if st.session_state[show_video_key] else "▶️ Show Preview"
                     if st.button(
-                        f"{toggle_label} Preview",
+                        toggle_label,
                         key=f"toggle_vid_btn_{unique_key_base}",
-                        help="Load/unload the video preview in the left panel",
-                        use_container_width=True # Make button fill column width
+                        help="Show/hide the video preview in the left panel",
+                        use_container_width=True # Keep for alignment
                     ):
                         st.session_state[show_video_key] = not st.session_state[show_video_key]
-                        st.rerun()
+                        st.rerun() # Rerun to reflect the change in col_vid
 
-                    # --- Select / Deselect Button (STYLED CONSISTENTLY) ---
+                    # --- Select / Deselect Button (Keep this) ---
                     select_button_label = "???" # Placeholder
                     select_button_type = "secondary"
                     select_disabled = st.session_state.batch_processing_active # Example condition
@@ -1509,10 +1510,7 @@ if st.session_state.api_search_results:
                     if is_selected:
                         select_button_label = "✅ Deselect"
                         select_button_type = "secondary"
-                    # ... other conditions like fetching ...
-                    # elif is_fetching_dlp:
-                    #     select_button_label = "⏳ Fetching..."
-                    #     select_disabled = True
+                    # ... other conditions ...
                     else:
                         select_button_label = "➕ Select"
                         select_button_type = "primary"
@@ -1521,20 +1519,19 @@ if st.session_state.api_search_results:
                         select_button_label,
                         key=f"select_{unique_key_base}",
                         type=select_button_type,
-                        use_container_width=True, # Make button fill column width
+                        use_container_width=True, # Keep for alignment
                         disabled=select_disabled
                     ):
                         # ... [keep existing select/deselect logic] ...
-                        st.rerun() # Keep the rerun here for select/deselect actions
+                        st.rerun()
 
                     # --- Display Status (Keep this logic) ---
-                    status_container = st.container(border=False) # Use container for status messages
+                    status_container = st.container(border=False)
                     if is_selected:
                          # ... [keep existing status display logic] ...
                          pass
 
                 st.divider() # Keep the divider between video results
-
 
 # --- yt-dlp Fetching Logic (runs after initial UI render if needed) ---
 # Check if batch processing is NOT active before fetching to avoid conflicts
