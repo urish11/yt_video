@@ -235,7 +235,6 @@ def search_youtube(api_key, query, max_results=5):
             response.raise_for_status() # Raises HTTPError for bad responses (4xx or 5xx)
             results = response.json()
             st.text(results)
-            input()
     
             if 'items' in results:
                 for item in results['items']:
