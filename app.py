@@ -225,7 +225,8 @@ def search_youtube(api_key, query, max_results=5):
         'key': api_key,
         'type': 'video',
         'maxResults': max_results,
-        'videoEmbeddable': 'true'
+        'videoEmbeddable': 'true',
+        'order': 'viewCount' 
                         }
         videos =[]
             
