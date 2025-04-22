@@ -83,6 +83,7 @@ try:
     aws_secret_key = st.secrets["AWS_SECRET_ACCESS_KEY"]
     s3_bucket_name = st.secrets["S3_BUCKET_NAME"]
     s3_region = st.secrets["AWS_REGION"]
+    GOOGLE_API_KEY =st.secrets["GOOGLE_API_KEY "]
 except KeyError as e:
     st.error(f"Missing secret key: {e}. Please configure secrets.", icon="🚨")
     st.stop()
@@ -217,7 +218,7 @@ def search_youtube(api_key, query, max_results=40):
         terms = query.split('|')
     else:
         terms = [query]
-
+    api_key =random.choice(api_key)
     # Calculate results per term
     results_per_term = max(1, max_results // len(terms))  # Ensure at least 1 result per term
     st.text(f"Terms: {terms}, Results per term: {results_per_term}")
@@ -1376,7 +1377,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
                                  {topic}""",client=openai_client,model="gpt-4")
 
         if term not in results_cache: # Avoid re-searching same term in one go
-            videos = search_youtube(youtube_api_key_secret, term, count)
+            videos = search_youtube(GOOGLE_API_KEY, term, count)
 
             if videos is None: # Critical API error (e.g., 403)
                 st.error(f"Stopping search due to critical API issue (check key/quota) for term: '{term}'.", icon="🚫")
