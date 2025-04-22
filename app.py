@@ -1399,20 +1399,21 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
 #             {topic}""",client=openai_client)
 
                 term = chatGPT(f"""You are a viral video ad expert. I will give you a topic, and you will return the top 3 YouTube Shorts search terms that:
-                                - Are short (2–5 words)
-                                - Lead to visually engaging, emotional, or curiosity-driven videos
-                                - Work well as inspiration for Facebook ads
-                                - Focus on transformation, surprise, luxury, hacks, or lifestyle desire
-                                - Are perfect for fast-scrolling mobile users
+                                    - Are short (2–5 words)
+                                    - Clearly describe what viewers will see in the video (visuals only)
+                                    - Lead to emotionally engaging, surprising, or curiosity-triggering content
+                                    - Are perfect for remixing or using as inspiration for Facebook video ads
+                                    - Focus on things like transformations, objects in motion, satisfying actions, luxury aesthetics, clever space-saving, or unexpected reveals
+                                    - Avoid abstract or advice-based phrases (like “tips,” “hacks,” or “secrets”)
 
+                                    - Add '#shorts' to the end of each search term and separate terms with ' | '
 
-                               -add '#shorts' to the end of each search term and seperate terms with '|'
-                                Example:
-                                Input: sofa
-                                Output (exatcly, no extra text intros etc.): 
-                                'sofa transformation #shorts | hidden bed sofa #shorts | luxury sofa unboxing #shorts'
+                                    Example:  
+                                    Input: sofa  
+                                    Output:  
+                                    'sofa transformation #shorts | hidden bed sofa #shorts | luxury sofa unboxing #shorts'
 
-                                My topic:
+                                    My topic:
                                  {topic}""",client=openai_client)
 
         if term not in results_cache: # Avoid re-searching same term in one go
