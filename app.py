@@ -1414,7 +1414,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
                                     'sofa transformation #shorts | hidden bed sofa #shorts | luxury sofa unboxing #shorts'
 
                                     My topic:
-                                 {topic}""",client=openai_client)
+                                 {topic}""",client=openai_client,model="gpt-4")
 
         if term not in results_cache: # Avoid re-searching same term in one go
             videos = search_youtube(youtube_api_key_secret, term, count)
