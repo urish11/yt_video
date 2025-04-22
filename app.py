@@ -1409,7 +1409,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
                                -add '#shorts' to the end of each search term and seperate terms with '|'
                                 Example:
                                 Input: sofa
-                                Output:
+                                Output (exatcly, no extra text intros etc.): 
                                 'sofa transformation #shorts | hidden bed sofa #shorts | luxury sofa unboxing #shorts'
 
                                 My topic:
