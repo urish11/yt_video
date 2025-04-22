@@ -276,6 +276,8 @@ def search_youtube(api_key, query, max_results=5):
         except Exception as e:
             st.error(f"An unexpected error occurred during search for '{query}': {e}", icon="💥")
             return []
+
+    st.text(videos_res)
     return videos_res
 
 # --- Helper Function: Get Info with yt-dlp ---
