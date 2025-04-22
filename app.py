@@ -261,6 +261,16 @@ def search_youtube(api_key, query, max_results=40):
     return videos_res[:max_results]  # Ensure the total results do not exceed max_results
 
 # --- Helper Function: Get Info with yt-dlp ---
+
+
+def simple_hash(s):
+    total = 0
+    for i, c in enumerate(s):
+        total += (i + 1) * ord(c)
+    return str(total % 100000)  # Keep it short
+
+
+
 def get_yt_dlp_info(video_url):
     """
     Uses yt-dlp to extract video format information, prioritizing a direct mp4 URL.
@@ -1475,8 +1485,8 @@ if st.session_state.api_search_results:
                             standard_video_url = video['url']
                             thumbnail_url = f"https://img.youtube.com/vi/{video_id}/sddefault.jpg"
                             # Use video_id for unique keys within the grid cell
-                            normalized_term = term.strip().lower().replace(" ", "_")
-                            unique_key_base = f"{normalized_term}_{video_id}"
+                            search_term_hash = simple_hash(term.strip().lower())
+                            unique_key_base = f"{video_id}_{search_term_hash}"
 
                             # --- State for controlling video player visibility ---
                             show_video_key = f"show_player_{unique_key_base}"
