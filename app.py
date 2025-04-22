@@ -1568,13 +1568,20 @@ if st.session_state.api_search_results:
                             # Status Display Block
                             status_container = st.container()
                             if is_selected:
+                                # Keep track of whether the fetch succeeded (downloaded path exists)
+                                fetch_succeeded = bool(video_state.get('Downloaded Path')) # <-- CHANGE HERE
+                            
                                 if is_fetching_dlp:
-                                    status_container.info("⏳ Fetching URL...", icon="📡")
+                                    status_container.info("⏳ Fetching/Downloading...", icon="📡") # Update text slightly
                                 elif dlp_error:
-                                    status_container.error(f"URL Error: {dlp_error}", icon="⚠️")
-                                elif not has_dlp_info:
-                                    status_container.warning("URL fetch incomplete.", icon="❓")
-                                elif has_dlp_info:
+                                    status_container.error(f"Download Error: {dlp_error}", icon="⚠️") # Update text slightly
+                                # Check if fetch didn't succeed AND there's no error AND it's not fetching
+                                elif not fetch_succeeded and not dlp_error and not is_fetching_dlp:
+                                     # This state might indicate an unexpected issue or a brief moment between steps
+                                     status_container.warning("Download/Fetch incomplete.", icon="❓")
+                                # Check if fetch succeeded (we have the path)
+                                elif fetch_succeeded:
+                                    # Now proceed with the generation status checks
                                     if is_currently_processing:
                                         status_container.info("⚙️ Processing...", icon="⏳")
                                     elif is_in_queue:
@@ -1585,7 +1592,11 @@ if st.session_state.api_search_results:
                                     elif is_failed:
                                         status_container.error(f"❌ Failed: {generation_error[:50]}...", icon="🔥")
                                     else:
-                                        status_container.success("✅ Ready to Process", icon="👍")
+                                         # Use the 'Status' field which is set to 'Ready' after download
+                                         if video_state.get('Status') == 'Ready':
+                                             status_container.success("✅ Ready to Process", icon="👍")
+                                         else: # Fallback if status isn't 'Ready' but path exists
+                                             status_container.info("Downloaded.", icon="💾") # Or some other appropriate status
 
 # --- yt-dlp Fetching Logic (runs after initial UI render if needed) ---
 # Check if batch processing is NOT active before fetching to avoid conflicts
