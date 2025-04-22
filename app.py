@@ -83,7 +83,7 @@ try:
     aws_secret_key = st.secrets["AWS_SECRET_ACCESS_KEY"]
     s3_bucket_name = st.secrets["S3_BUCKET_NAME"]
     s3_region = st.secrets["AWS_REGION"]
-    GOOGLE_API_KEY =st.secrets["GOOGLE_API_KEY "]
+    GOOGLE_API_KEY =st.secrets["GOOGLE_API_KEY"]
 except KeyError as e:
     st.error(f"Missing secret key: {e}. Please configure secrets.", icon="🚨")
     st.stop()
