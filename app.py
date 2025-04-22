@@ -1402,12 +1402,12 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
                                 - Focus on transformation, surprise, luxury, hacks, or lifestyle desire
                                 - Are perfect for fast-scrolling mobile users
 
+
+                               -add '#shorts' to the end of each search term and seperate terms with '|'
                                 Example:
                                 Input: sofa
                                 Output:
-                                1. sofa transformation
-                                2. hidden bed sofa
-                                3. luxury sofa unboxing
+                                'sofa transformation #shorts | hidden bed sofa #shorts | luxury sofa unboxing #shorts'
 
                                 My topic:
                                  {topic}""",client=openai_client)
