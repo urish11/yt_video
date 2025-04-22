@@ -214,10 +214,11 @@ def search_youtube(api_key, query, max_results=5):
     response = None # Initialize response to None
     if '|' in query:
         terms = query.split('|')
+
         max_results = int(max_results/len(terms)+1)
     else:
         terms = [query]
-    st.text(terms)
+    st.text(terms + max_results )
     for term in terms:
         params = {
         'part': 'snippet',
@@ -1461,7 +1462,6 @@ if st.session_state.api_search_results:
     # Display results from cache
 
     st.text(st.session_state.api_search_results.items())
-    input()
     for term, result_data in st.session_state.api_search_results.items():
         videos = result_data['videos']
         topic = result_data['topic']
