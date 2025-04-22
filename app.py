@@ -277,7 +277,7 @@ def search_youtube(api_key, query, max_results=5):
             st.error(f"An unexpected error occurred during search for '{query}': {e}", icon="💥")
             return []
 
-    st.text(videos_res)
+    
     return videos_res
 
 # --- Helper Function: Get Info with yt-dlp ---
@@ -1430,7 +1430,8 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
     status_text_api.text("API Search complete.")
     st.session_state.api_search_results = results_cache # Update main cache
     st.session_state.search_triggered = False  # ✅ Prevent infinite rerun loop
-
+    st.text(results_cache)
+    input()
 
     if api_error_occurred:
         st.session_state.search_triggered = False # Reset trigger on critical error
