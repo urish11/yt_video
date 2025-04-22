@@ -1460,7 +1460,7 @@ if st.session_state.api_search_results:
     st.subheader("Search Results & Video Selection (Grid View)") # Updated subheader
     # Display results from cache
 
-    st.text(session_state.api_search_results.items())
+    st.text(st.session_state.api_search_results.items())
     input()
     for term, result_data in st.session_state.api_search_results.items():
         videos = result_data['videos']
