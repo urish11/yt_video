@@ -1120,7 +1120,10 @@ st.sidebar.divider()
 # Calculate how many selected videos are ready for processing
 ready_videos_count = sum(
     1 for vid_id, data in st.session_state.selected_videos.items()
-    if data.get('Direct URL') and not data.get('yt_dlp_error') and not data.get('Generated S3 URL') and not data.get('Generation Error') # Only count ready and not already done/failed
+    if data.get('Downloaded Path')      # <<< CHANGE THIS LINE
+       and not data.get('yt_dlp_error')
+       and not data.get('Generated S3 URL')
+       and not data.get('Generation Error')
 )
 
 process_all_button = st.sidebar.button(
