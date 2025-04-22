@@ -1475,7 +1475,8 @@ if st.session_state.api_search_results:
                             standard_video_url = video['url']
                             thumbnail_url = f"https://img.youtube.com/vi/{video_id}/sddefault.jpg"
                             # Use video_id for unique keys within the grid cell
-                            unique_key_base = f"{term}_{video_id}_{random.randint(0,99999)}"
+                            normalized_term = term.strip().lower().replace(" ", "_")
+                            unique_key_base = f"{normalized_term}_{video_id}"
 
                             # --- State for controlling video player visibility ---
                             show_video_key = f"show_player_{unique_key_base}"
