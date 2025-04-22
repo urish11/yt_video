@@ -1694,7 +1694,7 @@ if st.session_state.batch_processing_active and st.session_state.generation_queu
                         st.write(f"1/5: Generating script for topic: '{topic}'...")
 
                         # --- Step 2: Generate Script (Text Only) ---
-                        script_prompt = f"Create a short, engaging voiceover script for FB viral   video (roughly 15-20 seconds long, maybe 2-3 sentences) about '{topic}' in language {lang}. The tone should be informative yet conversational, '.  smooth flow. Just provide the script text, nothing else. create intriguing and engaging script, sell the topic to the audience ,make them click in and the topic very attractive. be very causal and not 'advertisement' style vibe. end with a call to action 'tap to....'  .the text needs to be retentive and highly engaging. "
+                        script_prompt = f"Create a short, engaging voiceover script for FB viral   video (roughly 15-20 seconds long, maybe 2-3 sentences) about '{topic}' in language {lang}. The tone should be informative yet conversational, '.  smooth flow. Just provide the script text, nothing else. create intriguing and engaging script, sell the topic to the audience ,make them click in and the topic very attractive. be very causal and not 'advertisement' style vibe. end with a call to action 'tap to....'  .the text needs to be retentive and highly engaging. BUT dont use senetional words and phrasing and DONT make false promises !!! "
                         # script_text = chatGPT(script_prompt,model="o1", client=openai_client)
                         script_text = claude(script_prompt,is_thinking=True)
 
