@@ -1486,7 +1486,7 @@ if st.session_state.api_search_results:
                             thumbnail_url = f"https://img.youtube.com/vi/{video_id}/sddefault.jpg"
                             # Use video_id for unique keys within the grid cell
                             search_term_hash = simple_hash(term.strip().lower())
-                            unique_key_base = f"{video_id}_{search_term_hash}"
+                            unique_key_base = f"{video_id}_{search_term_hash}_{i+j}"
 
                             # --- State for controlling video player visibility ---
                             show_video_key = f"show_player_{unique_key_base}"
