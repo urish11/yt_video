@@ -271,86 +271,56 @@ def simple_hash(s):
 
 
 
-def get_yt_dlp_info(video_url):
+def get_yt_dlp_info(video_url, download=True, output_dir=None):
     """
-    Uses yt-dlp to extract video format information, prioritizing a direct mp4 URL.
+    Downloads or fetches high-quality video+audio using yt-dlp.
+    Prefers 1080p or better, merged as MP4. Returns file path, direct URL (if not downloading),
+    format details, or error.
     """
-    # Prioritize standard mp4 formats often playable directly in browsers/st.video
-    # Format 18: mp4 [360p], Format 22: mp4 [720p]
-    # Fallback to best mp4, then best overall
-    YDL_OPTS = {
-        'format': '22/18/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+    import tempfile
+
+    output_dir = output_dir or tempfile.gettempdir()
+    output_template = os.path.join(output_dir, '%(title).70s.%(ext)s')
+
+    ydl_opts = {
+        'format': 'bestvideo[height>=1080][ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best',
+        'merge_output_format': 'mp4',
+        'outtmpl': output_template,
         'quiet': True,
+        'noplaylist': True,
         'no_warnings': True,
-        'skip_download': True,
-        'extract_flat': False, # Need format details
-        'socket_timeout': YT_DLP_FETCH_TIMEOUT,
-        'retries': 3, # Add retries
+        'socket_timeout': 30,
+        'retries': 3,
+        'skip_download': not download
     }
+
     try:
-        with yt_dlp.YoutubeDL(YDL_OPTS) as ydl:
-            info = ydl.extract_info(video_url, download=False)
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(video_url, download=download)
 
-            # Sanitize info can be large, extract only what's needed
-            direct_url = info.get('url')
-            format_note = info.get('format_note', 'N/A')
-            format_id = info.get('format_id', 'N/A')
-            ext = info.get('ext', 'N/A')
-            resolution = info.get('resolution', 'N/A')
+            if not info:
+                return {'error': 'No info extracted'}
+
+            output_path = ydl.prepare_filename(info) if download else None
+            resolution = info.get('resolution') or f"{info.get('height')}p"
+            ext = info.get('ext', 'mp4')
             filesize = info.get('filesize') or info.get('filesize_approx')
+            size_mb = f"{filesize / (1024*1024):.1f} MB" if filesize else "N/A"
+            format_id = info.get('format_id', 'N/A')
+            format_note = info.get('format_note', '')
 
-            # Fallback if top-level URL isn't populated (sometimes happens)
-            if not direct_url and 'formats' in info:
-                 # Check requested formats first
-                preferred_formats = ['22', '18']
-                found_format = None
-                for pf_id in preferred_formats:
-                    found_format = next((f for f in info['formats'] if f.get('format_id') == pf_id and f.get('url')), None)
-                    if found_format: break
-                # If not found, try the format yt-dlp actually selected
-                if not found_format:
-                     chosen_format_id = info.get('format_id')
-                     found_format = next((f for f in info['formats'] if f.get('format_id') == chosen_format_id and f.get('url')), None)
-                # If still not found, grab the first format with a URL
-                if not found_format:
-                     found_format = next((f for f in info['formats'] if f.get('url')), None)
-
-                if found_format:
-                    direct_url = found_format.get('url')
-                    format_id = found_format.get('format_id', format_id)
-                    format_note = found_format.get('format_note', format_note)
-                    ext = found_format.get('ext', ext)
-                    resolution = found_format.get('resolution', resolution)
-                    filesize = found_format.get('filesize') or found_format.get('filesize_approx')
-
-            filesize_str = f"{filesize / (1024*1024):.2f} MB" if filesize else "N/A"
-            format_details = f"ID: {format_id}, Res: {resolution}, Ext: {ext}, Size: {filesize_str}"
-
-            if direct_url:
-                return {
-                    'direct_url': direct_url,
-                    'format_details': format_details,
-                    'error': None
-                }
-            else:
-                # Log available formats if URL extraction failed unexpectedly
-                print(f"Warning: Could not extract direct URL for {video_url}. Info fetched: {info.keys()}") # Log available keys
-                return {'error': 'Could not extract direct URL.'}
+            return {
+                'file_path': output_path,
+                'direct_url': info.get('url') if not download else None,
+                'format_details': f"{resolution} {ext} {size_mb} (format: {format_id} {format_note})",
+                'error': None
+            }
 
     except yt_dlp.utils.DownloadError as e:
-        # Extract specific error messages if possible
-        err_msg = str(e)
-        if "confirm your age" in err_msg:
-            return {'error': 'Age-restricted video'}
-        if "Private video" in err_msg:
-            return {'error': 'Private video'}
-        if "Video unavailable" in err_msg:
-            return {'error': 'Video unavailable'}
-        st.warning(f"yt-dlp DownloadError for {video_url}: {e}", icon="🚧")
-        return {'error': f"yt-dlp: {err_msg[:100]}"} # Truncate long messages
+        return {'error': f'Download error: {str(e)[:200]}'}
     except Exception as e:
-        st.error(f"Unexpected yt-dlp error for {video_url}: {e}", icon="💥")
-        return {'error': f"Unexpected yt-dlp error: {e}"} # Return error dict
+        return {'error': f'Unexpected yt-dlp error: {repr(e)}'}
+
 
 
 # --- Helper Function: Generate Script with ChatGPT ---
@@ -1635,37 +1605,35 @@ if not st.session_state.batch_processing_active:
 
             # Show spinner only if fetching is actually happening for this ID
             with st.spinner(f"Fetching yt-dlp details for '{title}'..."):
-                 dlp_info = get_yt_dlp_info(standard_url)
+                dlp_info = get_yt_dlp_info(standard_url, download=True)
 
-            # Update state based on dlp_info result
-            # Use .get(fetch_id) again in case it was deleted between checks
             current_state = st.session_state.selected_videos.get(fetch_id)
-            if current_state: # Check if still exists
-                current_state['fetching_dlp'] = False # Mark fetch attempt as complete
+            if current_state:
+                current_state['fetching_dlp'] = False
 
-                if dlp_info and dlp_info.get('direct_url'):
-                    current_state['Direct URL'] = dlp_info['direct_url']
+                if dlp_info and dlp_info.get('file_path'):
+                    current_state['Downloaded Path'] = dlp_info['file_path']
                     current_state['Format Details'] = dlp_info['format_details']
                     current_state['yt_dlp_error'] = None
                     current_state['Status'] = 'Ready'
-                    st.toast(f"Direct URL loaded for '{title}'", icon="✅")
+                    st.toast(f"Downloaded high-quality video for '{title}'", icon="✅")
+
                 elif dlp_info and dlp_info.get('error'):
-                    current_state['Direct URL'] = None
+                    current_state['Downloaded Path'] = None
                     current_state['Format Details'] = "Error"
                     current_state['yt_dlp_error'] = dlp_info['error']
                     current_state['Status'] = f"Error: {dlp_info['error']}"
                     st.toast(f"yt-dlp failed for '{title}': {dlp_info['error']}", icon="⚠️")
-                else: # Critical failure from get_yt_dlp_info or dlp_info is None
-                    current_state['Direct URL'] = None
+
+                else:
+                    current_state['Downloaded Path'] = None
                     current_state['Format Details'] = "Critical Error"
                     current_state['yt_dlp_error'] = dlp_info.get('error', "Critical yt-dlp failure") if dlp_info else "Critical yt-dlp failure"
                     current_state['Status'] = f"Error: {current_state['yt_dlp_error']}"
                     st.toast(f"Critical yt-dlp error for '{title}'", icon="🔥")
 
-                st.session_state.selected_videos[fetch_id] = current_state # Save updated state
-                st.rerun() # Rerun to update UI
-
-
+                st.session_state.selected_videos[fetch_id] = current_state
+                st.rerun()
 # 4. Video Generation Logic (BATCH PROCESSING)
 if st.session_state.batch_processing_active and st.session_state.generation_queue:
     video_id_to_process = st.session_state.generation_queue[0] # Peek at the next item
