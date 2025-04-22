@@ -236,7 +236,7 @@ def search_youtube(api_key, query, max_results=5):
 
             response.raise_for_status() # Raises HTTPError for bad responses (4xx or 5xx)
             results = response.json()
-            st.text(results)
+            # st.text(results)
     
             if 'items' in results:
                 for item in results['items']:
@@ -1462,7 +1462,7 @@ if st.session_state.api_search_results:
     st.subheader("Search Results & Video Selection (Grid View)") # Updated subheader
     # Display results from cache
 
-    st.text(st.session_state.api_search_results.items())
+    # st.text(st.session_state.api_search_results.items())
     for term, result_data in st.session_state.api_search_results.items():
         videos = result_data['videos']
         topic = result_data['topic']
