@@ -188,7 +188,7 @@ def create_topic_summary_dataframe(selected_videos_dict):
              max_urls = 0
 
     # --- Add Debugging ---
-    st.sidebar.write(f"`max_urls` (Should be 2): {max_urls}")
+    # st.sidebar.write(f"`max_urls` (Should be 2): {max_urls}")
     # --- End Debugging ---
 
     data_for_df = []
@@ -201,12 +201,12 @@ def create_topic_summary_dataframe(selected_videos_dict):
         data_for_df.append(row) # Appends the complete row dict
 
     # --- Add Debugging ---
-    st.sidebar.write("`data_for_df` (Should be list of dicts, each with vid1_url AND vid2_url):")
-    try:
-        st.sidebar.json(data_for_df, expanded=False)
-    except Exception as e:
-        st.sidebar.write(f"Error displaying json: {e}")
-        st.sidebar.write(data_for_df) # Fallback
+    # st.sidebar.write("`data_for_df` (Should be list of dicts, each with vid1_url AND vid2_url):")
+    # try:
+    #     st.sidebar.json(data_for_df, expanded=False)
+    # except Exception as e:
+    #     st.sidebar.write(f"Error displaying json: {e}")
+    #     st.sidebar.write(data_for_df) # Fallback
     # --- End Debugging ---
 
     # 3. Create Final DataFrame
@@ -215,8 +215,8 @@ def create_topic_summary_dataframe(selected_videos_dict):
         df_final = pd.DataFrame(data_for_df)
 
         # --- Add Debugging ---
-        st.sidebar.write("`df_final` (Immediately after creation, should have vid1/vid2 cols):")
-        st.sidebar.dataframe(df_final)
+        # st.sidebar.write("`df_final` (Immediately after creation, should have vid1/vid2 cols):")
+        # st.sidebar.dataframe(df_final)
         # --- End Debugging ---
 
         # Check if necessary columns were created before trying to reorder
@@ -232,8 +232,8 @@ def create_topic_summary_dataframe(selected_videos_dict):
              final_cols = ['Topic'] + url_cols_sorted
 
              # --- Add Debugging ---
-             st.sidebar.write("`final_cols` list (Columns expected in final output):")
-             st.sidebar.write(final_cols)
+            #  st.sidebar.write("`final_cols` list (Columns expected in final output):")
+            #  st.sidebar.write(final_cols)
              # --- End Debugging ---
 
              # Reindex to ensure columns exist and are in order - might be masking the real issue
