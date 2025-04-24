@@ -160,12 +160,14 @@ def create_topic_summary_dataframe(selected_videos_dict):
     for video_id, video_data in selected_videos_dict.items():
         topic = video_data.get('Topic')
         s3_url = video_data.get('Generated S3 URL')
+        lang = video_data.get('Language')
 
         # Only include if topic exists and video was successfully generated
-        if topic and s3_url:
+        if topic and s3_url and lang:
             if topic not in topic_to_generated_urls:
-                topic_to_generated_urls[topic] = []
-            topic_to_generated_urls[topic].append(s3_url)
+                topic_to_generated_urls[f"{topic}_{lang}"] = []
+
+            topic_to_generated_urls[f"{topic}_{lang}"].append(s3_url)
 
     if not topic_to_generated_urls:
         # Return an empty DataFrame with expected columns if no data
@@ -935,7 +937,7 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic):
         safe_topic = urllib.parse.quote(topic.replace(' ', '_')[:30], safe='')
         temp_output_filename = f"final_{safe_topic}_{timestamp}.mp4"
 
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4", prefix=f"final_{safe_topic}_") as temp_output_file_obj:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4", prefix=f"final_{safe_topic}_{lang}_") as temp_output_file_obj:
              temp_output_path = temp_output_file_obj.name
 
         if not isinstance(final_video_clip, (VideoFileClip, CompositeVideoClip)):
