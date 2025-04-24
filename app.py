@@ -142,9 +142,10 @@ except Exception as e:
 # --- Helper Function: YouTube API Search ---
 
 
-def create_topic_summary_dataframe(selected_videos_dict):
+def create_topic_summary_dataframe_by_topic_only(selected_videos_dict):
     """
-    Creates a DataFrame summarizing generated videos grouped by topic.
+    Creates a DataFrame summarizing generated videos grouped ONLY by topic.
+    Language information for individual URLs is lost in this view.
 
     Args:
         selected_videos_dict (dict): The session state dictionary
@@ -152,59 +153,53 @@ def create_topic_summary_dataframe(selected_videos_dict):
 
     Returns:
         pandas.DataFrame: A DataFrame with 'Topic' and 'vidX_url' columns,
-                          or an empty DataFrame if no generated videos are found.
+                          or an empty DataFrame.
     """
     topic_to_generated_urls = {}
 
-    # 1. Collect Generated URLs and Group by Topic
-    for video_id, video_data in selected_videos_dict.items():
-        topic = video_data.get('Topic')
+    # 1. Collect Generated URLs and Group by Normalized Topic ONLY
+    for video_key, video_data in selected_videos_dict.items():
+        topic = str(video_data.get('Topic', '')).strip().lower() # Normalize topic
         s3_url = video_data.get('Generated S3 URL')
-        lang = video_data.get('Language')
+        # lang = video_data.get('Language') # Not used for grouping
 
-        # Only include if topic exists and video was successfully generated
-        if topic and s3_url and lang:
+        # Only include if topic is non-empty and video was generated
+        if topic and s3_url:
             if topic not in topic_to_generated_urls:
-                topic_to_generated_urls[f"{topic}_{lang}"] = []
+                topic_to_generated_urls[topic] = [] # Use topic as key
 
-            topic_to_generated_urls[f"{topic}_{lang}"].append(s3_url)
+            topic_to_generated_urls[topic].append(s3_url)
 
     if not topic_to_generated_urls:
-        # Return an empty DataFrame with expected columns if no data
         return pd.DataFrame(columns=['Topic'])
 
-    # 2. Determine Max URLs per Topic and Prepare Data for Wide Format
+    # 2. Determine Max URLs per Topic and Prepare Data (Same logic as before)
     max_urls = 0
-    if topic_to_generated_urls: # Ensure dict is not empty before finding max
-         max_urls = max(len(urls) for urls in topic_to_generated_urls.values())
+    if topic_to_generated_urls:
+        max_urls = max(len(urls) for urls in topic_to_generated_urls.values())
 
     data_for_df = []
-    for topic, urls in topic_to_generated_urls.items():
-        row = {'Topic': topic}
-        # Pad the list of URLs with empty strings up to max_urls
+    for topic, urls in topic_to_generated_urls.items(): # Loop by topic
+        row = {'Topic': topic} # Use the topic name for display
         padded_urls = urls + [''] * (max_urls - len(urls))
         for i, url in enumerate(padded_urls):
             row[f'vid{i+1}_url'] = url
         data_for_df.append(row)
 
-    # 3. Create Final DataFrame
+    # 3. Create Final DataFrame (Same logic as before)
     if data_for_df:
         df_final = pd.DataFrame(data_for_df)
-        # Ensure 'Topic' column is first
         topic_col = df_final.pop('Topic')
         df_final.insert(0, 'Topic', topic_col)
-        # Sort columns naturally (vid1, vid2, ... vid10...) if needed
         url_cols = sorted([col for col in df_final.columns if col.startswith('vid')],
-                           key=lambda x: int(x.replace('vid','').replace('_url','')))
+                          key=lambda x: int(x.replace('vid','').replace('_url','')))
         final_cols = ['Topic'] + url_cols
-        df_final = df_final[final_cols]
-
+        df_final = df_final.reindex(columns=final_cols, fill_value='')
     else:
-         # Should not happen if topic_to_generated_urls was populated, but safe fallback
-         df_final = pd.DataFrame(columns=['Topic'])
-
+        df_final = pd.DataFrame(columns=['Topic'])
 
     return df_final
+
 
 def search_youtube(api_key, query, max_results=40):
     """
