@@ -1415,13 +1415,13 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
 
             # Store results along with the topic
 
-            if "," in lang:
-                langs = lang.split(",")
-                for idx, lang in enumerate(langs):
+            # if "," in lang:
+            #     langs = lang.split(",")
+            #     for idx, lang in enumerate(langs):
         
-                    results_cache[f"{term}_{lang}_{idx}"] = {'videos': videos, 'topic': topic , 'lang' : lang}
-            else:
-                results_cache[term] = {'videos': videos, 'topic': topic , 'lang' : lang}
+            #         results_cache[f"{term}_{lang}_{idx}"] = {'videos': videos, 'topic': topic , 'lang' : lang}
+            # else:
+            results_cache[term] = {'videos': videos, 'topic': topic , 'lang' : lang}
 
             time.sleep(0.1) # Small delay between API calls
         progress_bar.progress((i + 1) / len(search_items))
@@ -1585,7 +1585,27 @@ if st.session_state.api_search_results:
                                         st.session_state.generation_queue.remove(video_id)
                                         st.session_state.batch_total_count = len(st.session_state.generation_queue)
                                 else:
-                                    st.session_state.selected_videos[video_id] = {
+                                    if "," in lang:
+                                        langs = lang.split(",")
+                                        for idx, lang in enumerate(langs):
+                                            st.session_state.selected_videos[video_id] = {
+                                                'Search Term': term,
+                                                'Topic': topic,
+                                                'Language': lang,
+                                                'Video Title': video_title,
+                                                'Video ID': video_id,
+                                                'Standard URL': standard_video_url,
+                                                'fetching_dlp': True,
+                                                'Direct URL': None,
+                                                'Format Details': None,
+                                                'yt_dlp_error': None,
+                                                'Generated S3 URL': None,
+                                                'Generation Error': None,
+                                                'Status': 'Selected, Fetching URL...'
+                                            }
+                                            st.toast(f"Selected: {video_title}. Fetching direct URL...", icon="⏳")
+                                    else:
+                                        st.session_state.selected_videos[video_id] = {
                                         'Search Term': term,
                                         'Topic': topic,
                                         'Language': lang,
@@ -1600,6 +1620,8 @@ if st.session_state.api_search_results:
                                         'Generation Error': None,
                                         'Status': 'Selected, Fetching URL...'
                                     }
+
+
                                     st.toast(f"Selected: {video_title}. Fetching direct URL...", icon="⏳")
                                 st.rerun()
                             
