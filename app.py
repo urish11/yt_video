@@ -258,9 +258,9 @@ def create_topic_summary_dataframe(selected_videos_dict):
         df_final = pd.DataFrame(columns=['Topic'])
 
     # --- Add Final Debugging ---
-    st.sidebar.write("`df_final` (Returned value):")
-    st.sidebar.dataframe(df_final)
-    st.sidebar.write("--- End Debugging Summary Function ---")
+    # st.sidebar.write("`df_final` (Returned value):")
+    # st.sidebar.dataframe(df_final)
+    # st.sidebar.write("--- End Debugging Summary Function ---")
     # --- End Final Debugging ---
 
     return df_final
