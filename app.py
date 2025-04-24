@@ -1417,9 +1417,9 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
 
             if "," in lang:
                 langs = lang.split(",")
-                for lang in langs:
+                for idx, lang in enumerate(langs):
         
-                    results_cache[f"{term}_{lang}"] = {'videos': videos, 'topic': topic , 'lang' : lang}
+                    results_cache[f"{term}_{lang}_{idx}"] = {'videos': videos, 'topic': topic , 'lang' : lang}
             else:
                 results_cache[term] = {'videos': videos, 'topic': topic , 'lang' : lang}
 
