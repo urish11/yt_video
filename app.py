@@ -142,61 +142,126 @@ except Exception as e:
 # --- Helper Function: YouTube API Search ---
 
 
-def create_topic_summary_dataframe_by_topic_only(selected_videos_dict):
+
+
+def create_topic_summary_dataframe(selected_videos_dict):
     """
-    Creates a DataFrame summarizing generated videos grouped ONLY by topic.
-    Language information for individual URLs is lost in this view.
-
-    Args:
-        selected_videos_dict (dict): The session state dictionary
-                                     st.session_state.selected_videos.
-
-    Returns:
-        pandas.DataFrame: A DataFrame with 'Topic' and 'vidX_url' columns,
-                          or an empty DataFrame.
+    (DEBUG VERSION) Creates a DataFrame summarizing generated videos grouped by a normalized
+    'topic_language' key. Includes debug output.
     """
-    topic_to_generated_urls = {}
+    topic_lang_to_generated_urls = {}
 
-    # 1. Collect Generated URLs and Group by Normalized Topic ONLY
+    # 1. Collect Generated URLs and Group by Normalized Topic + Language
     for video_key, video_data in selected_videos_dict.items():
-        topic = str(video_data.get('Topic', '')).strip().lower() # Normalize topic
+        topic = str(video_data.get('Topic', '')).strip().lower()
+        lang = str(video_data.get('Language', '')).strip().lower()
         s3_url = video_data.get('Generated S3 URL')
-        # lang = video_data.get('Language') # Not used for grouping
 
-        # Only include if topic is non-empty and video was generated
-        if topic and s3_url:
-            if topic not in topic_to_generated_urls:
-                topic_to_generated_urls[topic] = [] # Use topic as key
+        if topic and lang and s3_url:
+            grouping_key = f"{topic}_{lang}"
+            if grouping_key not in topic_lang_to_generated_urls:
+                topic_lang_to_generated_urls[grouping_key] = []
+            topic_lang_to_generated_urls[grouping_key].append(s3_url)
 
-            topic_to_generated_urls[topic].append(s3_url)
+    # --- Add Debugging ---
+    st.sidebar.write("--- Debugging Summary Function ---")
+    st.sidebar.write("`topic_lang_to_generated_urls` (Should show lists with 2 URLs each):")
+    # Use st.json for better dict/list display in sidebar
+    try:
+        st.sidebar.json(topic_lang_to_generated_urls, expanded=False)
+    except Exception as e:
+        st.sidebar.write(f"Error displaying json: {e}")
+        st.sidebar.write(topic_lang_to_generated_urls) # Fallback to plain write
+    # --- End Debugging ---
 
-    if not topic_to_generated_urls:
+    if not topic_lang_to_generated_urls:
+        st.sidebar.write("Debug: No groups found.")
+        st.sidebar.write("--- End Debugging Summary Function ---")
         return pd.DataFrame(columns=['Topic'])
 
-    # 2. Determine Max URLs per Topic and Prepare Data (Same logic as before)
+    # 2. Determine Max URLs per Group and Prepare Data
     max_urls = 0
-    if topic_to_generated_urls:
-        max_urls = max(len(urls) for urls in topic_to_generated_urls.values())
+    if topic_lang_to_generated_urls:
+        try:
+            max_urls = max(len(urls) for urls in topic_lang_to_generated_urls.values())
+        except ValueError: # Handles case where dictionary is empty after filtering bad data
+             max_urls = 0
+
+    # --- Add Debugging ---
+    st.sidebar.write(f"`max_urls` (Should be 2): {max_urls}")
+    # --- End Debugging ---
 
     data_for_df = []
-    for topic, urls in topic_to_generated_urls.items(): # Loop by topic
-        row = {'Topic': topic} # Use the topic name for display
+    for topic_lang_key, urls in topic_lang_to_generated_urls.items():
+        row = {'Topic': topic_lang_key}
         padded_urls = urls + [''] * (max_urls - len(urls))
+        # This loop seems like the most likely place for an error if max_urls is correct
         for i, url in enumerate(padded_urls):
-            row[f'vid{i+1}_url'] = url
-        data_for_df.append(row)
+            row[f'vid{i+1}_url'] = url # Creates vid1_url, vid2_url etc. keys in the row dict
+        data_for_df.append(row) # Appends the complete row dict
 
-    # 3. Create Final DataFrame (Same logic as before)
+    # --- Add Debugging ---
+    st.sidebar.write("`data_for_df` (Should be list of dicts, each with vid1_url AND vid2_url):")
+    try:
+        st.sidebar.json(data_for_df, expanded=False)
+    except Exception as e:
+        st.sidebar.write(f"Error displaying json: {e}")
+        st.sidebar.write(data_for_df) # Fallback
+    # --- End Debugging ---
+
+    # 3. Create Final DataFrame
     if data_for_df:
+        # Create DF directly from the list of dictionaries
         df_final = pd.DataFrame(data_for_df)
-        topic_col = df_final.pop('Topic')
-        df_final.insert(0, 'Topic', topic_col)
-        url_cols = sorted([col for col in df_final.columns if col.startswith('vid')],
-                          key=lambda x: int(x.replace('vid','').replace('_url','')))
-        final_cols = ['Topic'] + url_cols
-        df_final = df_final.reindex(columns=final_cols, fill_value='')
+
+        # --- Add Debugging ---
+        st.sidebar.write("`df_final` (Immediately after creation, should have vid1/vid2 cols):")
+        st.sidebar.dataframe(df_final)
+        # --- End Debugging ---
+
+        # Check if necessary columns were created before trying to reorder
+        if 'Topic' in df_final.columns:
+             # Ensure 'Topic' column is first
+             topic_col = df_final.pop('Topic')
+             df_final.insert(0, 'Topic', topic_col)
+
+             # Get existing URL columns and sort them
+             url_cols_present = [col for col in df_final.columns if col.startswith('vid')]
+             url_cols_sorted = sorted(url_cols_present,
+                                      key=lambda x: int(x.replace('vid','').replace('_url','')))
+             final_cols = ['Topic'] + url_cols_sorted
+
+             # --- Add Debugging ---
+             st.sidebar.write("`final_cols` list (Columns expected in final output):")
+             st.sidebar.write(final_cols)
+             # --- End Debugging ---
+
+             # Reindex to ensure columns exist and are in order - might be masking the real issue
+             # Let's try returning without reindex first to see raw structure
+             # df_final = df_final.reindex(columns=final_cols, fill_value='')
+             # Return the dataframe after sorting columns, before reindex
+             df_final = df_final[['Topic'] + url_cols_sorted]
+
+
+        else:
+             st.sidebar.warning("Debug: 'Topic' column missing after DataFrame creation.")
+             # Fallback if Topic column wasn't created correctly
+             if not df_final.empty:
+                 # Try to make Topic the first column if it exists under a different name/case? Unlikely.
+                 pass # Or handle error
+             else:
+                 df_final = pd.DataFrame(columns=['Topic'])
+
+
     else:
+        st.sidebar.write("Debug: `data_for_df` was empty.")
         df_final = pd.DataFrame(columns=['Topic'])
+
+    # --- Add Final Debugging ---
+    st.sidebar.write("`df_final` (Returned value):")
+    st.sidebar.dataframe(df_final)
+    st.sidebar.write("--- End Debugging Summary Function ---")
+    # --- End Final Debugging ---
 
     return df_final
 
