@@ -164,14 +164,14 @@ def create_topic_summary_dataframe(selected_videos_dict):
             topic_lang_to_generated_urls[grouping_key].append(s3_url)
 
     # --- Add Debugging ---
-    st.sidebar.write("--- Debugging Summary Function ---")
-    st.sidebar.write("`topic_lang_to_generated_urls` (Should show lists with 2 URLs each):")
-    # Use st.json for better dict/list display in sidebar
-    try:
-        st.sidebar.json(topic_lang_to_generated_urls, expanded=False)
-    except Exception as e:
-        st.sidebar.write(f"Error displaying json: {e}")
-        st.sidebar.write(topic_lang_to_generated_urls) # Fallback to plain write
+    # st.sidebar.write("--- Debugging Summary Function ---")
+    # st.sidebar.write("`topic_lang_to_generated_urls` (Should show lists with 2 URLs each):")
+    # # Use st.json for better dict/list display in sidebar
+    # try:
+    #     st.sidebar.json(topic_lang_to_generated_urls, expanded=False)
+    # except Exception as e:
+    #     st.sidebar.write(f"Error displaying json: {e}")
+    #     st.sidebar.write(topic_lang_to_generated_urls) # Fallback to plain write
     # --- End Debugging ---
 
     if not topic_lang_to_generated_urls:
