@@ -1396,7 +1396,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
                                     - Are perfect for remixing or using as inspiration for Facebook video ads
                                     - Focus on things like transformations, objects in motion, satisfying actions, luxury aesthetics, clever space-saving, or unexpected reveals
                                     - Avoid abstract or advice-based phrases (like “tips,” “hacks,” or “secrets”)
-
+                                    - Avoid using non visual\describing words that are not likely to be relevent (like 'On credit', "Financing", etc)
                                     - Add '#shorts' to the end of each search term and separate terms with ' | '
 
                                     Example:  
