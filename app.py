@@ -1696,8 +1696,7 @@ if st.session_state.batch_processing_active and st.session_state.generation_queu
                       for lang, err in current_gen_errors.items():
                            st.caption(f"{lang}: {err}")
 
-        finally:
-            # --- Cleanup Temporary Files for this run ---
+        
             st.write(f"🧹 Cleaning up temporary files for {video_id_to_process}...")
             for path in temp_audio_paths_this_run + temp_final_video_paths_this_run:
                 if path and os.path.exists(path):
