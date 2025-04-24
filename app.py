@@ -1588,7 +1588,7 @@ if st.session_state.api_search_results:
                                     if "," in lang:
                                         langs = lang.split(",")
                                         for idx, lang in enumerate(langs):
-                                            st.session_state.selected_videos[video_id] = {
+                                            st.session_state.selected_videos[f'{video_id}_{lang}'] = {
                                                 'Search Term': term,
                                                 'Topic': topic,
                                                 'Language': lang,
