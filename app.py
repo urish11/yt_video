@@ -276,6 +276,7 @@ def search_youtube(api_key, query, max_results=40):
 
     # Split query into multiple terms if it contains '|'
     if '|' in query:
+        terms = terms.replace('"','')
         terms = query.split('|')
     else:
         terms = [query]
