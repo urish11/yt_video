@@ -21,6 +21,8 @@ import anthropic
 # Ensure numpy is installed: pip install numpy
 import numpy as np
 # --- Try importing moviepy components with error handling ---
+
+st.session_state['resolved_vid_urls'] = {} # vid:url
 try:
     from moviepy.editor import (
         VideoFileClip, AudioFileClip, CompositeVideoClip, ImageClip, concatenate_videoclips, TextClip
@@ -1728,7 +1730,11 @@ if not st.session_state.batch_processing_active:
 
             # Show spinner only if fetching is actually happening for this ID
             with st.spinner(f"Fetching yt-dlp details for '{title}'..."):
-                 dlp_info = get_yt_dlp_info(standard_url)
+              if standard_url in st.session_state['resolved_vid_urls']:
+                dlp_info = st.session_state['resolved_vid_urls'][standard_url]
+              else:
+                dlp_info = get_yt_dlp_info(standard_url)
+                st.session_state['resolved_vid_urls'][standard_url] = dlp_info
 
             # Update state based on dlp_info result
             # Use .get(fetch_id) again in case it was deleted between checks
