@@ -21,8 +21,8 @@ import anthropic
 # Ensure numpy is installed: pip install numpy
 import numpy as np
 # --- Try importing moviepy components with error handling ---
-
-st.session_state['resolved_vid_urls'] = {} # vid:url
+if 'resolved_vid_urls' not in st.session_state:
+  st.session_state['resolved_vid_urls'] = {} # vid:url
 try:
     from moviepy.editor import (
         VideoFileClip, AudioFileClip, CompositeVideoClip, ImageClip, concatenate_videoclips, TextClip
