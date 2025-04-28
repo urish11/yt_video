@@ -942,7 +942,6 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic):
             # Let MoviePy handle the URL directly
             local_vid_path = download_with_ytdlp(base_video_url)
             st.text(local_vid_path)
-            input()
             base_video = VideoFileClip(local_vid_path, audio=False, target_resolution=(720, 1280)) # Target 720p vertical
             # Or download first if direct URL fails often:
             # with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as temp_vid_file:
