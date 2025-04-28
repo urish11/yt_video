@@ -1813,7 +1813,11 @@ if not st.session_state.batch_processing_active:
               if standard_url in st.session_state['resolved_vid_urls']:
                 dlp_info = st.session_state['resolved_vid_urls'][standard_url]
               else:
-                dlp_info = get_yt_dlp_info(standard_url)
+                # dlp_info = get_yt_dlp_info(standard_url)
+                dlp_info ={'direct_url': "dummy",
+                    'format_details': "dummy",
+                    'error': None}
+                
                 st.session_state['resolved_vid_urls'][standard_url] = dlp_info
 
             # Update state based on dlp_info result
