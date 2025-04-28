@@ -845,6 +845,34 @@ def create_text_image(text, fontsize, color, bg_color, font_path, video_width):
         return np.zeros((10, 10, 4), dtype=np.uint8)
 
 # --- Helper Function: Process Video with TTS and Subtitles ---
+def download_with_ytdlp(video_url):
+    """
+    Use yt-dlp to download a video properly to a local temp file.
+    Returns the path to the downloaded file, or None if failed.
+    """
+    try:
+        # Set up temp output path
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
+        temp_path = temp_file.name
+        temp_file.close()
+
+        ydl_opts = {
+            'outtmpl': temp_path,
+            'format': 'best[ext=mp4]/best',  # Best available mp4
+            'quiet': True,
+            'noplaylist': True,
+        }
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([video_url])
+        
+        print(f"✔️ yt-dlp downloaded video to {temp_path}")
+        return temp_path
+
+    except Exception as e:
+        print(f"❌ yt-dlp download failed: {e}")
+        return None
+
+
 
 def download_direct_url(url, suffix=".mp4"):
     """
@@ -912,7 +940,7 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic):
         # Consider downloading locally first if direct URL access is flaky
         try:
             # Let MoviePy handle the URL directly
-            local_vid_path = download_direct_url(base_video_url)
+            local_vid_path = download_with_ytdlp(base_video_url)
             st.text(local_vid_path)
             input()
             base_video = VideoFileClip(local_vid_path, audio=False, target_resolution=(720, 1280)) # Target 720p vertical
