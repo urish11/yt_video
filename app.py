@@ -351,7 +351,9 @@ def get_yt_dlp_info(video_url):
         'extract_flat': False, # Need format details
         'socket_timeout': YT_DLP_FETCH_TIMEOUT,
         'retries': 3, # Add retries
-        'force_ipv4': True
+        'force_ipv4': True,
+      'http_headers': {
+        'Referer': 'https://iframe.mediadelivery.net/'}
     }
     try:
         with yt_dlp.YoutubeDL(YDL_OPTS) as ydl:
