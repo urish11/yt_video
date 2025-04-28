@@ -24,8 +24,7 @@ import numpy as np
 if 'resolved_vid_urls' not in st.session_state:
   st.session_state['resolved_vid_urls'] = {} # vid:url
 
-result = os.popen('pip list').read()
-st.code(result, language=None)
+
 try:
     from moviepy.editor import (
         VideoFileClip, AudioFileClip, CompositeVideoClip, ImageClip, concatenate_videoclips, TextClip
