@@ -23,8 +23,6 @@ import numpy as np
 # --- Try importing moviepy components with error handling ---
 if 'resolved_vid_urls' not in st.session_state:
   st.session_state['resolved_vid_urls'] = {} # vid:url
-
-
 try:
     from moviepy.editor import (
         VideoFileClip, AudioFileClip, CompositeVideoClip, ImageClip, concatenate_videoclips, TextClip
@@ -847,133 +845,6 @@ def create_text_image(text, fontsize, color, bg_color, font_path, video_width):
         return np.zeros((10, 10, 4), dtype=np.uint8)
 
 # --- Helper Function: Process Video with TTS and Subtitles ---
-def download_with_ytdlp(video_url):
-    """
-    Uses yt-dlp to download a video to a local temp file, performing
-    basic existence and size checks after download.
-    (Does NOT perform ffmpeg probe for corruption).
-
-    Args:
-        video_url (str): The URL of the YouTube video to download.
-
-    Returns:
-        str: The path to the downloaded temporary file if successful and passes checks,
-             otherwise None. The caller is responsible for deleting the file later.
-    """
-    temp_path = None # Initialize path
-    st.write(f"ℹ️ Attempting to download video: {video_url}")
-
-    try:
-        # Set up temp output path ensuring it gets an mp4 extension if possible
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_file_obj:
-            temp_path = temp_file_obj.name
-        # Note: The file is created empty here. yt-dlp will write to this path.
-
-        ydl_opts = {
-            'outtmpl': temp_path, # Tell yt-dlp to use this specific path
-            'format': '22/18/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best', # Best available mp4
-            'quiet': False, # Set to False to see yt-dlp output in logs/console
-            'noplaylist': True,
-            'merge_output_format': 'mp4', # Ensure merged files are mp4
-            'overwrites': True, # Overwrite the empty temp file
-            # Add options to potentially help with errors
-            'retries': 3, # Retry downloads
-            'fragment_retries': 3, # Retry fragments
-            'socket_timeout': 30, # Increase timeout
-            'force_ipv4': True,
-            # 'verbose': True, # Uncomment for extremely detailed logs from yt-dlp
-        }
-
-        st.write(f"⏳ Starting yt-dlp download to: {temp_path}")
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([video_url])
-
-        # --- Basic Integrity Checks ---
-        st.write("🔬 Performing basic checks on downloaded file...")
-
-        # 1. Check if file exists and has size > 0
-        if not os.path.exists(temp_path):
-            st.error(f"❌ Download Error: File not found after yt-dlp finished: {temp_path}")
-            return None
-        if os.path.getsize(temp_path) == 0:
-            st.error(f"❌ Download Error: File is empty after download: {temp_path}")
-            try: os.remove(temp_path) # Clean up empty file
-            except OSError: pass
-            return None
-        st.write(f"✔️ Check 1 Passed: File exists and is not empty (Size: {os.path.getsize(temp_path) / (1024*1024):.2f} MB).")
-
-        # --- FFmpeg probe check is removed as requested ---
-
-        # --- If basic checks passed ---
-        st.success(f"✅ yt-dlp download and basic checks successful for: {temp_path}")
-        return temp_path
-
-    except yt_dlp.utils.DownloadError as dl_err:
-        st.error(f"❌ yt-dlp DownloadError: {dl_err}")
-        # Clean up potentially incomplete/bad file
-        if temp_path and os.path.exists(temp_path):
-             try: os.remove(temp_path)
-             except OSError: pass
-        return None
-    except Exception as e:
-        st.error(f"❌ Unexpected error during download_with_ytdlp: {e}")
-        import traceback
-        st.error(traceback.format_exc()) # Print full traceback to Streamlit logs
-        # Clean up potentially incomplete/bad file
-        if temp_path and os.path.exists(temp_path):
-             try: os.remove(temp_path)
-             except OSError: pass
-        return None
-
-def download_direct_url(url, suffix=".mp4"):
-    """
-    Downloads content from a direct URL to a temporary local file.
-
-    Args:
-        url (str): The direct URL to the file (e.g., ending in .mp4, .jpg).
-        suffix (str): A suggested file extension for the temporary file.
-
-    Returns:
-        str: The path to the downloaded temporary file, or None if download fails.
-             The caller is responsible for deleting this file when done.
-    """
-    local_path = None
-    try:
-        headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
-    }
-
-        # Create a temporary file (it gets a random name)
-        # delete=False means the file persists after closing, we delete manually
-        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
-            local_path = temp_file.name # Get the path
-            print(f"Attempting to download direct URL to temp file: {local_path}")
-
-            # Make the request, stream=True handles large files efficiently
-            with requests.get(url, stream=True, timeout=60, headers= headers) as response:
-                response.raise_for_status() # Raise an exception for bad status codes (4xx or 5xx)
-                # Write the content to the temporary file in chunks
-                for chunk in response.iter_content(chunk_size=8192):
-                    temp_file.write(chunk)
-
-        print(f"✔️ Download successful: {local_path}")
-        return local_path
-
-    except requests.exceptions.RequestException as e:
-        print(f"❌ Download failed (Network/HTTP Error): {e}")
-        # Clean up the potentially incomplete temp file if it exists
-        if local_path and os.path.exists(local_path):
-            os.remove(local_path)
-        return None
-    except Exception as e:
-        print(f"❌ Download failed (Other Error): {e}")
-        if local_path and os.path.exists(local_path):
-            os.remove(local_path)
-        return None
-
-
-
-
 def process_video_with_tts(base_video_url, audio_path, word_timings, topic):
     """Loads video, adds TTS audio, loops if necessary, adds subtitles centered with wrapping."""
     final_video_clip = None
@@ -991,10 +862,7 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic):
         # Consider downloading locally first if direct URL access is flaky
         try:
             # Let MoviePy handle the URL directly
-            local_vid_path = download_with_ytdlp(base_video_url)
-            st.text(local_vid_path)
-            st.video(local_vid_path)
-            base_video = VideoFileClip(local_vid_path, audio=False, target_resolution=(720, 1280)) # Target 720p vertical
+            base_video = VideoFileClip(base_video_url, audio=False, target_resolution=(720, 1280)) # Target 720p vertical
             # Or download first if direct URL fails often:
             # with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as temp_vid_file:
             #     response = requests.get(base_video_url, stream=True)
@@ -1593,7 +1461,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
                                     - Avoid abstract or advice-based phrases (like “tips,” “hacks,” or “secrets”)
                                     - Avoid using non visual\describing words that are not likely to be relevent (like 'On credit', "Financing", etc)
                                     - Add '#shorts' to the end of each search term and separate terms with ' | '
-                                    - if the topic is a service (like lawyer) that is intangible, think of something else that can be used (like "Veterans Benefits Lawyer free consultation" give "veteran shares #shorts ") 
+
                                     Example:  
                                     Input: sofa  
                                     Output:  
@@ -1865,11 +1733,7 @@ if not st.session_state.batch_processing_active:
               if standard_url in st.session_state['resolved_vid_urls']:
                 dlp_info = st.session_state['resolved_vid_urls'][standard_url]
               else:
-                # dlp_info = get_yt_dlp_info(standard_url)
-                dlp_info ={'direct_url': "dummy",
-                    'format_details': "dummy",
-                    'error': None}
-                
+                dlp_info = get_yt_dlp_info(standard_url)
                 st.session_state['resolved_vid_urls'][standard_url] = dlp_info
 
             # Update state based on dlp_info result
@@ -1929,7 +1793,7 @@ if st.session_state.batch_processing_active and st.session_state.generation_queu
                         st.write(f"1/5: Generating script for topic: '{topic}'...")
 
                         # --- Step 2: Generate Script (Text Only) ---
-                        script_prompt = f"""Create a short, engaging voiceover script for FB viral   video (roughly 15-20 seconds long, maybe 2-3 sentences) about '{topic}' in language {lang}. The tone should be informative yet conversational, '.  smooth flow. Just provide the script text, nothing else. create intriguing and engaging script, sell the topic to the audience . be very causal and not 'advertisement' style vibe. end with a call to action 'tap to....'  .the text needs to be retentive.Don't say 'we' or 'our' .NOTE:: DO NOT dont use senetional words and phrasing and DONT make false promises , use Urgency Language, Avoid geographically suggestive terms (e.g., "Near you," "In your area"). Do not use "we" or "our". in end if video use something "Tap now to.." with a clear, non-committal phrase !!!  """
+                        script_prompt = f"Create a short, engaging voiceover script for FB viral   video (roughly 15-20 seconds long, maybe 2-3 sentences) about '{topic}' in language {lang}. The tone should be informative yet conversational, '.  smooth flow. Just provide the script text, nothing else. create intriguing and engaging script, sell the topic to the audience . be very causal and not 'advertisement' style vibe. end with a call to action 'tap to....'  .the text needs to be retentive.Don't say 'we' or 'our' .NOTE:: DO NOT dont use senetional words and phrasing and DONT make false promises !!! "
                         # script_text = chatGPT(script_prompt,model="o1", client=openai_client)
                         script_text = claude(script_prompt,is_thinking=True)
 
@@ -1950,7 +1814,7 @@ if st.session_state.batch_processing_active and st.session_state.generation_queu
 
                         # --- Step 4: Process Video (Combine, Loop, Subtitles) ---
                         final_video_path, final_filename = process_video_with_tts(
-                            base_video_url=video_data["Standard URL"],
+                            base_video_url=video_data['Direct URL'],
                             audio_path=audio_path,
                             word_timings=word_timings,
                             topic=topic # Pass topic for filename generation
