@@ -1895,7 +1895,7 @@ if st.session_state.batch_processing_active and st.session_state.generation_queu
 
                         # --- Step 4: Process Video (Combine, Loop, Subtitles) ---
                         final_video_path, final_filename = process_video_with_tts(
-                            base_video_url=f"https://www.youtube.com/watch?v={video_data['Video_ID']}",
+                            base_video_url=video_data["Standard URL"],
                             audio_path=audio_path,
                             word_timings=word_timings,
                             topic=topic # Pass topic for filename generation
