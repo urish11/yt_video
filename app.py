@@ -852,7 +852,6 @@ def download_with_ytdlp(video_url):
     """
     try:
         st.text(video_url)
-        input()
         # Set up temp output path
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
         temp_path = temp_file.name
