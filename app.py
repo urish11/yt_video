@@ -1461,7 +1461,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
                                     - Avoid abstract or advice-based phrases (like “tips,” “hacks,” or “secrets”)
                                     - Avoid using non visual\describing words that are not likely to be relevent (like 'On credit', "Financing", etc)
                                     - Add '#shorts' to the end of each search term and separate terms with ' | '
-
+                                    - if the topic is a serivce that is intangible, think of something else that can be used (like "Veterans Benefits Lawyer free consultation" give "veteran shares #shorts ")
                                     Example:  
                                     Input: sofa  
                                     Output:  
