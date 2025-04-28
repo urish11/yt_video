@@ -882,7 +882,7 @@ def download_with_ytdlp(video_url, cookie_file_path=None):
             'retries': 3,
             'fragment_retries': 3,
             'socket_timeout': 30,
-          'proxy': "http://ozueknly:oxnmjbfdgxzm@38.153.152.244:9594"
+          'proxy': "http://ozueknly:oxnmjbfdgxzm@86.38.234.176:6630"
       #        'force_ipv4': True,
       # 'http_headers': {
       #   'Referer': 'https://iframe.mediadelivery.net/'}
