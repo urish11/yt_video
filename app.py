@@ -880,6 +880,7 @@ def download_with_ytdlp(video_url):
             'retries': 3, # Retry downloads
             'fragment_retries': 3, # Retry fragments
             'socket_timeout': 30, # Increase timeout
+            'force_ipv4': True,
             # 'verbose': True, # Uncomment for extremely detailed logs from yt-dlp
         }
 
