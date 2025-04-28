@@ -845,6 +845,52 @@ def create_text_image(text, fontsize, color, bg_color, font_path, video_width):
         return np.zeros((10, 10, 4), dtype=np.uint8)
 
 # --- Helper Function: Process Video with TTS and Subtitles ---
+
+def download_direct_url(url, suffix=".mp4"):
+    """
+    Downloads content from a direct URL to a temporary local file.
+
+    Args:
+        url (str): The direct URL to the file (e.g., ending in .mp4, .jpg).
+        suffix (str): A suggested file extension for the temporary file.
+
+    Returns:
+        str: The path to the downloaded temporary file, or None if download fails.
+             The caller is responsible for deleting this file when done.
+    """
+    local_path = None
+    try:
+        # Create a temporary file (it gets a random name)
+        # delete=False means the file persists after closing, we delete manually
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
+            local_path = temp_file.name # Get the path
+            print(f"Attempting to download direct URL to temp file: {local_path}")
+
+            # Make the request, stream=True handles large files efficiently
+            with requests.get(url, stream=True, timeout=60) as response:
+                response.raise_for_status() # Raise an exception for bad status codes (4xx or 5xx)
+                # Write the content to the temporary file in chunks
+                for chunk in response.iter_content(chunk_size=8192):
+                    temp_file.write(chunk)
+
+        print(f"✔️ Download successful: {local_path}")
+        return local_path
+
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Download failed (Network/HTTP Error): {e}")
+        # Clean up the potentially incomplete temp file if it exists
+        if local_path and os.path.exists(local_path):
+            os.remove(local_path)
+        return None
+    except Exception as e:
+        print(f"❌ Download failed (Other Error): {e}")
+        if local_path and os.path.exists(local_path):
+            os.remove(local_path)
+        return None
+
+
+
+
 def process_video_with_tts(base_video_url, audio_path, word_timings, topic):
     """Loads video, adds TTS audio, loops if necessary, adds subtitles centered with wrapping."""
     final_video_clip = None
@@ -862,7 +908,8 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic):
         # Consider downloading locally first if direct URL access is flaky
         try:
             # Let MoviePy handle the URL directly
-            base_video = VideoFileClip(base_video_url, audio=False, target_resolution=(720, 1280)) # Target 720p vertical
+            local_vid_path = download_direct_url(base_video_url)
+            base_video = VideoFileClip(local_vid_path, audio=False, target_resolution=(720, 1280)) # Target 720p vertical
             # Or download first if direct URL fails often:
             # with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as temp_vid_file:
             #     response = requests.get(base_video_url, stream=True)
