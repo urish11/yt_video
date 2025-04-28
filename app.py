@@ -851,6 +851,8 @@ def download_with_ytdlp(video_url):
     Returns the path to the downloaded file, or None if failed.
     """
     try:
+        st.text(video_url)
+      input()
         # Set up temp output path
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
         temp_path = temp_file.name
@@ -858,7 +860,7 @@ def download_with_ytdlp(video_url):
 
         ydl_opts = {
             'outtmpl': temp_path,
-            'format': 'best[ext=mp4]/best',  # Best available mp4
+            'format': '22/18/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',  # Best available mp4
             'quiet': True,
             'noplaylist': True,
         }
