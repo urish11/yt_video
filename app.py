@@ -924,7 +924,7 @@ def download_direct_url(url, suffix=".mp4"):
 
 
 
-def process_video_with_tts(base_video_url, audio_path, word_timings, topic):
+def (base_video_url, audio_path, word_timings, topic):
     """Loads video, adds TTS audio, loops if necessary, adds subtitles centered with wrapping."""
     final_video_clip = None
     temp_output_path = None
@@ -944,7 +944,6 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic):
             local_vid_path = download_with_ytdlp(base_video_url)
             st.text(local_vid_path)
             st.video(local_vid_path)
-            input()
             base_video = VideoFileClip(local_vid_path, audio=False, target_resolution=(720, 1280)) # Target 720p vertical
             # Or download first if direct URL fails often:
             # with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as temp_vid_file:
