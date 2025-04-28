@@ -847,33 +847,80 @@ def create_text_image(text, fontsize, color, bg_color, font_path, video_width):
 # --- Helper Function: Process Video with TTS and Subtitles ---
 def download_with_ytdlp(video_url):
     """
-    Use yt-dlp to download a video properly to a local temp file.
-    Returns the path to the downloaded file, or None if failed.
+    Uses yt-dlp to download a video to a local temp file, performing
+    basic existence and size checks after download.
+    (Does NOT perform ffmpeg probe for corruption).
+
+    Args:
+        video_url (str): The URL of the YouTube video to download.
+
+    Returns:
+        str: The path to the downloaded temporary file if successful and passes checks,
+             otherwise None. The caller is responsible for deleting the file later.
     """
+    temp_path = None # Initialize path
+    st.write(f"ℹ️ Attempting to download video: {video_url}")
+
     try:
-        st.text(video_url)
-        # Set up temp output path
-        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
-        temp_path = temp_file.name
-        temp_file.close()
+        # Set up temp output path ensuring it gets an mp4 extension if possible
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_file_obj:
+            temp_path = temp_file_obj.name
+        # Note: The file is created empty here. yt-dlp will write to this path.
 
         ydl_opts = {
-            'outtmpl': temp_path,
-            'format': '22/18/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',  # Best available mp4
-            'quiet': True,
+            'outtmpl': temp_path, # Tell yt-dlp to use this specific path
+            'format': '22/18/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best', # Best available mp4
+            'quiet': False, # Set to False to see yt-dlp output in logs/console
             'noplaylist': True,
+            'merge_output_format': 'mp4', # Ensure merged files are mp4
+            'overwrites': True, # Overwrite the empty temp file
+            # Add options to potentially help with errors
+            'retries': 3, # Retry downloads
+            'fragment_retries': 3, # Retry fragments
+            'socket_timeout': 30, # Increase timeout
+            # 'verbose': True, # Uncomment for extremely detailed logs from yt-dlp
         }
+
+        st.write(f"⏳ Starting yt-dlp download to: {temp_path}")
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([video_url])
-        
-        print(f"✔️ yt-dlp downloaded video to {temp_path}")
+
+        # --- Basic Integrity Checks ---
+        st.write("🔬 Performing basic checks on downloaded file...")
+
+        # 1. Check if file exists and has size > 0
+        if not os.path.exists(temp_path):
+            st.error(f"❌ Download Error: File not found after yt-dlp finished: {temp_path}")
+            return None
+        if os.path.getsize(temp_path) == 0:
+            st.error(f"❌ Download Error: File is empty after download: {temp_path}")
+            try: os.remove(temp_path) # Clean up empty file
+            except OSError: pass
+            return None
+        st.write(f"✔️ Check 1 Passed: File exists and is not empty (Size: {os.path.getsize(temp_path) / (1024*1024):.2f} MB).")
+
+        # --- FFmpeg probe check is removed as requested ---
+
+        # --- If basic checks passed ---
+        st.success(f"✅ yt-dlp download and basic checks successful for: {temp_path}")
         return temp_path
 
-    except Exception as e:
-        print(f"❌ yt-dlp download failed: {e}")
+    except yt_dlp.utils.DownloadError as dl_err:
+        st.error(f"❌ yt-dlp DownloadError: {dl_err}")
+        # Clean up potentially incomplete/bad file
+        if temp_path and os.path.exists(temp_path):
+             try: os.remove(temp_path)
+             except OSError: pass
         return None
-
-
+    except Exception as e:
+        st.error(f"❌ Unexpected error during download_with_ytdlp: {e}")
+        import traceback
+        st.error(traceback.format_exc()) # Print full traceback to Streamlit logs
+        # Clean up potentially incomplete/bad file
+        if temp_path and os.path.exists(temp_path):
+             try: os.remove(temp_path)
+             except OSError: pass
+        return None
 
 def download_direct_url(url, suffix=".mp4"):
     """
