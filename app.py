@@ -87,6 +87,7 @@ try:
     aws_secret_key = st.secrets["AWS_SECRET_ACCESS_KEY"]
     s3_bucket_name = st.secrets["S3_BUCKET_NAME"]
     s3_region = st.secrets["AWS_REGION"]
+    COOKIE_FILE_PATH = st.secrets.get("YOUTUBE_COOKIE_PATH")
 except KeyError as e:
     st.error(f"Missing secret key: {e}. Please configure secrets.", icon="🚨")
     st.stop()
@@ -847,14 +848,15 @@ def create_text_image(text, fontsize, color, bg_color, font_path, video_width):
         return np.zeros((10, 10, 4), dtype=np.uint8)
 
 # --- Helper Function: Process Video with TTS and Subtitles ---
-def download_with_ytdlp(video_url):
+def download_with_ytdlp(video_url, cookie_file_path=None):
     """
     Uses yt-dlp to download a video to a local temp file, performing
-    basic existence and size checks after download.
-    (Does NOT perform ffmpeg probe for corruption).
+    basic existence and size checks after download. Optionally uses a cookie file.
 
     Args:
         video_url (str): The URL of the YouTube video to download.
+        cookie_file_path (str, optional): Path to a Netscape format cookie file.
+                                          Defaults to None.
 
     Returns:
         str: The path to the downloaded temporary file if successful and passes checks,
@@ -862,54 +864,70 @@ def download_with_ytdlp(video_url):
     """
     temp_path = None # Initialize path
     st.write(f"ℹ️ Attempting to download video: {video_url}")
+    if cookie_file_path:
+        st.write(f"ℹ️ Using cookie file: {cookie_file_path}")
 
     try:
-        # Set up temp output path ensuring it gets an mp4 extension if possible
+        # Set up temp output path
         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_file_obj:
             temp_path = temp_file_obj.name
-        # Note: The file is created empty here. yt-dlp will write to this path.
 
         ydl_opts = {
-            'outtmpl': temp_path, # Tell yt-dlp to use this specific path
-            'format': '22/18/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best', # Best available mp4
-            'quiet': False, # Set to False to see yt-dlp output in logs/console
+            'outtmpl': temp_path,
+            'format': '22/18/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+            'quiet': False,
             'noplaylist': True,
-            'merge_output_format': 'mp4', # Ensure merged files are mp4
-            'overwrites': True, # Overwrite the empty temp file
-            # Add options to potentially help with errors
-            'retries': 3, # Retry downloads
-            'fragment_retries': 3, # Retry fragments
-            'socket_timeout': 30, # Increase timeout
-            'force_ipv4': True,
-            # 'verbose': True, # Uncomment for extremely detailed logs from yt-dlp
+            'merge_output_format': 'mp4',
+            'overwrites': True,
+            'retries': 3,
+            'fragment_retries': 3,
+            'socket_timeout': 30,
+            # --- Add Cookie Option ---
+            # The 'cookies' key corresponds to the --cookies command-line option
+            # Only add it if a valid path is provided
         }
+
+        # Add cookie option if path is valid and file exists
+        if cookie_file_path and os.path.exists(cookie_file_path):
+             ydl_opts['cookies'] = cookie_file_path
+        elif cookie_file_path:
+             # Log if path provided but file doesn't exist (already warned globally usually)
+             st.warning(f"Cookie file specified but not found at '{cookie_file_path}'. Proceeding without cookies for this download.")
+
 
         st.write(f"⏳ Starting yt-dlp download to: {temp_path}")
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            # Log the effective options being used (optional, for debugging)
+            # st.write(f"yt-dlp effective options: {ydl.params}")
             ydl.download([video_url])
 
         # --- Basic Integrity Checks ---
         st.write("🔬 Performing basic checks on downloaded file...")
-
-        # 1. Check if file exists and has size > 0
         if not os.path.exists(temp_path):
             st.error(f"❌ Download Error: File not found after yt-dlp finished: {temp_path}")
             return None
         if os.path.getsize(temp_path) == 0:
             st.error(f"❌ Download Error: File is empty after download: {temp_path}")
-            try: os.remove(temp_path) # Clean up empty file
+            try: os.remove(temp_path)
             except OSError: pass
             return None
         st.write(f"✔️ Check 1 Passed: File exists and is not empty (Size: {os.path.getsize(temp_path) / (1024*1024):.2f} MB).")
 
-        # --- FFmpeg probe check is removed as requested ---
-
-        # --- If basic checks passed ---
         st.success(f"✅ yt-dlp download and basic checks successful for: {temp_path}")
         return temp_path
 
     except yt_dlp.utils.DownloadError as dl_err:
-        st.error(f"❌ yt-dlp DownloadError: {dl_err}")
+        # Check if the error message indicates an authentication issue
+        err_str = str(dl_err).lower()
+        if "login" in err_str or "authentication" in err_str or "age restricted" in err_str or "private" in err_str:
+             st.error(f"❌ yt-dlp DownloadError: Authentication possibly required or video is private/restricted. Message: {dl_err}", icon="🔒")
+             if not cookie_file_path:
+                 st.warning("Consider providing a valid cookies.txt file via secrets (YOUTUBE_COOKIE_PATH) for videos requiring login.")
+        elif "403: forbidden" in err_str:
+             st.error(f"❌ yt-dlp DownloadError: Received '403 Forbidden'. YouTube may be blocking the request. Cookies might help, or the block may be stricter. Message: {dl_err}", icon="🚫")
+        else:
+             st.error(f"❌ yt-dlp DownloadError: {dl_err}")
+
         # Clean up potentially incomplete/bad file
         if temp_path and os.path.exists(temp_path):
              try: os.remove(temp_path)
@@ -918,12 +936,13 @@ def download_with_ytdlp(video_url):
     except Exception as e:
         st.error(f"❌ Unexpected error during download_with_ytdlp: {e}")
         import traceback
-        st.error(traceback.format_exc()) # Print full traceback to Streamlit logs
-        # Clean up potentially incomplete/bad file
+        st.error(traceback.format_exc())
         if temp_path and os.path.exists(temp_path):
              try: os.remove(temp_path)
              except OSError: pass
         return None
+
+
 
 def download_direct_url(url, suffix=".mp4"):
     """
@@ -991,7 +1010,7 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic):
         # Consider downloading locally first if direct URL access is flaky
         try:
             # Let MoviePy handle the URL directly
-            local_vid_path = download_with_ytdlp(base_video_url)
+            local_vid_path = download_with_ytdlp(base_video_url, cookie_file_path=COOKIE_FILE_PATH)
             st.text(local_vid_path)
             st.video(local_vid_path)
             base_video = VideoFileClip(local_vid_path, audio=False, target_resolution=(720, 1280)) # Target 720p vertical
