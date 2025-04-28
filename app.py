@@ -882,9 +882,10 @@ def download_with_ytdlp(video_url, cookie_file_path=None):
             'retries': 3,
             'fragment_retries': 3,
             'socket_timeout': 30,
-             'force_ipv4': True,
-      'http_headers': {
-        'Referer': 'https://iframe.mediadelivery.net/'}
+          'proxy': "http://170.106.171.100:13001"
+      #        'force_ipv4': True,
+      # 'http_headers': {
+      #   'Referer': 'https://iframe.mediadelivery.net/'}
     
             # --- Add Cookie Option ---
             # The 'cookies' key corresponds to the --cookies command-line option
