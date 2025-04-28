@@ -860,6 +860,10 @@ def download_direct_url(url, suffix=".mp4"):
     """
     local_path = None
     try:
+      headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+    }
+
         # Create a temporary file (it gets a random name)
         # delete=False means the file persists after closing, we delete manually
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
@@ -867,7 +871,7 @@ def download_direct_url(url, suffix=".mp4"):
             print(f"Attempting to download direct URL to temp file: {local_path}")
 
             # Make the request, stream=True handles large files efficiently
-            with requests.get(url, stream=True, timeout=60) as response:
+            with requests.get(url, stream=True, timeout=60, headers= headers) as response:
                 response.raise_for_status() # Raise an exception for bad status codes (4xx or 5xx)
                 # Write the content to the temporary file in chunks
                 for chunk in response.iter_content(chunk_size=8192):
