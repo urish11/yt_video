@@ -882,17 +882,21 @@ def download_with_ytdlp(video_url, cookie_file_path=None):
             'retries': 3,
             'fragment_retries': 3,
             'socket_timeout': 30,
+             'force_ipv4': True,
+      'http_headers': {
+        'Referer': 'https://iframe.mediadelivery.net/'}
+    }
             # --- Add Cookie Option ---
             # The 'cookies' key corresponds to the --cookies command-line option
             # Only add it if a valid path is provided
         }
 
         # Add cookie option if path is valid and file exists
-        if cookie_file_path and os.path.exists(cookie_file_path):
-             ydl_opts['cookies'] = cookie_file_path
-        elif cookie_file_path:
-             # Log if path provided but file doesn't exist (already warned globally usually)
-             st.warning(f"Cookie file specified but not found at '{cookie_file_path}'. Proceeding without cookies for this download.")
+        # if cookie_file_path and os.path.exists(cookie_file_path):
+        #      ydl_opts['cookies'] = cookie_file_path
+        # elif cookie_file_path:
+        #      # Log if path provided but file doesn't exist (already warned globally usually)
+        #      st.warning(f"Cookie file specified but not found at '{cookie_file_path}'. Proceeding without cookies for this download.")
 
 
         st.write(f"⏳ Starting yt-dlp download to: {temp_path}")
