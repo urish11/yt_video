@@ -924,7 +924,7 @@ def download_direct_url(url, suffix=".mp4"):
 
 
 
-def (base_video_url, audio_path, word_timings, topic):
+def process_video_with_tts(base_video_url, audio_path, word_timings, topic):
     """Loads video, adds TTS audio, loops if necessary, adds subtitles centered with wrapping."""
     final_video_clip = None
     temp_output_path = None
