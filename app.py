@@ -1953,7 +1953,65 @@ if st.session_state.batch_processing_active and st.session_state.generation_queu
                         st.write(f"1/5: Generating script for topic: '{topic}'...")
 
                         # --- Step 2: Generate Script (Text Only) ---
-                        script_prompt = f"""Create a short, engaging voiceover script for FB viral   video (roughly 15-20 seconds long, maybe 2-3 sentences) about '{topic}' in language {lang}. The tone should be informative yet conversational, '.  smooth flow. Just provide the script text, nothing else. create intriguing and engaging script, sell the topic to the audience . be very causal and not 'advertisement' style vibe. end with a call to action 'tap to....'  .the text needs to be retentive.Don't say 'we' or 'our' .NOTE:: DO NOT dont use senetional words and phrasing and DONT make false promises , use Urgency Language, Avoid geographically suggestive terms (e.g., "Near you," "In your area"). Do not use "we" or "our". in end if video use something "Tap now to.." with a clear, non-committal phrase !!!  """
+                        if 'v2' in lang:
+                            st.text(f"using v2")
+
+                            script_prompt = f"""Generate a short voiceover script (approx. 15-20 seconds, typically 2-3 concise sentences) for a social media video ad about '{topic}' in {lang}.
+
+**Goal:** Create an intriguing and engaging script that captures attention quickly, holds it (retentive), and encourages clicks, suitable for platforms like Facebook/Instagram Reels/TikTok.
+
+**Tone:** Conversational, casual, and authentic. Avoid sounding like a formal advertisement or overly 'salesy'. Speak *to* the viewer directly (use "you" where appropriate).
+
+**Key Requirements:**
+1.  **Strong Hook:** Start immediately with something captivating (e.g., a relatable question, a surprising statement, the core benefit) to grab attention in the first 1-2 seconds.
+2.  **Concise Body:** Briefly convey the most interesting or beneficial aspect of the '{topic}'. Focus on clarity and smooth flow.
+3.  **Clear Call to Action (CTA):** End the script *only* with the phrase "Tap now to " followed by a simple, clear, non-committal action (e.g., learn more, see details, explore options, find out how).
+
+**Strict Exclusions (Mandatory):**
+* **NO:** "we," "our," or "I."
+* **NO:** Sensational language, hype, exaggeration, or false promises. (Be truthful and grounded).
+* **NO:** Aggressive or fake urgency/scarcity tactics (e.g., "Act fast!", "Limited spots!").
+* **NO:** Geographically suggestive terms (e.g., "Near you," "In your area").
+* **NO:** Jargon or overly complex vocabulary.
+
+**Output:** Provide ONLY the raw script text, with no extra explanations or formatting.  """
+
+                        if 'v3' in lang:
+                            st.text(f"using v3")
+                            script_prompt = f"""
+You are an expert scriptwriter for high-performing short-form video ads. Generate a voiceover script based on the following parameters:
+
+**Topic:** {topic}
+**Language:** {lang}
+**Target Length:** 15-20 seconds (2-3 very concise sentences).
+**Platform Context:** Viral-style social media ad (e.g., Reels, TikTok).
+
+**Choose ONE Core Angle for the script:**
+* **Problem/Solution:** Briefly identify a relatable pain point and position the '{topic}' as the clear solution.
+* **Transformation/Benefit:** Focus entirely on the positive outcome, feeling, or change the '{topic}' enables for the viewer.
+* **Intrigue/Curiosity:** Hint at something unique, surprising, or valuable about the '{topic}' without giving everything away, making the viewer want to know more.
+
+**Script Structure & Tone:**
+1.  **Hook (1-2 seconds):** Start *immediately* with the most compelling part of your chosen angle (the problem, the benefit, the surprising fact). Must grab attention instantly.
+2.  **Body (Concise):** Briefly elaborate on the hook, sticking to the chosen angle. Use simple, direct, conversational language. Address the viewer using "you." Maintain an authentic, non-hypey tone.
+3.  **Call to Action (CTA - Final words):** Conclude *only* with "Tap now to " followed by a low-commitment action phrase (e.g., learn more, see details, explore, find out why).
+
+**Mandatory Constraints:**
+* Exclude: "we," "our," "I."
+* Exclude: Hype, false promises, sensationalism.
+* Exclude: Fake urgency or scarcity.
+* Exclude: Geographic limitations.
+* Exclude: Complex jargon. Keep words simple.
+
+**Output Requirement:** Return *only* the final script text.
+                            
+
+
+
+"""
+
+                        else:
+                            script_prompt = f"""Create a short, engaging voiceover script for FB viral   video (roughly 15-20 seconds long, maybe 2-3 sentences) about '{topic}' in language {lang}. The tone should be informative yet conversational, '.  smooth flow. Just provide the script text, nothing else. create intriguing and engaging script, sell the topic to the audience . be very causal and not 'advertisement' style vibe. end with a call to action 'tap to....'  .the text needs to be retentive.Don't say 'we' or 'our' .NOTE:: DO NOT dont use senetional words and phrasing and DONT make false promises , use Urgency Language, Avoid geographically suggestive terms (e.g., "Near you," "In your area"). Do not use "we" or "our". in end if video use something "Tap now to.." with a clear, non-committal phrase !!!  """
                         # script_text = chatGPT(script_prompt,model="o1", client=openai_client)
                         script_text = claude(script_prompt,is_thinking=True)
 
