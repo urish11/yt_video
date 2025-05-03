@@ -1045,7 +1045,7 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic,with_
         tts_audio = AudioFileClip(audio_path)
         audio_duration = tts_audio.duration
         if with_music:
-            back_music = AudioFileClip('audio/Sunrise.mp3').fx(afx.volumex, 0.25)
+            back_music = AudioFileClip('audio/Sunrise.mp3').fx(afx.volumex, 0.15)
             
 
             combined_audio = CompositeAudioClip([tts_audio, back_music])
