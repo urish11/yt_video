@@ -1360,6 +1360,7 @@ col1, col2 = st.sidebar.columns(2)
 search_button = col1.button("🔍 Search Videos", use_container_width=True, disabled=st.session_state.batch_processing_active)
 clear_button = col2.button("🧹 Clear All", use_container_width=True, type="secondary", disabled=st.session_state.batch_processing_active)
 with_music = col1.checkbox("With bg music?")
+with_music_rand = col2.checkbox("With bg music randomly??")
 if clear_button:
     st.session_state.selected_videos = {}
     st.session_state.search_triggered = False
@@ -2039,7 +2040,8 @@ You are an expert scriptwriter for high-performing short-form video ads. Generat
                             raise ValueError("Failed to generate TTS audio or timestamps.")
                         st.write(f"3/5: Processing base video and adding audio/subtitles...")
 
-
+                        if with_music_rand:
+                            with_music = random.choice([True,False])
                         # --- Step 4: Process Video (Combine, Loop, Subtitles) ---
                         final_video_path, final_filename = process_video_with_tts(
                             base_video_url=video_data["Standard URL"],
