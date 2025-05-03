@@ -1359,8 +1359,8 @@ st.sidebar.data_editor(
 col1, col2 = st.sidebar.columns(2)
 search_button = col1.button("🔍 Search Videos", use_container_width=True, disabled=st.session_state.batch_processing_active)
 clear_button = col2.button("🧹 Clear All", use_container_width=True, type="secondary", disabled=st.session_state.batch_processing_active)
-with_music = col1.checkbox("With bg music?")
-with_music_rand = col2.checkbox("With bg music randomly??")
+with_music = col1.checkbox("With BG music?")
+with_music_rand = col2.checkbox("With BG music randomly?")
 if clear_button:
     st.session_state.selected_videos = {}
     st.session_state.search_triggered = False
