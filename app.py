@@ -14,7 +14,7 @@ import textwrap
 import tempfile
 from io import BytesIO
 import anthropic
-  
+import moviepy.audio.fx.all as afx
 # Ensure MoviePy is installed: pip install moviepy
 # Ensure Pillow is installed: pip install Pillow
 # Ensure pydub is installed: pip install pydub
@@ -27,7 +27,7 @@ if 'resolved_vid_urls' not in st.session_state:
 
 try:
     from moviepy.editor import (
-        VideoFileClip, AudioFileClip, CompositeVideoClip, ImageClip, concatenate_videoclips, TextClip
+        VideoFileClip, AudioFileClip, CompositeVideoClip, ImageClip, concatenate_videoclips, TextClip,CompositeAudioClip
     )
     import moviepy.video.fx.all as vfx
     # This specific import might be less common or part of older versions, handle potential error
@@ -998,7 +998,7 @@ def download_direct_url(url, suffix=".mp4"):
 
 
 
-def process_video_with_tts(base_video_url, audio_path, word_timings, topic):
+def process_video_with_tts(base_video_url, audio_path, word_timings, topic,with_music=False):
     """Loads video, adds TTS audio, loops if necessary, adds subtitles centered with wrapping."""
     final_video_clip = None
     temp_output_path = None
@@ -1044,6 +1044,14 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic):
         st.write(f"⏳ Loading TTS audio...")
         tts_audio = AudioFileClip(audio_path)
         audio_duration = tts_audio.duration
+        if with_music:
+            back_music = AudioFileClip('yt_video/audio/Sunrise.mp3').fx(afx.volumex, 0.5)
+            
+
+            combined_audio = CompositeAudioClip([tts_audio, back_music])
+
+        else:
+            combined_audio= tts_audio
         st.write(f"✔️ TTS audio loaded: Duration: {audio_duration:.2f}s")
 
         # --- Video Resizing (Force 9:16 aspect ratio - e.g., 720x1280) ---
@@ -1081,7 +1089,7 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic):
 
 
         # Set the TTS audio to the processed video
-        final_video_clip = processed_video.set_audio(tts_audio).set_duration(audio_duration)
+        final_video_clip = processed_video.set_audio(combined_audio).set_duration(audio_duration)
         # Ensure the clip size is correct after processing
         final_video_clip = final_video_clip.resize(newsize=(target_w, target_h))
 
@@ -1351,7 +1359,7 @@ st.sidebar.data_editor(
 col1, col2 = st.sidebar.columns(2)
 search_button = col1.button("🔍 Search Videos", use_container_width=True, disabled=st.session_state.batch_processing_active)
 clear_button = col2.button("🧹 Clear All", use_container_width=True, type="secondary", disabled=st.session_state.batch_processing_active)
-
+with_music = st.checkbox("With bg music?")
 if clear_button:
     st.session_state.selected_videos = {}
     st.session_state.search_triggered = False
@@ -2037,7 +2045,8 @@ You are an expert scriptwriter for high-performing short-form video ads. Generat
                             base_video_url=video_data["Standard URL"],
                             audio_path=audio_path,
                             word_timings=word_timings,
-                            topic=topic # Pass topic for filename generation
+                            topic=topic ,# Pass topic for filename generation,
+                            with_music=with_music
                         )
                         if not final_video_path:
                             raise ValueError("Video processing (MoviePy) failed.")
