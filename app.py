@@ -2054,7 +2054,7 @@ You are an expert scriptwriter for high-performing short-form video ads. Generat
                                             - No geographic claims (e.g., "near you," "in your area")
                                             - No "we" or "our" language - keep it personal
                                             - End with "Tap to..." followed by a clear, non-committal action
-
+                                            * **NO:** DONT make false promises. ('get approved')
                                             Return only the script text itself, nothing else.
                                             """
 
