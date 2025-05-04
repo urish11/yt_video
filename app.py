@@ -1282,7 +1282,7 @@ if 'api_search_results' not in st.session_state:
 # Input DataFrame for search terms and topics
 if 'search_data' not in st.session_state:
     st.session_state.search_data = pd.DataFrame([
-        {'Topic': 'sofa sale', 'Search Term': 'sofa unboxing #shorts' ,'Language' : 'English', 'Video Results': 5}
+        {'Topic': 'sofa sale', 'Search Term': 'auto' ,'Language' : 'English',"Script Angle" : "default", 'Video Results': 5}
    
         
     ])
@@ -1332,7 +1332,7 @@ def sync_search_data():
 
     # Enforce column order and types
     df = pd.DataFrame(clean_data)
-    expected_cols = ["Topic", "Search Term", "Language", "Video Results"]
+    expected_cols = ["Topic", "Search Term", "Language","Script Angle", "Video Results"]
     for col in expected_cols:
         if col not in df.columns:
             df[col] = ""
@@ -1342,10 +1342,11 @@ def sync_search_data():
 
 
 
-
+script_versions = ["default", "default_v2", "1st_person"]
 # Use data_editor with on_change callback
 st.sidebar.data_editor(
     st.session_state.search_data,
+    column_config={"column_config": st.column_config.SelectboxColumn(script_versions)}
     num_rows="dynamic",
     use_container_width=True,
     key="search_topic_editor",
