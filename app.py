@@ -78,7 +78,7 @@ SUBTITLE_WORDS_PER_GROUP = 2 # Group words for subtitles
 SUBTITLE_COLOR = '#FFFF00' # Yellow
 SUBTITLE_BG_COLOR = 'rgba(0, 0, 0, 0.6)' # Semi-transparent black
 st.set_page_config(layout="wide", page_title="YouTube Video Generator", page_icon="🎥")
-
+SCRIPT_VER_OPTIONS =["default", "default_v2", "1st_person" ,"mix"] 
 # --- Load Secrets ---
 try:
     youtube_api_key_secret = st.secrets["YOUTUBE_API_KEY"] # Assuming key name in secrets
@@ -1342,11 +1342,11 @@ def sync_search_data():
 
 
 
-script_versions = ["default", "default_v2", "1st_person"] 
+
 # Use data_editor with on_change callback
 st.sidebar.data_editor(
     st.session_state.search_data,
-    column_config={"Script Angle": st.column_config.SelectboxColumn(options=script_versions)},
+    column_config={"Script Angle": st.column_config.SelectboxColumn(options=SCRIPT_VER_OPTIONS)}
     num_rows="dynamic",
     use_container_width=True,
     key="search_topic_editor",
@@ -1423,7 +1423,7 @@ if search_button:
     # Get the DataFrame used to initialize the editor in the *previous* run
     # Ensure it's a DataFrame, provide default if it's the very first run
     if 'search_data' not in st.session_state or not isinstance(st.session_state.search_data, pd.DataFrame):
-         st.session_state.search_data = pd.DataFrame(columns=["Topic", "Search Term", "Language", "Video Results"]) # Ensure columns exist
+         st.session_state.search_data = pd.DataFrame(columns=["Topic", "Search Term", "Language","Script Angle", "Video Results"]) # Ensure columns exist
     original_df = st.session_state.search_data
 
     # --- Add Debugging Output ---
@@ -1485,7 +1485,7 @@ if search_button:
         if additions:
              # Ensure added rows have expected columns, fill missing if necessary
              processed_additions = []
-             expected_cols_set = set(["Topic", "Search Term", "Language", "Video Results"])
+             expected_cols_set = set(["Topic", "Search Term", "Language","Script Angle", "Video Results"])
              for new_row in additions:
                  # Ensure it's a dict
                  if isinstance(new_row, dict):
@@ -1531,7 +1531,7 @@ if search_button:
             # --- Perform subsequent validation steps (Column handling, Type Conversion, Empty Check, Final Validation) ---
             # (Use the same robust validation block from the previous answer here, operating on 'search_df')
             # Example snippet:
-            expected_cols = ["Topic", "Search Term", "Language", "Video Results"]
+            expected_cols = ["Topic", "Search Term", "Language","Script Angle", "Video Results"]
             for col in expected_cols:
                  if col not in search_df.columns:
                      if col == "Language": search_df[col] = "English"
@@ -1595,6 +1595,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
         count = int(item['Video Results'])
         lang = item['Language'] # Language for search
         status_text_api.text(f"Searching for: '{term}'...")
+        script_ver = item["Script Angle"]
         st.text(f"topic {topic}")
         if term == 'auto':
 #             term = chatGPT(f"""I want concise, emotional, and visually-rich YouTube search keywords for a specific topic. These should feel like real titles users would upload — casual, vlog-style, and rooted in personal experiences or moments.
@@ -1652,7 +1653,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
         
             #         results_cache[f"{term}_{lang}_{idx}"] = {'videos': videos, 'topic': topic , 'lang' : lang}
             # else:
-            results_cache[term] = {'videos': videos, 'topic': topic , 'lang' : lang}
+            results_cache[term] = {'videos': videos, 'topic': topic , 'lang' : lang, "script_ver" :script_ver }
 
             time.sleep(0.1) # Small delay between API calls
         progress_bar.progress((i + 1) / len(search_items))
@@ -1695,6 +1696,7 @@ if st.session_state.api_search_results:
         videos = result_data['videos']
         topic = result_data['topic']
         lang = result_data['lang']
+        script_ver = result_data["Script Angle"]
 
         # --- Container for the results of THIS search term ---
         term_container = st.container(border=True)
@@ -1832,7 +1834,8 @@ if st.session_state.api_search_results:
                                                 'yt_dlp_error': None,
                                                 'Generated S3 URL': None,
                                                 'Generation Error': None,
-                                                'Status': 'Selected, Fetching URL...'
+                                                'Status': 'Selected, Fetching URL...',
+                                                'Script Angle' : script_ver
                                             }
                                             st.toast(f"Selected: {video_title}. Fetching direct URL...", icon="⏳")
                                     else:
@@ -1849,7 +1852,8 @@ if st.session_state.api_search_results:
                                         'yt_dlp_error': None,
                                         'Generated S3 URL': None,
                                         'Generation Error': None,
-                                        'Status': 'Selected, Fetching URL...'
+                                        'Status': 'Selected, Fetching URL...',
+                                        'Script Angle' : script_ver
                                     }
 
 
@@ -1947,7 +1951,6 @@ if st.session_state.batch_processing_active and st.session_state.generation_queu
         total_count_display = st.session_state.batch_total_count
         st.header(f"⚙️ Processing Video {processed_count_display}/{total_count_display}: {video_data['Video Title']}")
         gen_placeholder = st.container() # Use a container for logs within this specific run
-
         try:
             # --- Update Status ---
             st.session_state.selected_videos[video_id_to_process]['Status'] = 'Processing'
@@ -1960,11 +1963,15 @@ if st.session_state.batch_processing_active and st.session_state.generation_queu
                         # --- Step 1: Get Topic ---
                         topic = video_data.get('Topic', 'the selected video') # Fallback topic
                         lang = video_data.get('Language', 'English') # Fallback language
+                        script_ver = video_data.get("Script Angle","default")
                         st.write(f"1/5: Generating script for topic: '{topic}'...")
-
+                        if script_ver == "mix":
+                            script_ver_temp = random.choice(SCRIPT_VER_OPTIONS) 
+                        else:
+                            script_ver_temp = script_ver
                         # --- Step 2: Generate Script (Text Only) ---
-                        if 'v2' in lang:
-                            st.text(f"using v2")
+                        if  script_ver_temp == 'default_v2' :
+                            
 
                             script_prompt = f"""Generate a short voiceover script (approx. 15-20 seconds, typically 2-3 concise sentences) for a social media video ad about '{topic}' in {lang}.
 
@@ -1988,8 +1995,7 @@ if st.session_state.batch_processing_active and st.session_state.generation_queu
 
 **Output:** Provide ONLY the raw script text, with no extra explanations or formatting.  """
 
-                        if 'v3' in lang:
-                            st.text(f"using v3")
+                        elif 'v3' in lang:
                             script_prompt = f"""
 You are an expert scriptwriter for high-performing short-form video ads. Generate a voiceover script based on the following parameters:
 
@@ -2022,9 +2028,38 @@ You are an expert scriptwriter for high-performing short-form video ads. Generat
 
 """
 
-                        else:
+                        elif script_ver_temp == "default":
                             script_prompt = f"""Create a short, engaging voiceover script for FB viral   video (roughly 15-20 seconds long, maybe 2-3 sentences) about '{topic}' in language {lang}. The tone should be informative yet conversational, '.  smooth flow. Just provide the script text, nothing else. create intriguing and engaging script, sell the topic to the audience . be very causal and not 'advertisement' style vibe. end with a call to action 'tap to....'  .the text needs to be retentive.Don't say 'we' or 'our' .NOTE:: DO NOT dont use senetional words and phrasing and DONT make false promises , use Urgency Language, Avoid geographically suggestive terms (e.g., "Near you," "In your area"). Do not use "we" or "our". in end if video use something "Tap now to.." with a clear, non-committal phrase !!!  """
                         # script_text = chatGPT(script_prompt,model="o1", client=openai_client)
+
+                        elif script_ver_temp == '1st_person':
+                            script_prompt = f"""
+                                            Create a brief, captivating first-person voiceover script for a viral FB video about '{topic}' in {lang}. 
+                                            Keep it concise (15-20 seconds when spoken, about 2-3 sentences) with these guidelines:
+
+                                            - Start with an immediate hook in the first 3-5 seconds to grab attention
+                                            - The hook should be intriguing but honest - NO false promises or misleading claims
+                                            - Use first-person perspective throughout
+                                            - Make the tone authentic and conversational, like a friend sharing a discovery
+                                            - Focus on creating genuine interest in the topic with real value
+                                            - Maintain a natural flow that keeps viewers watching
+                                            - End with a simple call to action like "Tap to discover..." or "Tap to learn..."
+                                            - Ensure the content feels genuine, not like an advertisement
+
+                                            IMPORTANT:
+                                            - The opening hook must be attention-grabbing AND truthful
+                                            - Avoid sensational language or exaggerated claims
+                                            - Don't make promises that can't be delivered
+                                            - No urgency phrases like "limited time" or "act now"
+                                            - No geographic claims (e.g., "near you," "in your area")
+                                            - No "we" or "our" language - keep it personal
+                                            - End with "Tap to..." followed by a clear, non-committal action
+
+                                            Return only the script text itself, nothing else.
+                                            """
+
+
+                        st.text(f"using script: {script_ver_temp}")
                         script_text = claude(script_prompt,is_thinking=True)
 
                         if not script_text:
