@@ -1696,7 +1696,7 @@ if st.session_state.api_search_results:
         videos = result_data['videos']
         topic = result_data['topic']
         lang = result_data['lang']
-        script_ver = result_data["Script Angle"]
+        script_ver = result_data["script_ver"]
 
         # --- Container for the results of THIS search term ---
         term_container = st.container(border=True)
