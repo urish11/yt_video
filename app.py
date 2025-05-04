@@ -1346,7 +1346,7 @@ script_versions = ["default", "default_v2", "1st_person"]
 # Use data_editor with on_change callback
 st.sidebar.data_editor(
     st.session_state.search_data,
-    column_config={"column_config": st.column_config.SelectboxColumn(script_versions)}
+    column_config={"Script Angle": st.column_config.SelectboxColumn(script_versions)}
     num_rows="dynamic",
     use_container_width=True,
     key="search_topic_editor",
