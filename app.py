@@ -1346,7 +1346,7 @@ def sync_search_data():
 # Use data_editor with on_change callback
 st.sidebar.data_editor(
     st.session_state.search_data,
-    column_config={"Script Angle": st.column_config.SelectboxColumn(options=SCRIPT_VER_OPTIONS)}
+    column_config={"Script Angle": st.column_config.SelectboxColumn(options=SCRIPT_VER_OPTIONS)},
     num_rows="dynamic",
     use_container_width=True,
     key="search_topic_editor",
