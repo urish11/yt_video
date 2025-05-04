@@ -1342,7 +1342,7 @@ def sync_search_data():
 
 
 
-script_versions = ["default", "default_v2", "1st_person"]
+script_versions = ["default", "default_v2", "1st_person"] 
 # Use data_editor with on_change callback
 st.sidebar.data_editor(
     st.session_state.search_data,
