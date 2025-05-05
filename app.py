@@ -1790,11 +1790,11 @@ if st.session_state.api_search_results:
                             generation_error = video_state.get('Generation Error', '')
                             
                             # Determine button label and type
-                            if is_selected and 1==2: #killed
-                                select_button_label = "✅ Deselect"
-                                select_button_type = "secondary"
-                                select_disabled = False
-                            elif is_fetching_dlp:
+                            # if is_selected : #killed
+                            #     select_button_label = "✅ Deselect"
+                            #     select_button_type = "secondary"
+                            #     select_disabled = False
+                            if is_fetching_dlp:
                                 select_button_label = "⏳ Fetching..."
                                 select_button_type = "secondary"
                                 select_disabled = True
