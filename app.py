@@ -453,72 +453,73 @@ def chatGPT(prompt, client, model="gpt-4o", temperature=1.0):
 
 
 # --- Helper Function: Generate Script with Claude ---
-def claude(prompt , model = "claude-3-haiku-20240307", temperature=1.0 , is_thinking = False, max_retries = 5):
-    """Generates text using Anthropic Claude."""
+def claude(prompt , model = "claude-3-7-sonnet-20250219", temperature=1 , is_thinking = False, max_retries = 10):
     tries = 0
-    last_error = None
-    # Initialize client here or ensure it's passed/global and valid
-    try:
-        client = anthropic.Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
-    except Exception as client_err:
-         st.error(f"Failed to initialize Anthropic client: {client_err}")
-         return None
 
     while tries < max_retries:
         try:
-            # Construct message parameters
-            message_params = {
-                 "model": model,
-                 "max_tokens": 1024, # Adjust token limit as needed
-                 "temperature": temperature,
-                 "messages": [{"role": "user", "content": prompt}]
-            }
-            # Add 'thinking' parameter if requested (Note: Check current API support for 'thinking')
-            # As of recent checks, 'thinking' might be deprecated or experimental.
-            # Let's omit it for broader compatibility unless specifically tested.
-            # if is_thinking:
-            #    message_params["thinking"] = { "type": "enabled", "budget_tokens": 16000} # Example, check docs
+        
+        
+        
+            client = anthropic.Anthropic(
+            # defaults to os.environ.get("ANTHROPIC_API_KEY")
+            api_key=st.secrets["ANTHROPIC_API_KEY"])
+        
+            if is_thinking == False:
+                    
+                message = client.messages.create(
+                    
+                model=model,
+                max_tokens=20000,
+                temperature=temperature,
+                
+                top_p= 0.8,
 
-            # Make the API call
-            message = client.messages.create(**message_params)
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": prompt
+                            }
+                        ]
+                    }
+                ]
+            )
+                return message.content[0].text
+            if is_thinking == True:
+                message = client.messages.create(
+                    
+                model=model,
+                max_tokens=20000,
+                temperature=temperature,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": prompt
+                            }
+                        ]
+                    }
+                ],
+                thinking = { "type": "enabled",
+                "budget_tokens": 16000}
+            )
+                return message.content[1].text
+        
+        
+        
+            print(message)
+            return message.content[0].text
 
-            # Extract content - assumes response structure based on recent docs
-            # Response content is a list, typically text is in the first block.
-            if message.content and isinstance(message.content, list) and hasattr(message.content[0], 'text'):
-                return message.content[0].text.strip()
-            else:
-                # Handle unexpected response structure
-                st.warning(f"Claude response format unexpected: {message.content}")
-                last_error = Exception("Unexpected Claude response format")
-                tries += 1
-                time.sleep(2 ** tries) # Exponential backoff
-
-        except anthropic.APIConnectionError as e:
-            st.warning(f"Claude connection error (Attempt {tries+1}/{max_retries}): {e}. Retrying...")
-            last_error = e
-            tries += 1
-            time.sleep(2 ** tries) # Exponential backoff
-        except anthropic.RateLimitError as e:
-            st.warning(f"Claude rate limit hit (Attempt {tries+1}/{max_retries}). Retrying after delay...")
-            last_error = e
-            tries += 1
-            time.sleep(max(5, 2 ** tries)) # Longer backoff for rate limits
-        except anthropic.APIStatusError as e:
-            st.error(f"Claude API error (Status {e.status_code}): {e.message}")
-            last_error = e
-            # Don't retry on persistent API errors like 4xx ?
-            break # Or implement specific retry logic based on status code
         except Exception as e:
-            st.error(f"Unexpected error calling Claude: {e}")
-            last_error = e
-            import traceback
-            st.error(traceback.format_exc())
-            tries += 1 # Retry on general errors too? Maybe limit this.
-            time.sleep(2 ** tries)
+            st.text(e)
+            tries += 1 
+            time.sleep(5)
 
-
-    st.error(f"Failed to get response from Claude after {max_retries} attempts. Last error: {last_error}")
-    return None
 
 
 # --- Helper Function: Generate TTS Audio & Timestamps ---
@@ -1979,7 +1980,7 @@ You are an expert scriptwriter for high-performing short-form video ads. Generat
 
                         # --- Choose LLM ---
                         # script_text = chatGPT(script_prompt, client=openai_client)
-                        script_text = claude(script_prompt) # Assumes claude function uses API key from secrets
+                        script_text  = claude(script_prompt,is_thinking=True) # Assumes claude function uses API key from secrets
 
                         if not script_text: raise ValueError("Failed to generate script text.")
                         st.text_area("Generated Script:", script_text, height=100, disabled=True, key=f"script_{job_key_to_process}")
