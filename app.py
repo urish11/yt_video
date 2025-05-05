@@ -659,7 +659,7 @@ def group_words_with_timing(word_timings, words_per_group=2):
 def create_text_image(text, fontsize, color, bg_color, font_path, video_width):
     """
     Creates a transparent PNG image with text and rounded background,
-    wrapping text to fit video width and centering it. Returns a NumPy array.
+    wrapping text to fit video width and centering it.
     """
     try:
         # --- Font Loading ---
@@ -669,146 +669,154 @@ def create_text_image(text, fontsize, color, bg_color, font_path, video_width):
                 font = ImageFont.truetype(font_path, fontsize)
             except Exception as font_load_err:
                 st.warning(f"Failed to load font {font_path}: {font_load_err}. Using default.", icon="⚠️")
-        if not font: # Fallback to default font
-             try: font = ImageFont.load_default(size=fontsize) # Newer Pillow
-             except AttributeError: font = ImageFont.load_default() # Older Pillow
+
+        if not font: # If path was None or loading failed
+            try:
+                # Try getting default font with size (newer Pillow)
+                font = ImageFont.load_default(size=fontsize)
+            except AttributeError:
+                # Fallback for older Pillow without size arg
+                font = ImageFont.load_default()
+                st.warning(f"Using basic default font. Consider providing a TTF font file.", icon="⚠️")
 
 
         # --- Configuration ---
-        padding_x = 25
-        padding_y = 15
-        bg_radius = 15
-        # Max width for the text content itself inside the video frame (with margins)
-        max_text_width = video_width - (2 * padding_x) - 40 # Added safety margin
+        padding_x = 25  # Horizontal padding for the background
+        padding_y = 15  # Vertical padding for the background
+        bg_radius = 15  # Corner radius for the background
+        # Calculate max width for the text itself inside the video frame
+        max_text_width = video_width - (2 * padding_x) - 30
         if max_text_width <= 0: max_text_width = video_width // 2 # Safety net
 
         # --- Text Wrapping ---
         lines = []
         words = text.split()
-        if not words: # Handle empty text gracefully
-             return np.zeros((10, 10, 4), dtype=np.uint8) # Return tiny transparent array
+        if not words:
+            return np.zeros((10, 10, 4), dtype=np.uint8) # Handle empty text
 
         current_line = ""
         for word in words:
             test_line = f"{current_line} {word}".strip()
-            # Use getbbox for more accurate width (left, top, right, bottom)
-            try: bbox = font.getbbox(test_line) ; line_width = bbox[2] - bbox[0]
-            except AttributeError: line_width = font.getlength(test_line) # Fallback
+            # Use getbbox for more accurate width/height, fallback to getlength
+            try:
+                 # bbox format: (left, top, right, bottom) relative to (0,0) anchor
+                 bbox = font.getbbox(test_line)
+                 line_width = bbox[2] - bbox[0]
+            except AttributeError: # Fallback for older PIL/Pillow
+                 line_width = font.getlength(test_line)
+
 
             if line_width <= max_text_width:
                 current_line = test_line
             else:
-                # Add the previous line if it has content
-                if current_line: lines.append(current_line)
-                # Start the new line with the current word, but check if word itself is too long
-                try: word_bbox = font.getbbox(word); word_width = word_bbox[2] - word_bbox[0]
-                except AttributeError: word_width = font.getlength(word)
+                if current_line:
+                    lines.append(current_line)
+                # Check if the single word itself is too long
+                try:
+                    word_bbox = font.getbbox(word)
+                    word_width = word_bbox[2] - word_bbox[0]
+                except AttributeError:
+                    word_width = font.getlength(word)
 
                 if word_width <= max_text_width:
-                    current_line = word # Start new line with this word
+                    current_line = word
                 else:
-                    # Word itself is too long, add it on its own line (might still overflow)
-                    lines.append(word)
-                    current_line = "" # Reset line after adding the long word
+                    # Word too long: Add previous line (if any), add long word on its own line
+                    # This might still exceed width if the word is extremely long and cannot be broken
+                    if current_line and lines[-1] != current_line: # Avoid double adding
+                        pass # Already added above
+                    lines.append(word) # Add the long word as its own line
+                    current_line = "" # Reset
 
-        if current_line: lines.append(current_line) # Add the last line
+        if current_line: # Add the last line
+            lines.append(current_line)
 
         wrapped_text = "\n".join(lines)
-        if not wrapped_text: wrapped_text = text # Fallback if wrapping resulted empty (unlikely)
+        if not wrapped_text: wrapped_text = text # Fallback
 
         # --- Calculate Text Block Dimensions ---
-        # Use a dummy draw object to get accurate multiline bbox
         dummy_img = Image.new("RGBA", (1, 1))
         dummy_draw = ImageDraw.Draw(dummy_img)
         try:
-            # Use multiline_textbbox for accurate size estimation including line spacing
-            # Anchor 'lt' (left-top) is common for bbox calculation origin
-            bbox = dummy_draw.multiline_textbbox((0, 0), wrapped_text, font=font, spacing=4, align='center', anchor='lt')
+            bbox = dummy_draw.multiline_textbbox((0, 0), wrapped_text, font=font, spacing=4, align='center') # Use center align here for bbox
             text_width = bbox[2] - bbox[0]
             text_height = bbox[3] - bbox[1]
-            # Ensure minimum dimensions
+            bbox_y_offset = bbox[1] # Top offset relative to draw origin
             text_width = max(text_width, 1)
             text_height = max(text_height, 1)
-            # Get descent for vertical positioning adjustment (negative value usually)
-            try: descent = font.getmetrics()[1] if hasattr(font, 'getmetrics') else fontsize * 0.2
-            except: descent = fontsize * 0.2 # Fallback descent estimate
-        except AttributeError as e:
-            st.warning(f"Using fallback subtitle dimension calculation (Pillow upgrade recommended): {e}", icon="PIL")
-            # Fallback calculation (less accurate)
-            text_width = 0
-            for line in lines:
-                 try: line_bbox = font.getbbox(line); text_width = max(text_width, line_bbox[2] - line_bbox[0])
-                 except AttributeError: text_width = max(text_width, int(font.getlength(line)))
-            try: line_height_metric = sum(font.getmetrics()) if hasattr(font, 'getmetrics') else fontsize * 1.2
-            except: line_height_metric = fontsize * 1.2
-            text_height = len(lines) * (line_height_metric + 4) # Add spacing
-            descent = fontsize * 0.2
-            text_width = max(text_width, 1)
-            text_height = max(text_height, 1)
+        except AttributeError:
+            # Fallback
+             st.warning("Using fallback subtitle dimension calculation (update Pillow recommended).", icon="PIL")
+             text_width = 0
+             for line in lines:
+                  try:
+                      line_bbox = font.getbbox(line)
+                      text_width = max(text_width, line_bbox[2] - line_bbox[0])
+                  except AttributeError:
+                      text_width = max(text_width, int(font.getlength(line)))
 
+             try:
+                 ascent, descent = font.getmetrics()
+                 line_height_metric = ascent + descent
+             except AttributeError:
+                 line_height_metric = fontsize * 1.2 # Estimate
+
+             line_height = line_height_metric + 4 # Add spacing
+             text_height = len(lines) * line_height
+             bbox_y_offset = -int(fontsize * 0.1) # Rough guess
+             text_width = max(text_width, 1)
+             text_height = max(text_height, 1)
 
         # --- Create Final Image ---
         img_width = text_width + 2 * padding_x
         img_height = text_height + 2 * padding_y
-        img = Image.new("RGBA", (int(img_width), int(img_height)), (0, 0, 0, 0)) # Transparent background
+
+        img = Image.new("RGBA", (int(img_width), int(img_height)), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
 
         # --- Draw Background ---
-        # Parse RGBA color string
         try:
             if isinstance(bg_color, str) and bg_color.startswith('rgba'):
                 parts = bg_color.strip('rgba()').split(',')
                 r, g, b = map(int, parts[:3])
                 a = int(float(parts[3]) * 255)
                 fill_color_tuple = (r, g, b, a)
-            else: # Assume hex or name, let Pillow handle parsing with default alpha if needed
-                 from PIL import ImageColor
-                 rgb = ImageColor.getrgb(bg_color)
-                 fill_color_tuple = rgb + (int(0.6 * 255),) # Add default alpha if not RGBA already? Risky. Better require RGBA string.
-                 # Let's stick to requiring rgba format for safety or use a fixed default.
-                 # Using fixed default if format is wrong:
-                 fill_color_tuple = (0, 0, 0, int(0.6*255))
-                 st.warning(f"Subtitle background color '{bg_color}' not in expected rgba format. Using default.")
-        except Exception:
-             fill_color_tuple = (0, 0, 0, int(0.6*255)) # Default fallback on any parsing error
-             st.warning(f"Error parsing subtitle background color '{bg_color}'. Using default.")
+            elif isinstance(bg_color, str): # hex or name
+                 fill_color_tuple = bg_color # Pillow handles hex/names directly
+            elif isinstance(bg_color, (tuple, list)) and len(bg_color) == 4:
+                 fill_color_tuple = tuple(map(int, bg_color)) # Ensure integer tuple
+            else: # assume tuple RGB, add alpha
+                 fill_color_tuple = tuple(map(int, bg_color)) + (int(0.6 * 255),) if len(bg_color) == 3 else (0,0,0, int(0.6*255))
 
-        # Draw rounded rectangle
-        try:
             draw.rounded_rectangle([(0, 0), (img_width, img_height)], radius=bg_radius, fill=fill_color_tuple)
-        except AttributeError: # Fallback for older Pillow without rounded_rectangle
-             draw.rectangle([(0, 0), (img_width, img_height)], fill=fill_color_tuple)
+        except Exception as draw_err:
+             st.warning(f"Could not draw rounded rect: {draw_err}. Using simple rect.", icon="🎨")
+             # Ensure fill_color_tuple is defined before drawing fallback rectangle
+             if 'fill_color_tuple' not in locals():
+                 fill_color_tuple = (0,0,0, int(0.6*255)) # Default fallback fill
+             draw.rectangle([(0,0), (img_width, img_height)], fill=fill_color_tuple)
 
         # --- Draw Text ---
-        # Calculate text starting position for centering
         text_x = padding_x
-        # Adjust y based on Pillow version's anchor behavior and metrics
-        text_y = padding_y # Start drawing near the top padding edge
-
-        # Use 'ms' anchor (middle-start) for center alignment with multiline_text
-        # Or 'la' (left-ascent) and calculate offset manually? 'ms' is often easier.
-        # Let's try 'ma' (middle-ascent) if 'ms' isn't ideal
-        anchor_to_try = "ma" # Middle horizontal, ascent vertical alignment
+        text_y = padding_y - bbox_y_offset # Adjust vertical start based on calculated bbox top
 
         draw.multiline_text(
-            (img_width / 2, text_y), # Position calculation might need adjustment based on anchor
+            (text_x, text_y),
             wrapped_text,
             font=font,
             fill=color,
             align="center",
             spacing=4,
-            anchor=anchor_to_try # Experiment with anchors: 'mm', 'ms', 'ma'
+            anchor="la" # Anchor at left-ascent of the first line
         )
 
-        # Convert PIL image to NumPy array for MoviePy
         return np.array(img)
 
     except Exception as e:
         st.error(f"Error creating text image for '{text[:50]}...': {e}", icon="🎨")
-        import traceback
-        st.error(traceback.format_exc())
-        # Return a small transparent array on error
         return np.zeros((10, 10, 4), dtype=np.uint8)
+
+
 
 
 # --- Helper Function: Download with yt-dlp (Downloads the actual video file) ---
