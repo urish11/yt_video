@@ -1790,7 +1790,7 @@ if st.session_state.api_search_results:
                             generation_error = video_state.get('Generation Error', '')
                             
                             # Determine button label and type
-                            if is_selected:
+                            if is_selected and 1==2: #killed
                                 select_button_label = "✅ Deselect"
                                 select_button_type = "secondary"
                                 select_disabled = False
