@@ -58,7 +58,7 @@ except ImportError:
 
 # --- Configuration ---
 YOUTUBE_API_BASE_URL = "https://www.googleapis.com/youtube/v3/search"
-MAX_RESULTS_PER_QUERY = 5 # How many results to fetch *per term* from YouTube API
+MAX_RESULTS_PER_QUERY = 100 # How many results to fetch *per term* from YouTube API
 YT_DLP_FETCH_TIMEOUT = 30 # Increased timeout for potentially slower connections
 DEFAULT_TTS_VOICE = "sage" # Default voice for TTS
 
@@ -234,13 +234,14 @@ def search_youtube(api_key, query, max_results_per_term=5):
         # Clean up potential extra quotes from GPT generation
         query = query.replace('"','').replace("'",'')
         terms = [term.strip() for term in query.split('|') if term.strip()]
+        max_results_per_term = max_results_per_term//len(terms)+1
     else:
         terms = [query.strip()] # Treat as a single term
 
     st.write(f"Searching for terms: {terms} (Max {max_results_per_term} results per term)")
 
     total_fetched = 0
-    MAX_TOTAL_RESULTS = 40 # Overall limit across all terms for safety
+    MAX_TOTAL_RESULTS = 100 # Overall limit across all terms for safety
 
     for term in terms:
         if total_fetched >= MAX_TOTAL_RESULTS:
