@@ -1736,6 +1736,7 @@ if st.session_state.api_search_results:
 
                             # --- Other states (selection, generation, etc.) ---
                             # is_selected = video_id in st.session_state.selected_videos killed
+                            is_selected = False
                             video_state = st.session_state.selected_videos.get(video_id, {})
                             # ... [keep existing state checks: is_fetching_dlp, dlp_error, is_in_queue, etc.] ...
 
@@ -1790,10 +1791,10 @@ if st.session_state.api_search_results:
                             generation_error = video_state.get('Generation Error', '')
                             
                             # Determine button label and type
-                            # if is_selected : #killed
-                            #     select_button_label = "✅ Deselect"
-                            #     select_button_type = "secondary"
-                            #     select_disabled = False
+                            if is_selected : #killed
+                                select_button_label = "✅ Deselect"
+                                select_button_type = "secondary"
+                                select_disabled = False
                             if is_fetching_dlp:
                                 select_button_label = "⏳ Fetching..."
                                 select_button_type = "secondary"
@@ -1811,7 +1812,7 @@ if st.session_state.api_search_results:
                                 use_container_width=True,
                                 disabled=select_disabled
                             ):
-                                if is_selected:
+                                if is_selected: killed
                                     del st.session_state.selected_videos[video_id]
                                     st.toast(f"Deselected: {video_title}", icon="➖")
                                     if video_id in st.session_state.generation_queue and 1==2: #killed
