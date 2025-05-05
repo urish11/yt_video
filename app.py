@@ -234,7 +234,7 @@ def search_youtube(api_key, query, max_results_per_term=5):
         # Clean up potential extra quotes from GPT generation
         query = query.replace('"','').replace("'",'')
         terms = [term.strip() for term in query.split('|') if term.strip()]
-        max_results_per_term = max_results_per_term//len(terms)
+        count = max_results_per_term//len(terms)
     else:
         terms = [query.strip()] # Treat as a single term
 
@@ -253,8 +253,8 @@ def search_youtube(api_key, query, max_results_per_term=5):
             'q': term,
             'key': api_key,
             'type': 'video',
-            'maxResults': max_results_per_term,
-            'videoEmbeddable': 'true',
+            'maxResults': count,
+            # 'videoEmbeddable': 'true',
             # 'order': 'relevance' # Default is relevance
             # 'regionCode': 'US' # Optional: Bias results towards a region
         }
