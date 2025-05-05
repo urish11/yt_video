@@ -244,6 +244,7 @@ def search_youtube(api_key, query, max_results_per_term=5):
     MAX_TOTAL_RESULTS = 100 # Overall limit across all terms for safety
 
     for term in terms:
+      st.text(term)
         if 1==2:
             st.warning(f"Reached overall result limit ({MAX_TOTAL_RESULTS}). Stopping search.")
             break
