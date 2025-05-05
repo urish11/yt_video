@@ -2148,18 +2148,18 @@ if 'selected_videos' in st.session_state and st.session_state.selected_videos:
         )
 
         # Download Button for detailed status
-        try:
-            csv_data = convert_df_to_csv(df_selected_display) # Use cached conversion
-            st.sidebar.download_button(
-                 label="📥 Download Job Status (CSV)",
-                 data=csv_data,
-                 file_name='video_generation_job_status.csv',
-                 mime='text/csv',
-                 use_container_width=True,
-                 disabled=st.session_state.batch_processing_active
-            )
-        except Exception as e:
-            st.sidebar.warning(f"Could not generate detailed CSV: {e}")
+        # try:
+        #     csv_data = convert_df_to_csv(df_selected_display) # Use cached conversion
+        #     st.sidebar.download_button(
+        #          label="📥 Download Job Status (CSV)",
+        #          data=csv_data,
+        #          file_name='video_generation_job_status.csv',
+        #          mime='text/csv',
+        #          use_container_width=True,
+        #          disabled=st.session_state.batch_processing_active
+        #     )
+        # except Exception as e:
+        #     st.sidebar.warning(f"Could not generate detailed CSV: {e}")
 
         # --- Topic Summary DataFrame Section ---
         st.sidebar.divider()
