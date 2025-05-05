@@ -2138,7 +2138,7 @@ if 'selected_videos' in st.session_state and st.session_state.selected_videos:
         st.sidebar.dataframe(
             df_selected_display,
             column_config={
-                 "Generated S3 URL": st.column_config.LinkColumn("S3 Link", display_text="View"),
+                 "Generated S3 URL": st.column_config.LinkColumn("S3 Link"),
                  "yt_dlp_error": st.column_config.TextColumn("URL Fetch Status", width="small", help="Status of fetching direct video URL"),
                  "Generation Error": st.column_config.TextColumn("Generation Status", width="small", help="Status of the video generation process"),
                  "Copy Number": st.column_config.NumberColumn("Copy #", width="small"),
