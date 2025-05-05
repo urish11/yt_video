@@ -1551,7 +1551,39 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
             status_text_api.text(f"Generating search terms for: '{topic}'...")
             try:
                 # --- Use the refined GPT prompt for search terms ---
-                generated_term = chatGPT(f"""You are a viral video ad expert... [Your Full Prompt Here] ... My topic: {topic}""", client=openai_client, model="gpt-4") # Use your full validated prompt
+                generated_term = chatGPT(f"""You are a viral video ad expert. I will give you a topic, and you will return the top 3 YouTube Shorts search terms that:
+
+                                    - Are short (2–5 words)
+
+                                    - Clearly describe what viewers will see in the video (visuals only)
+
+                                    - Lead to emotionally engaging, surprising, or curiosity-triggering content
+
+                                    - Are perfect for remixing or using as inspiration for Facebook video ads
+
+                                    - Focus on things like transformations, objects in motion, satisfying actions, luxury aesthetics, clever space-saving, or unexpected reveals
+
+                                    - Avoid abstract or advice-based phrases (like “tips,” “hacks,” or “secrets”)
+
+                                    - Avoid using non visual\describing words that are not likely to be relevent (like 'On credit', "Financing", etc)
+
+                                    - Add '#shorts' to the end of each search term and separate terms with ' | '
+
+                                    - if the topic is a service (like lawyer) that is intangible, think of something else that can be used (like "Veterans Benefits Lawyer free consultation" give "veteran shares #shorts ") 
+
+                                    Example:  
+
+                                    Input: sofa  
+
+                                    Output:  
+
+                                    'sofa transformation #shorts | hidden bed sofa #shorts | luxury sofa unboxing #shorts'
+
+
+
+                                    My topic:
+
+                                 {topic}""", client=openai_client, model="gpt-4") # Use your full validated prompt
                 if not generated_term:
                     st.warning(f"Failed to generate search terms for '{topic}'. Skipping.", icon="🤖")
                     continue
@@ -1833,11 +1865,153 @@ if st.session_state.batch_processing_active and st.session_state.generation_queu
                         # --- Construct the full script prompt based on script_ver_temp ---
                         # (Insert your actual prompt logic here, using f-strings)
                         if script_ver_temp == 'default_v2':
-                             script_prompt = f"""Generate a short voiceover script... [Your Full v2 Prompt] ... about '{topic}' in {lang}."""
+                             script_prompt = f"""Generate a short voiceover script (approx. 15-20 seconds, typically 2-3 concise sentences) for a social media video ad about '{topic}' in {lang}.
+
+        
+
+                                                **Goal:** Create an intriguing and engaging script that captures attention quickly, holds it (retentive), and encourages clicks, suitable for platforms like Facebook/Instagram Reels/TikTok.
+
+                                                
+
+                                                **Tone:** Conversational, casual, and authentic. Avoid sounding like a formal advertisement or overly 'salesy'. Speak *to* the viewer directly (use "you" where appropriate).
+
+                                                
+
+                                                **Key Requirements:**
+
+                                                1.  **Strong Hook:** Start immediately with something captivating (e.g., a relatable question, a surprising statement, the core benefit) to grab attention in the first 1-2 seconds.
+
+                                                2.  **Concise Body:** Briefly convey the most interesting or beneficial aspect of the '{topic}'. Focus on clarity and smooth flow.
+
+                                                3.  **Clear Call to Action (CTA):** End the script *only* with the phrase "Tap now to " followed by a simple, clear, non-committal action (e.g., learn more, see details, explore options, find out how).
+
+                                                
+
+                                                **Strict Exclusions (Mandatory):**
+
+                                                * **NO:** "we," "our," or "I."
+
+                                                * **NO:** Sensational language, hype, exaggeration, or false promises. (Be truthful and grounded).
+
+                                                * **NO:** Aggressive or fake urgency/scarcity tactics (e.g., "Act fast!", "Limited spots!").
+
+                                                * **NO:** Geographically suggestive terms (e.g., "Near you," "In your area").
+
+                                                * **NO:** Jargon or overly complex vocabulary.
+
+                                                * **NO:** DONT make false promises.
+
+                                                
+
+                                                
+
+                                                **Output:** Provide ONLY the raw script text, with no extra explanations or formatting.  """
+
+
                         elif script_ver_temp == '1st_person':
-                             script_prompt = f"""Create a brief, captivating first-person... [Your Full 1st Person Prompt] ... about '{topic}' in {lang}."""
+                             script_prompt = f"""
+
+                                                    Create a brief, captivating first-person voiceover script for a viral FB video about '{topic}' in {lang}. 
+
+                                                    Keep it concise (15-20 seconds when spoken, about 2-3 sentences) with these guidelines:
+
+        
+
+                                                    - Start with an immediate hook in the first 3-5 seconds to grab attention
+
+                                                    - The hook should be intriguing but honest - NO false promises or misleading claims
+
+                                                    - Use first-person perspective throughout
+
+                                                    - Make the tone authentic and conversational, like a friend sharing a discovery
+
+                                                    - Focus on creating genuine interest in the topic with real value
+
+                                                    - Maintain a natural flow that keeps viewers watching
+
+                                                    - End with a simple call to action like "Tap to discover..." or "Tap to learn..."
+
+                                                    - Ensure the content feels genuine, not like an advertisement
+
+        
+
+                                                    IMPORTANT:
+
+                                                    - The opening hook must be attention-grabbing AND truthful
+
+                                                    - Avoid sensational language or exaggerated claims
+
+                                                    - Don't make promises that can't be delivered
+
+                                                    - No urgency phrases like "limited time" or "act now"
+
+                                                    - No geographic claims (e.g., "near you," "in your area")
+
+                                                    - No "we" or "our" language - keep it personal
+
+                                                    - End with "Tap to..." followed by a clear, non-committal action
+
+                                                    * **NO:** DONT make false promises. ('get approved')
+
+                                                    Return only the script text itself, nothing else.
+
+                                                    """
                         else: # Default
-                             script_prompt = f"""Create a short, engaging voiceover script... [Your Full Default Prompt] ... about '{topic}' in {lang}."""
+                             script_prompt = f"""Create a short, engaging voiceover script for FB viral   video (roughly 15-20 seconds long, maybe 2-3 sentences) about '{topic}' in language {lang}. The tone should be informative yet conversational, '.  smooth flow. Just provide the script text, nothing else. create intriguing and engaging script, sell the topic to the audience . be very causal and not 'advertisement' style vibe. end with a call to action 'tap to....'  .the text needs to be retentive.Don't say 'we' or 'our' .NOTE:: DO NOT dont use senetional words and phrasing and DONT make false promises , use Urgency Language, Avoid geographically suggestive terms (e.g., "Near you," "In your area"). Do not use "we" or "our". in end if video use something "Tap now to.." with a clear, non-committal phrase !!!  """
+
+                                # script_text = chatGPT(script_prompt,model="o1", client=openai_client)
+
+        
+
+                                elif script_ver_temp == '1st_person':
+
+                                    script_prompt = f"""
+
+                                                    Create a brief, captivating first-person voiceover script for a viral FB video about '{topic}' in {lang}. 
+
+                                                    Keep it concise (15-20 seconds when spoken, about 2-3 sentences) with these guidelines:
+
+        
+
+                                                    - Start with an immediate hook in the first 3-5 seconds to grab attention
+
+                                                    - The hook should be intriguing but honest - NO false promises or misleading claims
+
+                                                    - Use first-person perspective throughout
+
+                                                    - Make the tone authentic and conversational, like a friend sharing a discovery
+
+                                                    - Focus on creating genuine interest in the topic with real value
+
+                                                    - Maintain a natural flow that keeps viewers watching
+
+                                                    - End with a simple call to action like "Tap to discover..." or "Tap to learn..."
+
+                                                    - Ensure the content feels genuine, not like an advertisement
+
+        
+
+                                                    IMPORTANT:
+
+                                                    - The opening hook must be attention-grabbing AND truthful
+
+                                                    - Avoid sensational language or exaggerated claims
+
+                                                    - Don't make promises that can't be delivered
+
+                                                    - No urgency phrases like "limited time" or "act now"
+
+                                                    - No geographic claims (e.g., "near you," "in your area")
+
+                                                    - No "we" or "our" language - keep it personal
+
+                                                    - End with "Tap to..." followed by a clear, non-committal action
+
+                                                    * **NO:** DONT make false promises. ('get approved')
+
+                                                    Return only the script text itself, nothing else.
+
+                                                    """
                         # --- Choose LLM ---
                         # script_text = chatGPT(script_prompt, client=openai_client)
                         script_text = claude(script_prompt) # Assumes claude function uses API key from secrets
