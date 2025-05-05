@@ -1693,6 +1693,7 @@ if st.session_state.api_search_results:
 
     # st.text(st.session_state.api_search_results.items())
     for term, result_data in st.session_state.api_search_results.items():
+        
         videos = result_data['videos']
         topic = result_data['topic']
         lang = result_data['lang']
@@ -1840,7 +1841,7 @@ if st.session_state.api_search_results:
                                             }
                                             st.toast(f"Selected: {video_title}. Fetching direct URL...", icon="⏳")
                                     else:
-                                        st.session_state.selected_videos[video_id] = {
+                                        st.session_state.selected_videos["video_id_{random.randit(0,999)}"] = {
                                         'Search Term': term,
                                         'Topic': topic,
                                         'Language': lang,
