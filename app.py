@@ -1601,7 +1601,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
 
         if unique_search_key not in results_cache:
             # Pass MAX_RESULTS_PER_QUERY defined earlier
-            videos = search_youtube(youtube_api_key_secret, term, MAX_RESULTS_PER_QUERY)
+            videos = search_youtube(youtube_api_key_secret, term, count)
 
             if videos is None: # Critical API error signalled from search_youtube
                  st.error(f"Stopping search due to critical API issue.", icon="🚫")
