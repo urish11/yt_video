@@ -1812,7 +1812,7 @@ if st.session_state.api_search_results:
                                 use_container_width=True,
                                 disabled=select_disabled
                             ):
-                                if is_selected: killed:
+                                if is_selected:
                                     del st.session_state.selected_videos[video_id]
                                     st.toast(f"Deselected: {video_title}", icon="➖")
                                     if video_id in st.session_state.generation_queue and 1==2: #killed
