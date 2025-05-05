@@ -1637,47 +1637,47 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
 
 
 # 3. Display Search Results
+# 3. Display Search Results
 st.divider() # Separator before results
 if st.session_state.api_search_results:
     st.subheader("Search Results & Video Selection (Grid View)")
-
-    if not st.session_state.api_search_results:
-         st.info("No search results available. Perform a search first.")
 
     # Display results grouped by the search cache key
     for search_key, result_data in st.session_state.api_search_results.items():
         videos = result_data['videos']
         topic = result_data['topic']
-        lang = result_data['lang']
+        lang = result_data['lang'] # This might contain comma-separated languages
         script_ver = result_data["script_ver"]
         original_term = result_data['original_term']
 
         # --- Container for each search result group ---
         term_container = st.container(border=True)
         with term_container:
+            # Display header for this result group
             st.subheader(f"Results for: \"{original_term}\" (Topic: \"{topic}\", Lang: {lang}, Angle: {script_ver})")
             if not videos:
                 st.write("No videos found via API for this search.")
-                continue
+                continue # Skip to the next search result group
 
             num_videos = len(videos)
             num_cols = 3 # Adjust number of columns as desired
 
+            # Create the grid for video results
             for i in range(0, num_videos, num_cols):
                 cols = st.columns(num_cols)
                 for j in range(num_cols):
                     video_index = i + j
                     if video_index < num_videos:
                         video = videos[video_index]
-                        # Use the column context manager
+                        # Use the column context manager for layout
                         with cols[j]:
                             # --- Extract Video Info ---
                             video_id = video['videoId']
                             video_title = video['title']
                             # Use the standard watch URL from search results
-                            standard_video_url = video.get('url', f"https://www.youtube.com/watch?v={video_id}")
+                            standard_video_url = video.get('url', f"https://www.youtube.com/watch?v={video_id}") # Standard YT URL
 
-                            # --- Unique key for UI elements in this grid cell ---
+                            # --- Unique key for UI elements specific to this video's position in the grid ---
                             grid_instance_key = f"{video_id}_{search_key}_{i}_{j}"
 
                             # --- Video Player/Thumbnail Toggle State ---
@@ -1691,91 +1691,95 @@ if st.session_state.api_search_results:
 
                             # --- Player / Thumbnail ---
                             if st.session_state[show_video_key]:
-                                try: 
-
-                                    iframe_code = f"""
-                                          <iframe width="315" height="560"
-                                          src="https://www.youtube.com/embed/{video_id}"
-                                          title="YouTube video player" frameborder="0"
-                                          allow="accelerometer; autoplay; clipboard-write; encrypted-media;
-                                          gyroscope; picture-in-picture; web-share"
-                                          allowfullscreen></iframe>
-                                          """
-                                            
-                                    st.markdown(iframe_code, unsafe_allow_html=True)
-                                  
-                                  # st.video(standard_video_url)
-                                except Exception as e: st.error(f"Video preview failed: {e}")
+                                try:
+                                    # Use Streamlit's native video component
+                                    st.video(standard_video_url)
+                                except Exception as e:
+                                    st.error(f"Video preview failed: {e}")
                             else:
+                                # Display thumbnail if preview is hidden
                                 thumbnail_url = f"https://i.ytimg.com/vi/{video_id}/mqdefault.jpg"
                                 st.image(thumbnail_url, use_container_width=True, caption="Video Thumbnail")
 
                             # --- Buttons ---
-                            # Toggle Preview
+                            # Toggle Preview Button
                             toggle_label = "🔼 Hide" if st.session_state[show_video_key] else "▶️ Show"
                             if st.button(f"{toggle_label} Preview", key=f"toggle_vid_btn_{grid_instance_key}", help="Show/hide video preview", use_container_width=True):
                                 st.session_state[show_video_key] = not st.session_state[show_video_key]
                                 st.rerun()
 
-                            # Select Button (Adds ONE job per click)
+                            # Select Button (Adds job(s) per click, handles multiple languages)
                             if st.button("➕ Select (Queue Job)", key=f"select_{grid_instance_key}", type="primary", use_container_width=True, disabled=st.session_state.batch_processing_active):
-                                # --- ADD JOB LOGIC ---
+                                # --- ADD JOB LOGIC (Handles comma-separated languages) ---
                                 base_video_id = video_id
-                                current_lang = lang.strip() # Language from this result group
-                                base_key_prefix = f"{base_video_id}_{current_lang}_"
-                                # Find existing copy numbers for this specific video+lang combo
-                                existing_copy_numbers = [
-                                    int(k[len(base_key_prefix):])
-                                    for k in st.session_state.selected_videos.keys()
-                                    if k.startswith(base_key_prefix) and k[len(base_key_prefix):].isdigit()
-                                ]
-                                next_copy_number = max(existing_copy_numbers) + 1 if existing_copy_numbers else 1
-                                job_key = f"{base_key_prefix}{next_copy_number}"
+                                # Get the language string associated with this search result group
+                                base_lang_string = lang.strip()
 
-                                # Add the new job entry
-                                st.session_state.selected_videos[job_key] = {
-                                    'Job Key': job_key,
-                                    'Search Term': original_term,
-                                    'Topic': topic,
-                                    'Language': current_lang,
-                                    'Video Title': video_title,
-                                    'Video ID': base_video_id,
-                                    'Copy Number': next_copy_number,
-                                    'Standard URL': standard_video_url, # Store YT watch URL
-                                    'fetching_dlp': True, # Mark for URL fetching
-                                    'Direct URL': None, # To be filled by yt-dlp fetch
-                                    'Format Details': None,
-                                    'yt_dlp_error': None,
-                                    'Generated S3 URL': None,
-                                    'Generation Error': None,
-                                    'Status': 'Selected, Fetching URL...',
-                                    'Script Angle': script_ver
-                                }
-                                st.toast(f"Queued Job #{next_copy_number} ({current_lang}) for: {video_title}", icon="➕")
-                                st.rerun() # Update sidebar, trigger fetch
+                                # Split the language string by comma
+                                langs_to_process = [l.strip() for l in base_lang_string.split(',') if l.strip()]
+                                if not langs_to_process: # Handle empty or invalid string
+                                    langs_to_process = ["default"] # Use a default if needed
+                                    st.warning("Could not parse languages, using default.")
+
+                                # Iterate through each specified language and create a job
+                                for current_lang in langs_to_process:
+                                    # Calculate the next copy number for this specific video_id and language
+                                    base_key_prefix = f"{base_video_id}_{current_lang}_"
+                                    existing_copy_numbers = [
+                                        int(k[len(base_key_prefix):])
+                                        for k in st.session_state.selected_videos.keys()
+                                        if k.startswith(base_key_prefix) and k[len(base_key_prefix):].isdigit()
+                                    ]
+                                    next_copy_number = max(existing_copy_numbers) + 1 if existing_copy_numbers else 1
+                                    job_key = f"{base_key_prefix}{next_copy_number}" # Generate the unique key
+
+                                    # Add the new job entry to session state
+                                    st.session_state.selected_videos[job_key] = {
+                                        'Job Key': job_key,
+                                        'Search Term': original_term, # Term used for this search
+                                        'Topic': topic,
+                                        'Language': current_lang, # Store the individual language
+                                        'Video Title': video_title,
+                                        'Video ID': base_video_id, # Original video ID
+                                        'Copy Number': next_copy_number,
+                                        'Standard URL': standard_video_url, # Store the watch URL
+                                        'fetching_dlp': True, # Mark for URL fetching
+                                        'Direct URL': None,
+                                        'Format Details': None,
+                                        'yt_dlp_error': None,
+                                        'Generated S3 URL': None,
+                                        'Generation Error': None,
+                                        'Status': 'Selected, Fetching URL...',
+                                        'Script Angle': script_ver
+                                    }
+                                    st.toast(f"Queued Job #{next_copy_number} ({current_lang}) for: {video_title}", icon="➕")
+
+                                st.rerun() # Rerun after adding all jobs for this click
+
 
                             # --- Display Status for Existing Jobs ---
-                            # Find jobs matching this specific Video ID and Language
+                            # Find jobs matching this specific Video ID and Language(s) from the header
+                            # Note: We check against the base_lang_string here as that's how results are grouped
+                            # A more refined approach might involve finding jobs matching video_id only and then filtering by lang if needed
                             related_job_keys = [
                                 k for k, v in st.session_state.selected_videos.items()
-                                if v.get('Video ID') == video_id and v.get('Language') == lang
+                                if v.get('Video ID') == video_id and v.get('Language') in [l.strip() for l in lang.split(',') if l.strip()] # Check if job lang matches any in the group lang string
                             ]
                             if related_job_keys:
-                                # Use an expander to avoid cluttering the grid
                                 status_expander = st.expander(f"Show Status for {len(related_job_keys)} Queued Job(s)")
                                 with status_expander:
-                                    # Sort jobs by copy number for consistent display
-                                    sorted_job_keys = sorted(related_job_keys, key=lambda k: st.session_state.selected_videos.get(k, {}).get('Copy Number', 0))
+                                    # Sort jobs for consistent display (e.g., by language then copy number)
+                                    sorted_job_keys = sorted(related_job_keys, key=lambda k: (st.session_state.selected_videos.get(k, {}).get('Language', ''), st.session_state.selected_videos.get(k, {}).get('Copy Number', 0)))
                                     for r_job_key in sorted_job_keys:
                                         job_data = st.session_state.selected_videos.get(r_job_key)
                                         if job_data:
                                             copy_num = job_data.get('Copy Number', '?')
+                                            job_lang = job_data.get('Language', '?') # Show lang for clarity
                                             status = job_data.get('Status', 'Unknown')
                                             s3_url = job_data.get('Generated S3 URL')
-                                            # Combine potential errors for display
                                             error_msg = job_data.get('Generation Error') or job_data.get('yt_dlp_error')
 
-                                            st.markdown(f"**Job #{copy_num}** (`{r_job_key}`)") # Use markdown for bold
+                                            st.markdown(f"**Job #{copy_num} ({job_lang})** (`{r_job_key}`)")
                                             if status == 'Processing': st.info("⚙️ Processing...", icon="⏳")
                                             elif status == 'Queued': st.info("🕒 Queued", icon="🕒")
                                             elif status == 'Completed' and s3_url:
@@ -1785,8 +1789,16 @@ if st.session_state.api_search_results:
                                             elif status.startswith('Error:') and error_msg: st.error(f"⚠️ URL Error: {error_msg[:60]}...", icon="⚠️")
                                             elif status == 'Ready': st.success("✅ Ready to Process", icon="👍")
                                             elif status == 'Selected, Fetching URL...': st.info("📡 Fetching URL...", icon="📡")
-                                            else: st.write(f"Status: {status}") # Fallback
+                                            else: st.write(f"Status: {status}") # Fallback display
+else:
+    # Optional: Display a message if a search has been performed but yielded zero results overall
+    if 'api_search_results' in st.session_state and not st.session_state.api_search_results:
+         st.info("The previous search returned no results for any term/topic.")
+    else:
+         # Initial state or after clearing
+         st.info("Perform a search using the sidebar to see video results here.")
 
+# The rest of the script (yt-dlp fetching, batch processing, sidebar display) follows...
 
 # 4. yt-dlp Fetching Logic (Runs after UI render if needed)
 # (Use the corrected version that works with job_keys and caches results)
