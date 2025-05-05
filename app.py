@@ -1735,7 +1735,7 @@ if st.session_state.api_search_results:
                                 st.session_state[show_video_key] = False
 
                             # --- Other states (selection, generation, etc.) ---
-                            is_selected = video_id in st.session_state.selected_videos
+                            # is_selected = video_id in st.session_state.selected_videos killed
                             video_state = st.session_state.selected_videos.get(video_id, {})
                             # ... [keep existing state checks: is_fetching_dlp, dlp_error, is_in_queue, etc.] ...
 
