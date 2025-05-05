@@ -1963,55 +1963,7 @@ if st.session_state.batch_processing_active and st.session_state.generation_queu
 
         
 
-                                elif script_ver_temp == '1st_person':
-
-                                    script_prompt = f"""
-
-                                                    Create a brief, captivating first-person voiceover script for a viral FB video about '{topic}' in {lang}. 
-
-                                                    Keep it concise (15-20 seconds when spoken, about 2-3 sentences) with these guidelines:
-
-        
-
-                                                    - Start with an immediate hook in the first 3-5 seconds to grab attention
-
-                                                    - The hook should be intriguing but honest - NO false promises or misleading claims
-
-                                                    - Use first-person perspective throughout
-
-                                                    - Make the tone authentic and conversational, like a friend sharing a discovery
-
-                                                    - Focus on creating genuine interest in the topic with real value
-
-                                                    - Maintain a natural flow that keeps viewers watching
-
-                                                    - End with a simple call to action like "Tap to discover..." or "Tap to learn..."
-
-                                                    - Ensure the content feels genuine, not like an advertisement
-
-        
-
-                                                    IMPORTANT:
-
-                                                    - The opening hook must be attention-grabbing AND truthful
-
-                                                    - Avoid sensational language or exaggerated claims
-
-                                                    - Don't make promises that can't be delivered
-
-                                                    - No urgency phrases like "limited time" or "act now"
-
-                                                    - No geographic claims (e.g., "near you," "in your area")
-
-                                                    - No "we" or "our" language - keep it personal
-
-                                                    - End with "Tap to..." followed by a clear, non-committal action
-
-                                                    * **NO:** DONT make false promises. ('get approved')
-
-                                                    Return only the script text itself, nothing else.
-
-                                                    """
+                                
                         # --- Choose LLM ---
                         # script_text = chatGPT(script_prompt, client=openai_client)
                         script_text = claude(script_prompt) # Assumes claude function uses API key from secrets
