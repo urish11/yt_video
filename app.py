@@ -1693,7 +1693,17 @@ if st.session_state.api_search_results:
                             if st.session_state[show_video_key]:
                                 try:
                                     # Use Streamlit's native video component
-                                    st.video(standard_video_url)
+                                    # st.video(standard_video_url)
+                                    iframe_code = f"""
+                                  <iframe width="315" height="560"
+                                  src="https://www.youtube.com/embed/{video_id}"
+                                  title="YouTube video player" frameborder="0"
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media;
+                                  gyroscope; picture-in-picture; web-share"
+                                  allowfullscreen></iframe>
+                                  """  
+                                    st.markdown(iframe_code, unsafe_allow_html=True)
+
                                 except Exception as e:
                                     st.error(f"Video preview failed: {e}")
                             else:
