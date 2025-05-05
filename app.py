@@ -1814,7 +1814,7 @@ if st.session_state.api_search_results:
                                 if is_selected:
                                     del st.session_state.selected_videos[video_id]
                                     st.toast(f"Deselected: {video_title}", icon="➖")
-                                    if video_id in st.session_state.generation_queue:
+                                    if video_id in st.session_state.generation_queue and 1==2: #killed
                                         st.session_state.generation_queue.remove(video_id)
                                         st.session_state.batch_total_count = len(st.session_state.generation_queue)
                                 else:
