@@ -84,7 +84,7 @@ SUBTITLE_BG_COLOR = 'rgba(0, 0, 0, 0.6)' # Semi-transparent black
 st.set_page_config(layout="wide", page_title="YouTube Video Generator", page_icon="🎥")
 SCRIPT_VER_OPTIONS =["default", "default_v2", "1st_person" ,"mix"]
 BG_VER_OPTIONS =[True, False, "mix"]
-TTS_VOICE_OPTIONS =['sage','redneck']
+TTS_VOICE_OPTIONS =['sage','redneck','announcer']
 # --- Load Secrets ---
 try:
     youtube_api_key_secret = st.secrets["YOUTUBE_API_KEY"]
@@ -535,10 +535,13 @@ def generate_audio_with_timestamps(text, client, voice_id="sage"):
             raise ValueError("Input text for TTS cannot be empty.")
 
         instructions_per_voice ={
-            'redneck': {'instructions':'talk like an older ameircan redneck heavy accent. deep voice','voice' :'ash'}
+            'redneck': {'instructions':'talk like an older ameircan redneck heavy accent. deep voice','voice' :'ash'},
+            'announcer': {'instructions':'Polished announcer voice, American accent','voice' :'ash'}
+
+
 
         }
-        if voice_id in ['redneck']:
+        if voice_id in instructions_per_voice.keys():
             response = client.audio.speech.create(
                 model="gpt-4o-mini-tts", # Use HD for better quality
                 voice=instructions_per_voice[voice_id]['voice'],
