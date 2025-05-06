@@ -236,7 +236,7 @@ def search_youtube(api_key, query, max_results_per_term=5):
         terms = [term.strip() for term in query.split('|') if term.strip()]
         count = max_results_per_term//len(terms)
     else:
-        terms = [query.strip()] # Treat as a single term
+        terms = [query] # Treat as a single term
         count = max_results_per_term
 
     st.write(f"Searching for terms: {terms} (Max {max_results_per_term} results per term)")
@@ -1564,37 +1564,37 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
                 # --- Use the refined GPT prompt for search terms ---
                 generated_term = chatGPT(f"""You are a viral video ad expert. I will give you a topic, and you will return the top 3 YouTube Shorts search terms that:
 
-                                    - Are short (2–5 words)
+                  - Are short (2–5 words)
 
-                                    - Clearly describe what viewers will see in the video (visuals only)
+                  - Clearly describe what viewers will see in the video (visuals only)
 
-                                    - Lead to emotionally engaging, surprising, or curiosity-triggering content
+                  - Lead to emotionally engaging, surprising, or curiosity-triggering content
 
-                                    - Are perfect for remixing or using as inspiration for Facebook video ads
+                  - Are perfect for remixing or using as inspiration for Facebook video ads
 
-                                    - Focus on things like transformations, objects in motion, satisfying actions, luxury aesthetics, clever space-saving, or unexpected reveals
+                  - Focus on things like transformations, objects in motion, satisfying actions, luxury aesthetics, clever space-saving, or unexpected reveals
 
-                                    - Avoid abstract or advice-based phrases (like “tips,” “hacks,” or “secrets”)
+                  - Avoid abstract or advice-based phrases (like “tips,” “hacks,” or “secrets”)
 
-                                    - Avoid using non visual\describing words that are not likely to be relevent (like 'On credit', "Financing", etc)
+                  - Avoid using non visual\describing words that are not likely to be relevent (like 'On credit', "Financing", etc)
 
-                                    - Add '#shorts' to the end of each search term and separate terms with ' | '
+                  - Add '#shorts' to the end of each search term and separate terms with ' | '
 
-                                    - if the topic is a service (like lawyer) that is intangible, think of something else that can be used (like "Veterans Benefits Lawyer free consultation" give "veteran shares #shorts ") 
+                  - if the topic is a service (like lawyer) that is intangible, think of something else that can be used (like "Veterans Benefits Lawyer free consultation" give "veteran shares #shorts ")
 
-                                    Example:  
+                  Example:
 
-                                    Input: sofa  
+                  Input: sofa
 
-                                    Output:  
+                  Output:
 
-                                    'sofa transformation #shorts | hidden bed sofa #shorts | luxury sofa unboxing #shorts'
+                  'sofa transformation #shorts | hidden bed sofa #shorts | luxury sofa unboxing #shorts'
 
 
 
-                                    My topic:
+                  My topic:
 
-                                 {topic}""", client=openai_client, model="gpt-4") # Use your full validated prompt
+                {topic}""", client=openai_client, model="gpt-4") # Use your full validated prompt
                 if not generated_term:
                     st.warning(f"Failed to generate search terms for '{topic}'. Skipping.", icon="🤖")
                     continue
