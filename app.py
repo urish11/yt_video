@@ -1585,7 +1585,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
             status_text_api.text(f"Generating search terms for: '{topic}'...")
             try:
                 # --- Use the refined GPT prompt for search terms ---
-                generated_term = calude(f"""You are a viral video ad expert. I will give you a topic, and you will return the top 3 YouTube Shorts search terms that:
+                generated_term = chatGPT(f"""You are a viral video ad expert. I will give you a topic, and you will return the top 3 YouTube Shorts search terms that:
 
                   - Are short (2–5 words)
 
@@ -1617,7 +1617,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
 
                   My topic:
 
-                {topic}""") # Use your full validated prompt  , client=openai_client, model="gpt-4"
+                {topic}""", client=openai_client, model="gpt-4o") # Use your full validated prompt  
                 if not generated_term:
                     st.warning(f"Failed to generate search terms for '{topic}'. Skipping.", icon="🤖")
                     continue
