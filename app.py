@@ -1412,7 +1412,7 @@ if 'api_search_results' not in st.session_state:
 # Input DataFrame for search terms and topics
 if 'search_data' not in st.session_state:
     st.session_state.search_data = pd.DataFrame([
-        {'Topic': '', 'Search Term': '', 'Language': 'English', "Script Angle": "default", 'Video Results': 5, 'BG Music' : False, 'TTS Voice': 'sage'}
+        {'Topic': 'sofa sale', 'Search Term': 'auto', 'Language': 'English', "Script Angle": "default", 'Video Results': 5, 'BG Music' : False, 'TTS Voice': 'sage'}
     ])
 # Snapshot for data editor comparison
 if 'search_data_snapshot' not in st.session_state:
