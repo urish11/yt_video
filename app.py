@@ -1613,11 +1613,14 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
 
                   'sofa transformation #shorts | hidden bed sofa #shorts | luxury sofa unboxing #shorts'
 
+                  Input: car finance bad credit no deposit
+                  Output:
 
+                  'new car tour #shorts | car reaction #shorts | new car surprise #shorts'
 
                   My topic:
 
-                {topic}""", client=openai_client, model="gpt-4o") # Use your full validated prompt  
+                {topic}""", client=openai_client, model="gpt-4") # Use your full validated prompt  
                 if not generated_term:
                     st.warning(f"Failed to generate search terms for '{topic}'. Skipping.", icon="🤖")
                     continue
