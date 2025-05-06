@@ -83,7 +83,8 @@ SUBTITLE_COLOR = '#FFFF00' # Yellow
 SUBTITLE_BG_COLOR = 'rgba(0, 0, 0, 0.6)' # Semi-transparent black
 st.set_page_config(layout="wide", page_title="YouTube Video Generator", page_icon="🎥")
 SCRIPT_VER_OPTIONS =["default", "default_v2", "1st_person" ,"mix"]
-
+BG_VER_OPTIONS =[True, False, "mix"]
+TTS_VOICE_OPTIONS =['sage','redneck']
 # --- Load Secrets ---
 try:
     youtube_api_key_secret = st.secrets["YOUTUBE_API_KEY"]
@@ -533,14 +534,29 @@ def generate_audio_with_timestamps(text, client, voice_id="sage"):
         if not text or not text.strip():
             raise ValueError("Input text for TTS cannot be empty.")
 
+        instructions_per_voice ={
+            'redneck': {'instructions':'talk like an older ameircan redneck heavy accent. deep voice','voice' :'ash'}
+
+        }
+        if voice_id in ['redneck']:
+            response = client.audio.speech.create(
+                model="gpt-4o-mini-tts", # Use HD for better quality
+                voice=instructions_per_voice[voice_id]['voice'],
+                input=text,
+                response_format="mp3",
+                instructions= instructions_per_voice[voice_id]['instructions'],
+                speed=1.0
+            )
+
+        elif voice_id in['sage']:
         # 1. Generate TTS audio
-        response = client.audio.speech.create(
-            model="tts-1-hd", # Use HD for better quality
-            voice=voice_id,
-            input=text,
-            response_format="mp3",
-            speed=1.0
-        )
+            response = client.audio.speech.create(
+                model="tts-1-hd", # Use HD for better quality
+                voice=voice_id,
+                input=text,
+                response_format="mp3",
+                speed=1.0
+            )
 
         # 2. Save to a temporary file
         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp_audio_file_obj:
@@ -1278,7 +1294,7 @@ def sync_search_data():
             current_df = st.session_state.search_data_snapshot.copy()
         else:
             # Fallback: use current state, but this might contain unsynced changes
-            current_df = st.session_state.search_data.copy() if isinstance(st.session_state.search_data, pd.DataFrame) else pd.DataFrame([{'Topic': '', 'Search Term': '', 'Language': 'English', "Script Angle": "default", 'Video Results': 5}])
+            current_df = st.session_state.search_data.copy() if isinstance(st.session_state.search_data, pd.DataFrame) else pd.DataFrame([{'Topic': '', 'Search Term': '', 'Language': 'English', "Script Angle": "default", 'Video Results': 5, 'BG Music' : False, 'TTS Voice': 'sage'}])
 
         # Apply deletions first (indices are based on the snapshot)
         valid_delete_indices = sorted([idx for idx in deleted_rows if idx < len(current_df)], reverse=True)
@@ -1303,7 +1319,7 @@ def sync_search_data():
 
         # Apply additions
         if added_rows:
-            expected_cols = ["Topic", "Search Term", "Language", "Script Angle", "Video Results"]
+            expected_cols = ["Topic", "Search Term", "Language", "Script Angle", "Video Results","BG Music","TTS Voice"]
             processed_adds = []
             for row_dict in added_rows:
                  if isinstance(row_dict, dict):
@@ -1324,7 +1340,7 @@ def sync_search_data():
 
 
         # Final cleanup and validation of the entire DataFrame
-        expected_cols = ["Topic", "Search Term", "Language", "Script Angle", "Video Results"]
+        expected_cols = ["Topic", "Search Term", "Language", "Script Angle", "Video Results","BG Music","TTS Voice"]
         for col in expected_cols: # Ensure all columns exist
              if col not in current_df.columns:
                   if col == "Language": current_df[col] = "English"
@@ -1354,7 +1370,7 @@ def sync_search_data():
 
         # If empty after filtering, add back a default row
         if current_df.empty:
-             current_df = pd.DataFrame([{'Topic': '', 'Search Term': '', 'Language': 'English', "Script Angle": "default", 'Video Results': 5}])
+             current_df = pd.DataFrame([{'Topic': '', 'Search Term': '', 'Language': 'English', "Script Angle": "default", 'Video Results': 5, 'BG Music' : False, 'TTS Voice': 'sage'}])
 
         # Update the main session state and create a fresh snapshot
         st.session_state.search_data = current_df.reset_index(drop=True)
@@ -1366,7 +1382,7 @@ def sync_search_data():
          if 'search_data_snapshot' in st.session_state:
               st.session_state.search_data = st.session_state.search_data_snapshot.copy()
          else: # If snapshot missing too, hard reset
-              st.session_state.search_data = pd.DataFrame([{'Topic': '', 'Search Term': '', 'Language': 'English', "Script Angle": "default", 'Video Results': 5}])
+              st.session_state.search_data = pd.DataFrame([{'Topic': '', 'Search Term': '', 'Language': 'English', "Script Angle": "default", 'Video Results': 5, 'BG Music' : False, 'TTS Voice': 'sage'}])
               st.session_state.search_data_snapshot = st.session_state.search_data.copy()
 
 
@@ -1426,7 +1442,9 @@ edited_df = st.sidebar.data_editor(
         "Video Results": st.column_config.NumberColumn("Video Results", min_value=1, max_value=50, step=1, default=5, required=True),
         "Language": st.column_config.TextColumn("Language", default="English", required=True),
         "Topic": st.column_config.TextColumn("Topic"),
-        "Search Term": st.column_config.TextColumn("Search Term (or 'auto')")
+        "Search Term": st.column_config.TextColumn("Search Term (or 'auto')"),
+        "BG Music": st.column_config.SelectboxColumn("BG Music", options=BG_VER_OPTIONS, default=False, required=True),
+        "TTS Voice": st.column_config.SelectboxColumn("BG Music", options=TTS_VOICE_OPTIONS, default="sage", required=True)
         },
     num_rows="dynamic",
     use_container_width=True,
@@ -1444,8 +1462,8 @@ search_button = col1.button(
     # on_click=sync_search_data # Sync now happens via on_change of editor
 )
 clear_button = col2.button("🧹 Clear All", use_container_width=True, type="secondary", disabled=st.session_state.batch_processing_active)
-with_music = col1.checkbox("With BG music?", value=False)
-with_music_rand = col2.checkbox("With BG music randomly?", value=False)
+# with_music = col1.checkbox("With BG music?", value=False)
+# with_music_rand = col2.checkbox("With BG music randomly?", value=False)
 
 if clear_button:
     # Reset all relevant states
@@ -1553,6 +1571,8 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
         count = item['Video Results'] # Already int and clamped
         lang = item['Language']   # Already stripped in sync
         script_ver = item["Script Angle"] # Already stripped in sync
+        bg_music = item["BG Music"]
+        tts_voice = item["TTS Voice"]
 
         # Handle 'auto' search term generation
         if term.lower() == 'auto':
@@ -1624,7 +1644,9 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
                 'topic': topic,
                 'lang': lang,
                 "script_ver": script_ver,
-                'original_term': term # Store the actual term used for search
+                'original_term': term, # Store the actual term used for search
+                'bg_music' : bg_music,
+                'tts_voice' : tts_voice
             }
             time.sleep(0.1) # Brief pause
 
@@ -1650,6 +1672,8 @@ if st.session_state.api_search_results:
         lang = result_data['lang'] # This might contain comma-separated languages
         script_ver = result_data["script_ver"]
         original_term = result_data['original_term']
+        bg_music = result_data['bg_music']
+        tts_voice = result_data['tts_data']
 
         # --- Container for each search result group ---
         term_container = st.container(border=True)
@@ -1761,7 +1785,9 @@ if st.session_state.api_search_results:
                                         'Generated S3 URL': None,
                                         'Generation Error': None,
                                         'Status': 'Selected, Fetching URL...',
-                                        'Script Angle': script_ver
+                                        'Script Angle': script_ver,
+                                        'BG Music' : bg_music,
+                                        'TTS Voice' : tts_voice
                                     }
                                     st.toast(f"Queued Job #{next_copy_number} ({current_lang}) for: {video_title}", icon="➕")
 
@@ -1896,6 +1922,8 @@ if st.session_state.batch_processing_active and st.session_state.generation_queu
                         topic = video_data.get('Topic', 'video topic')
                         lang = video_data.get('Language', 'English')
                         script_ver = video_data.get("Script Angle", "default")
+                        bg_music = video_data.get('BG Music', False)
+                        tts_voice = video_data.get('TTS Voice', 'sage')
                         base_video_direct_url = video_data.get("Direct URL") # Use the fetched direct URL
                         copy_num = video_data.get('Copy Number', 0)
 
@@ -2008,18 +2036,24 @@ You are an expert scriptwriter for high-performing short-form video ads. Generat
                         if not script_text: raise ValueError("Failed to generate script text.")
                         st.text_area("Generated Script:", script_text, height=100, disabled=True, key=f"script_{job_key_to_process}")
 
+
+                         # --- 3. select voice id ---
+
+                        voice_id = tts_voice
+
+
                         # --- 3. Generate TTS ---
                         st.write(f"2/5: Generating TTS audio & timestamps...")
                         audio_path, word_timings = generate_audio_with_timestamps(
-                            script_text, client=openai_client, voice_id=DEFAULT_TTS_VOICE
+                            script_text, client=openai_client, voice_id=voice_id
                         )
                         if audio_path is None or word_timings is None: # Check both for failure
                             raise ValueError("Failed to generate TTS audio or timestamps.")
 
                         # --- 4. Process Video ---
                         st.write(f"3/5: Processing base video & adding audio/subtitles...")
-                        current_with_music = with_music
-                        if with_music_rand: current_with_music = random.choice([True, False])
+                        current_with_music = bg_music
+                        if current_with_music == 'mix': current_with_music = random.choice([True, False])
 
                         # Pass Direct URL and other necessary data
                         # This function now downloads the direct url, processes, and returns temp output path
