@@ -1674,7 +1674,7 @@ if st.session_state.api_search_results:
         original_term = result_data['original_term']
         bg_music = result_data['bg_music']
         tts_voice = result_data['tts_data']
-
+ 
         # --- Container for each search result group ---
         term_container = st.container(border=True)
         with term_container:
