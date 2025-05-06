@@ -545,7 +545,7 @@ def generate_audio_with_timestamps(text, client, voice_id="sage"):
                 input=text,
                 response_format="mp3",
                 instructions= instructions_per_voice[voice_id]['instructions'],
-                speed=1.0
+                speed=1.15
             )
 
         elif voice_id in['sage']:
