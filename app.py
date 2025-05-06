@@ -237,6 +237,7 @@ def search_youtube(api_key, query, max_results_per_term=5):
         count = max_results_per_term//len(terms)
     else:
         terms = [query.strip()] # Treat as a single term
+        count = max_results_per_term
 
     st.write(f"Searching for terms: {terms} (Max {max_results_per_term} results per term)")
 
