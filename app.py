@@ -271,36 +271,36 @@ def search_youtube(api_key, query, max_results_per_term=5,max_retries = 5):
                 # 'order': 'relevance' # Default is relevance
                 'regionCode': 'US' # Optional: Bias results towards a region
             }
-            try:
-                response = requests.get(YOUTUBE_API_BASE_URL, params=params, timeout=15)
-                response.raise_for_status() # Raises HTTPError for bad responses (4xx or 5xx)
-                results = response.json()
-           
-                processed_ids_this_term = set() # Avoid adding duplicates from the same term search
+            with st.status("Progress:"):
+                try:
+                    response = requests.get(YOUTUBE_API_BASE_URL, params=params, timeout=15)
+                    response.raise_for_status() # Raises HTTPError for bad responses (4xx or 5xx)
+                    results = response.json()
+            
+                    processed_ids_this_term = set() # Avoid adding duplicates from the same term search
 
-                if 'items' in results:
-                    for item in results['items']:
-                        if total_fetched >= MAX_TOTAL_RESULTS: break # Check limit again
+                    if 'items' in results:
+                        for item in results['items']:
+                            if total_fetched >= MAX_TOTAL_RESULTS: break # Check limit again
 
-                        if item.get('id', {}).get('kind') == 'youtube#video' and 'videoId' in item['id']:
-                            video_id = item['id']['videoId']
-                            # Check if we already added this video ID from this specific term search
-                            if video_id in processed_ids_this_term:
-                                continue
+                            if item.get('id', {}).get('kind') == 'youtube#video' and 'videoId' in item['id']:
+                                video_id = item['id']['videoId']
+                                # Check if we already added this video ID from this specific term search
+                                if video_id in processed_ids_this_term:
+                                    continue
 
-                            title = item['snippet'].get('title', 'No Title')
-                            # Use the standard embeddable URL format
-                            standard_url = f"https://www.youtube.com/watch?v={video_id}"
-                            videos_res.append({
-                                'title': title,
-                                'videoId': video_id,
-                                'url': standard_url # Store the standard watch URL
-                            })
-                            processed_ids_this_term.add(video_id)
-                            total_fetched += 1
-                            flag =True
-                            
-            with st.status("Errors"):
+                                title = item['snippet'].get('title', 'No Title')
+                                # Use the standard embeddable URL format
+                                standard_url = f"https://www.youtube.com/watch?v={video_id}"
+                                videos_res.append({
+                                    'title': title,
+                                    'videoId': video_id,
+                                    'url': standard_url # Store the standard watch URL
+                                })
+                                processed_ids_this_term.add(video_id)
+                                total_fetched += 1
+                                flag =True
+                                
                 except requests.exceptions.Timeout:
                     st.text(f"API Request Timeout for query '{term}'.")
                     
