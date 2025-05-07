@@ -1627,85 +1627,85 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
             status_text_api.text(f"Generating search terms for: '{topic}'...")
             try:
                 # --- Use the refined GPT prompt for search terms ---
-                # generated_term = chatGPT(f"""You are a viral video ad expert. I will give you a topic, and you will return the top 3 YouTube Shorts search terms that:
+                generated_term = chatGPT(f"""You are a viral video ad expert. I will give you a topic, and you will return the top 3 YouTube Shorts search terms that:
 
-                #   - Are short (2–5 words)
+                  - Are short (2–5 words)
 
-                #   - Clearly describe what viewers will see in the video (visuals only)
+                  - Clearly describe what viewers will see in the video (visuals only)
 
-                #   - Lead to emotionally engaging, surprising, or curiosity-triggering content
+                  - Lead to emotionally engaging, surprising, or curiosity-triggering content
 
-                #   - Are perfect for remixing or using as inspiration for Facebook video ads
+                  - Are perfect for remixing or using as inspiration for Facebook video ads
 
-                #   - Focus on things like transformations, objects in motion, satisfying actions, luxury aesthetics, clever space-saving, or unexpected reveals
+                  - Focus on things like transformations, objects in motion, satisfying actions, luxury aesthetics, clever space-saving, or unexpected reveals
 
-                #   - Avoid abstract or advice-based phrases (like “tips,” “hacks,” or “secrets”)
+                  - Avoid abstract or advice-based phrases (like “tips,” “hacks,” or “secrets”)
 
-                #   - Avoid using non visual\describing words that are not likely to be relevent (like 'On credit', "Financing", etc)
+                  - Avoid using non visual\describing words that are not likely to be relevent (like 'On credit', "Financing", etc)
 
-                #   - Add '#shorts' to the end of each search term and separate terms with ' | '
+                  - Add '#shorts' to the end of each search term and separate terms with ' | '
 
-                #   - if the topic is a service (like lawyer) that is intangible, think of something else that can be used (like "Veterans Benefits Lawyer free consultation" give "veteran shares #shorts ")
+                  - if the topic is a service (like lawyer) that is intangible, think of something else that can be used (like "Veterans Benefits Lawyer free consultation" give "veteran shares #shorts ")
 
-                #   Example:
+                  Example:
 
-                #   Input: sofa
+                  Input: sofa
 
-                #   Output:
+                  Output:
 
-                #   'sofa transformation #shorts | hidden bed sofa #shorts | luxury sofa unboxing #shorts'
+                  'sofa transformation #shorts | hidden bed sofa #shorts | luxury sofa unboxing #shorts'
 
-                #   Input: car finance bad credit no deposit
-                #   Output:
+                  Input: car finance bad credit no deposit
+                  Output:
 
-                #   'new car tour #shorts | car reaction #shorts | new car surprise #shorts'
+                  'new car tour #shorts | car reaction #shorts | new car surprise #shorts'
 
-                #   My topic:
+                  My topic:
 
-                # {topic}""", client=openai_client, model="gpt-4") # Use your full validated prompt  
+                {topic}""", client=openai_client, model="gpt-4") # Use your full validated prompt  
 
-                generated_term = gemini_text_lib(f"""
-                                You are a Viral Video Ad Scout. Your mission is to find YouTube Shorts search terms that uncover visually compelling, user-generated style content perfect for remixing into high-performing Facebook video ads. The key is to think about what *actual users* are likely to upload as Shorts – authentic, engaging moments rather than polished ads.
+                # generated_term = gemini_text_lib(f"""
+                #                 You are a Viral Video Ad Scout. Your mission is to find YouTube Shorts search terms that uncover visually compelling, user-generated style content perfect for remixing into high-performing Facebook video ads. The key is to think about what *actual users* are likely to upload as Shorts – authentic, engaging moments rather than polished ads.
 
-                                Given a topic, return the top 3 YouTube Shorts search terms that meet these criteria:
+                #                 Given a topic, return the top 3 YouTube Shorts search terms that meet these criteria:
 
-                                1.  **Concise & Visual:** 2-5 words, clearly describing *tangible actions, objects, or visual transformations* viewers will see. Focus on the visual verb or noun.
-                                2.  **Emotionally Resonant:** Leads to content triggering surprise, satisfaction, curiosity, awe, or joy. Think "wow moments."
-                                3.  **Remix-Ready:** Content should be inspiring for new ad creatives, focusing on:
-                                    * **Transformations:** Before & after, makeovers, redesigns.
-                                    * **Objects in Motion/Use:** Product demos (organic feel), gadgets in action, vehicles moving.
-                                    * **Satisfying Processes:** Cleaning, organizing, creating, ASMR-like actions.
-                                    * **Luxury & Aesthetics:** Unboxings, showcases of high-end items, beautiful setups.
-                                    * **Clever Solutions:** Space-saving ideas, innovative uses, smart designs.
-                                    * **Unexpected Reveals:** Hidden features, surprise elements, sudden changes.
-                                4.  **Authentic YouTube Style:** Prioritize terms that reflect genuine user uploads, not overly commercial or "how-to" content.
-                                5.  **Avoid:**
-                                    * Abstract concepts, advice-based phrases (e.g., "tips," "hacks," "secrets," "how to learn").
-                                    * Non-visual qualifiers or descriptive words unlikely to be in a visual search (e.g., "on credit," "financing," "affordable," "best"). The visual should speak for itself.
-                                6.  **Handling Intangible Services/Topics:**
-                                    * If the topic is a service (e.g., lawyer, insurance, software), focus on *visual proxies or relatable human experiences/outcomes* associated with it.
-                                    * Example: For "Veterans Benefits Lawyer," think about the *result* or *emotion*. Instead of "lawyer consultation," terms like: "veteran disability approved #shorts" or "soldier homecoming surprise #shorts". For software, "dashboard animation #shorts" or "app feature showcase #shorts".
-                                7.  **Format:**
-                                    * Add '#shorts' to the end of each search term.
-                                    * Separate terms with ' | '.
+                #                 1.  **Concise & Visual:** 2-5 words, clearly describing *tangible actions, objects, or visual transformations* viewers will see. Focus on the visual verb or noun.
+                #                 2.  **Emotionally Resonant:** Leads to content triggering surprise, satisfaction, curiosity, awe, or joy. Think "wow moments."
+                #                 3.  **Remix-Ready:** Content should be inspiring for new ad creatives, focusing on:
+                #                     * **Transformations:** Before & after, makeovers, redesigns.
+                #                     * **Objects in Motion/Use:** Product demos (organic feel), gadgets in action, vehicles moving.
+                #                     * **Satisfying Processes:** Cleaning, organizing, creating, ASMR-like actions.
+                #                     * **Luxury & Aesthetics:** Unboxings, showcases of high-end items, beautiful setups.
+                #                     * **Clever Solutions:** Space-saving ideas, innovative uses, smart designs.
+                #                     * **Unexpected Reveals:** Hidden features, surprise elements, sudden changes.
+                #                 4.  **Authentic YouTube Style:** Prioritize terms that reflect genuine user uploads, not overly commercial or "how-to" content.
+                #                 5.  **Avoid:**
+                #                     * Abstract concepts, advice-based phrases (e.g., "tips," "hacks," "secrets," "how to learn").
+                #                     * Non-visual qualifiers or descriptive words unlikely to be in a visual search (e.g., "on credit," "financing," "affordable," "best"). The visual should speak for itself.
+                #                 6.  **Handling Intangible Services/Topics:**
+                #                     * If the topic is a service (e.g., lawyer, insurance, software), focus on *visual proxies or relatable human experiences/outcomes* associated with it.
+                #                     * Example: For "Veterans Benefits Lawyer," think about the *result* or *emotion*. Instead of "lawyer consultation," terms like: "veteran disability approved #shorts" or "soldier homecoming surprise #shorts". For software, "dashboard animation #shorts" or "app feature showcase #shorts".
+                #                 7.  **Format:**
+                #                     * Add '#shorts' to the end of each search term.
+                #                     * Separate terms with ' | '.
 
-                                Example 1:
-                                Input: sofa
-                                Output: 'sofa transformation #shorts | hidden storage sofa #shorts | modular sofa setup #shorts'
+                #                 Example 1:
+                #                 Input: sofa
+                #                 Output: 'sofa transformation #shorts | hidden storage sofa #shorts | modular sofa setup #shorts'
 
-                                Example 2:
-                                Input: car finance bad credit no deposit
-                                Output: 'new car day reaction #shorts | dream car surprise #shorts | first car celebration #shorts'
+                #                 Example 2:
+                #                 Input: car finance bad credit no deposit
+                #                 Output: 'new car day reaction #shorts | dream car surprise #shorts | first car celebration #shorts'
 
-                                Example 3:
-                                Input: home cleaning service
-                                Output: 'dirty to clean house #shorts | satisfying home clean #shorts | messy room makeover #shorts'
-                                return just the output no intros or explaining
-                                My topic: {topic}
-                                """,
-                                model = "gemini-2.5-flash-preview-04-17"
+                #                 Example 3:
+                #                 Input: home cleaning service
+                #                 Output: 'dirty to clean house #shorts | satisfying home clean #shorts | messy room makeover #shorts'
+                #                 return just the output no intros or explaining
+                #                 My topic: {topic}
+                #                 """,
+                #                 model = "gemini-2.5-flash-preview-04-17"
 
-                                )
+                #                 )
 
                 if not generated_term:
                     st.warning(f"Failed to generate search terms for '{topic}'. Skipping.", icon="🤖")
