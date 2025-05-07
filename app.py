@@ -271,7 +271,7 @@ def search_youtube(api_key, query, max_results_per_term=5,max_retries = 5):
                 response = requests.get(YOUTUBE_API_BASE_URL, params=params, timeout=15)
                 response.raise_for_status() # Raises HTTPError for bad responses (4xx or 5xx)
                 results = response.json()
-                st.text(response.text)
+                st.text(response)
                 input()
                 processed_ids_this_term = set() # Avoid adding duplicates from the same term search
 
