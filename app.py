@@ -269,7 +269,7 @@ def search_youtube(api_key, query, max_results_per_term=5,max_retries = 5):
                 'maxResults': count,
                 # 'videoEmbeddable': 'true',
                 # 'order': 'viewCount', # Default is relevance
-                'regionCode': 'US', # Optional: Bias results towards a region
+                # 'regionCode': 'US', # Optional: Bias results towards a region
                 'safeSearch' : 'none'
             }
             with st.status("Progress:"):
