@@ -299,7 +299,7 @@ def search_youtube(api_key, query, max_results_per_term=5,max_retries = 5):
                             processed_ids_this_term.add(video_id)
                             total_fetched += 1
                             flag =True
-                            break
+                            
                     
             except requests.exceptions.Timeout:
                 st.text(f"API Request Timeout for query '{term}'.")
