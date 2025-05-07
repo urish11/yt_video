@@ -302,27 +302,27 @@ def search_youtube(api_key, query, max_results_per_term=5,max_retries = 5):
                     
             except requests.exceptions.Timeout:
                 st.error(f"API Request Timeout for query '{term}'.", icon="⏱️")
-                tries += 1
+                
             except requests.exceptions.HTTPError as http_err:
                 st.error(f"API HTTP Error for query '{term}': {http_err}", icon="🔥")
-                tries += 1
+                
                 # Check for common quota/key errors
                 if response.status_code == 403:
                     st.error("Received 403 Forbidden. Check your YouTube API Key and Quota.", icon="🚫")
-                    tries += 1
+                    
                     return None # Signal critical error
                 if response.status_code == 400:
                     st.error(f"Received 400 Bad Request. Check API parameters. Details: {response.text}", icon="❓")
-                    tries += 1
+                    
 
             except requests.exceptions.RequestException as e:
                 st.error(f"API Request Error for query '{term}': {e}", icon="🌐")
-                tries += 1
+                
             except Exception as e:
                 st.error(f"An unexpected error occurred during search for '{term}': {e}", icon="💥")
                 import traceback
                 st.error(traceback.format_exc())
-                tries += 1
+            tries += 1
 
 
     # Return collected results, respecting the overall MAX_TOTAL_RESULTS implicitly
