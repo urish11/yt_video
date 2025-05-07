@@ -263,13 +263,14 @@ def search_youtube(api_key, query, max_results_per_term=5,max_retries = 5):
 
             params = {
                 'part': 'snippet',
-                'q': term.replace("#",""),
+                'q': term,
                 'key': api_key_choice,
                 'type': 'video',
                 'maxResults': count,
                 # 'videoEmbeddable': 'true',
-                # 'order': 'relevance' # Default is relevance
-                'regionCode': 'US' # Optional: Bias results towards a region
+                'order': 'viewCount', # Default is relevance
+                'regionCode': 'US', # Optional: Bias results towards a region
+                'safeSearch' : 'none'
             }
             with st.status("Progress:"):
                 try:
