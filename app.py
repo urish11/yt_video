@@ -1659,7 +1659,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
                                 Example 3:
                                 Input: home cleaning service
                                 Output: 'dirty to clean house #shorts | satisfying home clean #shorts | messy room makeover #shorts'
-
+                                return just the output no intros or explaining
                                 My topic: {topic}
                                 """, is_thinking=True)
 
