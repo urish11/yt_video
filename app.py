@@ -1744,7 +1744,9 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
                 "script_ver": script_ver,
                 'original_term': term, # Store the actual term used for search
                 'bg_music' : bg_music,
-                'tts_voice' : tts_voice
+                'original_input_count': count,
+                'tts_voice' : tts_voice,
+                'input_search_term': term,
             }
             time.sleep(0.1) # Brief pause
 
@@ -1758,38 +1760,41 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
 
 
 # 3. Display Search Results
-# 3. Display Search Results
-st.divider() # Separator before results
-# 3. Display Search Results
 st.divider() # Separator before results
 if st.session_state.api_search_results:
     st.subheader("Search Results & Video Selection (Grid View)")
 
+    # The search_key should uniquely identify an input configuration from your data editor
     for search_key, result_data in st.session_state.api_search_results.items():
-        videos = result_data['videos']
-        topic = result_data['topic']
-        lang = result_data['lang']
-        script_ver = result_data["script_ver"]
-        original_term_for_group = result_data['original_term'] # Crucial for "Search More" logic
-        bg_music = result_data['bg_music']
-        tts_voice = result_data['tts_voice']
+        videos = result_data.get('videos', []) # List of video dicts
+        topic_for_group = result_data['topic']
+        lang_for_group = result_data['lang']
+        script_ver_for_group = result_data["script_ver"]
+        # This is the term (or pipe-separated terms) that were *actually* used for the most recent search for this group.
+        # It will be updated if "Search More" is used.
+        current_search_terms_for_group_display = result_data['original_term']
+        bg_music_for_group = result_data.get('bg_music', False) # Default if not present
+        tts_voice_for_group = result_data.get('tts_voice', 'sage') # Default if not present
 
-        # Initialize state for this specific search group's "Search More" manual input
-        if search_key not in st.session_state.search_more_manual_input_visible:
-            st.session_state.search_more_manual_input_visible[search_key] = False
-        if search_key not in st.session_state.search_more_manual_query:
-            st.session_state.search_more_manual_query[search_key] = ""
+        # These are from the original data editor input for this topic/row
+        # Ensure these keys ('input_search_term', 'original_input_count') were stored when api_search_results was populated
+        input_search_term_from_editor = result_data.get('input_search_term', current_search_terms_for_group_display)
+        count_from_editor = result_data.get('original_input_count', MAX_RESULTS_PER_QUERY) # Fallback to global max
 
+        # Initialize state for this specific search group's "Search More" manual input, if not already
+        st.session_state.search_more_manual_input_visible.setdefault(search_key, False)
+        st.session_state.search_more_manual_query.setdefault(search_key, "")
 
         term_container = st.container(border=True)
         with term_container:
-            st.subheader(f"Results for: \"{original_term_for_group}\" (Topic: \"{topic}\", Lang: {lang}, Angle: {script_ver})")
+            st.subheader(f"Results for Search: \"{current_search_terms_for_group_display}\"")
+            st.caption(f"(Original Topic: \"{topic_for_group}\", Lang: {lang_for_group}, Angle: {script_ver_for_group}, Input Term: '{input_search_term_from_editor}')")
+
             if not videos:
-                st.write("No videos found via API for this search.")
-                # Still show "Search More" options even if no initial videos
+                st.write("No videos found for this search.")
             else:
                 num_videos = len(videos)
-                num_cols = 3
+                num_cols = 3 # Adjust number of columns as desired
                 for i in range(0, num_videos, num_cols):
                     cols = st.columns(num_cols)
                     for j in range(num_cols):
@@ -1799,11 +1804,11 @@ if st.session_state.api_search_results:
                             with cols[j]:
                                 video_id = video['videoId']
                                 video_title = video['title']
-                                standard_video_url = video.get('url', f"https://www.youtube.com/watch?v={video_id}")
-                                grid_instance_key = f"{video_id}_{search_key}_{i}_{j}"
+                                standard_video_url = video.get('url', f"https://www.youtube.com/watch?v={video_id}") # Standard YT URL
+                                grid_instance_key = f"vid_{video_id}_{search_key}_{i}_{j}" # More specific key
+
                                 show_video_key = f"show_player_{grid_instance_key}"
-                                if show_video_key not in st.session_state:
-                                    st.session_state[show_video_key] = False
+                                st.session_state.setdefault(show_video_key, False)
 
                                 st.write(f"**{textwrap.shorten(video_title, width=50, placeholder='...')}**")
                                 st.caption(f"ID: {video_id}")
@@ -1816,8 +1821,7 @@ if st.session_state.api_search_results:
                                         title="YouTube video player" frameborder="0"
                                         allow="accelerometer; autoplay; clipboard-write; encrypted-media;
                                         gyroscope; picture-in-picture; web-share"
-                                        allowfullscreen></iframe>
-                                        """
+                                        allowfullscreen></iframe>"""
                                         st.markdown(iframe_code, unsafe_allow_html=True)
                                     except Exception as e:
                                         st.error(f"Video preview failed: {e}")
@@ -1830,16 +1834,16 @@ if st.session_state.api_search_results:
                                     st.session_state[show_video_key] = not st.session_state[show_video_key]
                                     st.rerun()
 
-                                if st.button("➕ Select (Queue Job)", key=f"select_{grid_instance_key}", type="primary", use_container_width=True, disabled=st.session_state.batch_processing_active):
+                                if st.button("➕ Select (Queue Job)", key=f"select_btn_{grid_instance_key}", type="primary", use_container_width=True, disabled=st.session_state.batch_processing_active):
                                     base_video_id = video_id
-                                    base_lang_string = lang.strip()
+                                    base_lang_string = lang_for_group.strip() # Use lang_for_group
                                     langs_to_process = [l.strip() for l in base_lang_string.split(',') if l.strip()]
                                     if not langs_to_process:
-                                        langs_to_process = ["default"]
-                                        st.warning("Could not parse languages, using default.")
+                                        langs_to_process = ["default"] # Fallback language
+                                        st.warning("Could not parse languages for job, using default.")
 
-                                    for current_lang in langs_to_process:
-                                        base_key_prefix = f"{base_video_id}_{current_lang}_"
+                                    for current_lang_for_job in langs_to_process:
+                                        base_key_prefix = f"{base_video_id}_{current_lang_for_job}_"
                                         existing_copy_numbers = [
                                             int(k[len(base_key_prefix):])
                                             for k in st.session_state.selected_videos.keys()
@@ -1850,9 +1854,9 @@ if st.session_state.api_search_results:
 
                                         st.session_state.selected_videos[job_key] = {
                                             'Job Key': job_key,
-                                            'Search Term': original_term_for_group,
-                                            'Topic': topic,
-                                            'Language': current_lang,
+                                            'Search Term': current_search_terms_for_group_display, # Terms used for this result set
+                                            'Topic': topic_for_group,
+                                            'Language': current_lang_for_job, # Specific language for this job
                                             'Video Title': video_title,
                                             'Video ID': base_video_id,
                                             'Copy Number': next_copy_number,
@@ -1864,21 +1868,23 @@ if st.session_state.api_search_results:
                                             'Generated S3 URL': None,
                                             'Generation Error': None,
                                             'Status': 'Selected, Fetching URL...',
-                                            'Script Angle': script_ver,
-                                            'BG Music' : bg_music,
-                                            'TTS Voice' : tts_voice
+                                            'Script Angle': script_ver_for_group, # Use script_ver_for_group
+                                            'BG Music' : bg_music_for_group,    # Use bg_music_for_group
+                                            'TTS Voice' : tts_voice_for_group   # Use tts_voice_for_group
                                         }
-                                        st.toast(f"Queued Job #{next_copy_number} ({current_lang}) for: {video_title}", icon="➕")
+                                        st.toast(f"Queued Job #{next_copy_number} ({current_lang_for_job}) for: {video_title}", icon="➕")
                                     st.rerun()
 
+                                # --- Display Status for Existing Jobs for THIS video ---
                                 related_job_keys = [
-                                    k for k, v in st.session_state.selected_videos.items()
-                                    if v.get('Video ID') == video_id and v.get('Language') in [l.strip() for l in lang.split(',') if l.strip()]
+                                    k for k, v_data in st.session_state.selected_videos.items()
+                                    if v_data.get('Video ID') == video_id and v_data.get('Language') in [l.strip() for l in lang_for_group.split(',') if l.strip()]
                                 ]
                                 if related_job_keys:
+                                    status_expander_key = f"status_expander_{grid_instance_key}"
                                     status_expander = st.expander(f"Show Status for {len(related_job_keys)} Queued Job(s)")
                                     with status_expander:
-                                        sorted_job_keys = sorted(related_job_keys, key=lambda k: (st.session_state.selected_videos.get(k, {}).get('Language', ''), st.session_state.selected_videos.get(k, {}).get('Copy Number', 0)))
+                                        sorted_job_keys = sorted(related_job_keys, key=lambda k_sort: (st.session_state.selected_videos.get(k_sort, {}).get('Language', ''), st.session_state.selected_videos.get(k_sort, {}).get('Copy Number', 0)))
                                         for r_job_key in sorted_job_keys:
                                             job_data = st.session_state.selected_videos.get(r_job_key)
                                             if job_data:
@@ -1898,88 +1904,126 @@ if st.session_state.api_search_results:
                                                 elif status == 'Ready': st.success("✅ Ready to Process", icon="👍")
                                                 elif status == 'Selected, Fetching URL...': st.info("📡 Fetching URL...", icon="📡")
                                                 else: st.write(f"Status: {status}")
+            # --- End of Video Grid Display ---
 
-
-            # --- "Search More" Logic START ---
+            # --- "Search More" Logic Placed After Video Grid, Within term_container ---
             st.markdown("---") # Visual separator
 
-            # Get the original 'Video Results' count for this topic if available from the input DF
-            # This requires access to the original input that led to this search_key.
-            # For simplicity, we'll use MAX_RESULTS_PER_QUERY, or you can refine this.
-            # Find the original input row that generated this 'search_key'
-            # This can be tricky if 'search_key' doesn't directly map back.
-            # 'original_term_for_group' + 'topic' + 'lang' + 'script_ver' makes the search_key unique.
-            # We need the 'Video Results' count from the initial input for this combination.
-            original_input_count = MAX_RESULTS_PER_QUERY # Default
-            if 'current_search_df' in st.session_state:
-                search_df_for_counts = st.session_state.current_search_df
-                # Find the row in the original search_df that matches this result group
-                # This relies on how search_key was constructed or if you store the input row index with results
-                # For now, let's assume 'original_term_for_group' and 'topic' are sufficient to identify
-                # In a more robust system, you'd have a clearer link from result_data back to its specific input row config.
-                # Simplified: look for matching topic and original search term from input
-                matching_rows = search_df_for_counts[
-                    (search_df_for_counts['Topic'] == topic) &
-                    (search_df_for_counts['Search Term'] == result_data.get('input_search_term', original_term_for_group)) # You might need to store the raw input search term
-                ]
-                if not matching_rows.empty:
-                    original_input_count = matching_rows.iloc[0]['Video Results']
+            if st.button("🔎 Search More / Refine This Topic's Search", key=f"search_more_btn_{search_key}"):
+                if input_search_term_from_editor.lower() == 'auto':
+                    # "Auto Mode": Generate NEW AI terms for the original topic and then search
+                    st.info(f"Attempting to generate NEW search terms for 'auto' topic: {topic_for_group}...")
+                    new_ai_generated_terms = None
+                    try:
+                        prompt_for_new_terms = f"""
+                                        You are a Viral Video Ad Scout. Your mission is to find YouTube Shorts search terms that uncover visually compelling, user-generated style content perfect for remixing into high-performing Facebook video ads. The key is to think about what *actual users* are likely to upload as Shorts – authentic, engaging moments rather than polished ads.
 
+                                        Given a topic, return the top 3 YouTube Shorts search terms that meet these criteria:
 
-            if st.button("🔎 Search More / Refine Search", key=f"search_more_btn_{search_key}"):
-                if original_term_for_group.lower() == 'auto':
-                    # "Auto Mode": Re-run the search for this topic with its original auto-generated terms
-                    st.info(f"Refreshing 'auto' search for topic: {topic} using terms: '{original_term_for_group}'")
-                    # Use original_input_count or MAX_RESULTS_PER_QUERY
-                    new_videos = search_youtube(youtube_api_key_secret, original_term_for_group, original_input_count)
-                    if new_videos is not None:
-                        st.session_state.api_search_results[search_key]['videos'] = new_videos
-                        st.toast(f"Refreshed 'auto' results for '{topic}'.", icon="🔄")
-                    else:
-                        st.toast(f"Failed to refresh 'auto' results for '{topic}'.", icon="⚠️")
-                    st.rerun()
-                else:
-                    # "Manual Mode": Toggle visibility of the text input field
+                                        1.  **Concise & Visual:** 2-3 words, clearly describing *tangible actions, objects, or visual transformations* viewers will see. Focus on the visual verb or noun.
+                                        2.  **Emotionally Resonant:** Leads to content triggering surprise, satisfaction, curiosity, awe, or joy. Think "wow moments."
+                                        3.  **Remix-Ready:** Content should be inspiring for new ad creatives, focusing on:
+                                            * **Transformations:** Before & after, makeovers, redesigns.
+                                            * **Objects in Motion/Use:** Product demos (organic feel), gadgets in action, vehicles moving.
+                                            * **Satisfying Processes:** Cleaning, organizing, creating, ASMR-like actions.
+                                            * **Luxury & Aesthetics:** Unboxings, showcases of high-end items, beautiful setups.
+                                            * **Clever Solutions:** Space-saving ideas, innovative uses, smart designs.
+                                            * **Unexpected Reveals:** Hidden features, surprise elements, sudden changes.
+                                        4.  **Authentic YouTube Style:** Prioritize terms that reflect genuine user uploads, not overly commercial or "how-to" content.
+                                        5.  **Avoid:**
+                                            * Abstract concepts, advice-based phrases (e.g., "tips," "hacks," "secrets," "how to learn").
+                                            * Non-visual qualifiers or descriptive words unlikely to be in a visual search (e.g., "on credit," "financing," "affordable," "best"). The visual should speak for itself.
+                                        6.  **Handling Intangible Services/Topics:**
+                                            * If the topic is a service (e.g., lawyer, insurance, software), focus on *visual proxies or relatable human experiences/outcomes* associated with it.
+                                            * Example: For "Veterans Benefits Lawyer," think about the *result* or *emotion*. Instead of "lawyer consultation," terms like: "veteran disability approved #shorts" or "soldier homecoming surprise #shorts". For software, "dashboard animation #shorts" or "app feature showcase #shorts".
+                                        7.  **Format:**
+                                            * Add '#shorts' to the end of each search term.
+                                            * Separate terms with ' | '.
+
+                                        Example 1:
+                                        Input: sofa
+                                        Output: 'sofa transformation #shorts | hidden storage sofa #shorts | modular sofa setup #shorts'
+
+                                        Example 2:
+                                        Input: car finance bad credit no deposit
+                                        Output: 'new car day reaction #shorts | dream car surprise #shorts | first car celebration #shorts'
+
+                                        Example 3:
+                                        Input: home cleaning service
+                                        Output: 'dirty to clean house #shorts | satisfying home clean #shorts | messy room makeover #shorts'
+                                        return just the output no intros or explaining
+                                        My topic: {topic_for_group}
+                                        """
+                        # Replace with your actual LLM call
+                        new_ai_generated_terms = gemini_text_lib(prompt_for_new_terms, model="gemini-2.0-flash")
+                        # Or: new_ai_generated_terms = chatGPT(prompt_for_new_terms, client=openai_client)
+                        # Or: new_ai_generated_terms = claude(prompt_for_new_terms)
+
+                        if not new_ai_generated_terms or not new_ai_generated_terms.strip():
+                            st.error(f"LLM failed to generate new valid terms for '{topic_for_group}'. Original results retained.")
+                        else:
+                            st.write(f"Newly generated terms for '{topic_for_group}': {new_ai_generated_terms}")
+                            # Search YouTube with these NEW terms, using the original count for this topic
+                            new_videos = search_youtube(youtube_api_key_secret, new_ai_generated_terms, count_from_editor)
+
+                            if new_videos is not None: # search_youtube returns [] for no results, None for critical error
+                                st.session_state.api_search_results[search_key]['videos'] = new_videos
+                                st.session_state.api_search_results[search_key]['original_term'] = new_ai_generated_terms # Update displayed term
+                                st.toast(f"Fetched new 'auto' results for '{topic_for_group}' using fresh AI terms.", icon="🔄")
+                            else:
+                                st.toast(f"Failed to fetch new 'auto' results for '{topic_for_group}'. Search API error.", icon="⚠️")
+                            st.rerun()
+                    except Exception as e:
+                        st.error(f"An error occurred while generating new terms or searching: {e}")
+                        # Not rerunning here to allow user to see the error
+
+                else: # Original input_search_term was not 'auto', so this is for manual refinement
                     st.session_state.search_more_manual_input_visible[search_key] = not st.session_state.search_more_manual_input_visible[search_key]
+                    if not st.session_state.search_more_manual_input_visible[search_key]: # If hiding, clear query
+                        st.session_state.search_more_manual_query[search_key] = ""
                     st.rerun()
 
+            # --- Manual input section (conditionally displayed) ---
             if st.session_state.search_more_manual_input_visible.get(search_key, False):
-                cols_manual = st.columns([3, 1])
+                cols_manual = st.columns([0.7, 0.3]) # Adjust column ratios as needed
                 with cols_manual[0]:
                     st.session_state.search_more_manual_query[search_key] = st.text_input(
-                        "Enter new search term for this topic:",
+                        f"Enter new search term for topic '{topic_for_group}':",
                         value=st.session_state.search_more_manual_query.get(search_key, ""),
-                        key=f"manual_query_text_{search_key}"
+                        key=f"manual_query_text_{search_key}",
+                        placeholder="e.g., amazing gadget reviews"
                     )
                 with cols_manual[1]:
-                    if st.button("Go", key=f"submit_manual_query_{search_key}"):
+                    # Add a little space above the button for alignment if needed
+                    st.write("") # Or use st.markdown("<br>", unsafe_allow_html=True) for more control
+                    if st.button("Search with New Term", key=f"submit_manual_query_{search_key}", use_container_width=True):
                         new_manual_term = st.session_state.search_more_manual_query.get(search_key, "").strip()
                         if new_manual_term:
-                            st.info(f"Searching with new term '{new_manual_term}' for topic: {topic}...")
-                            # Use original_input_count or MAX_RESULTS_PER_QUERY
-                            new_videos = search_youtube(youtube_api_key_secret, new_manual_term, original_input_count)
+                            st.info(f"Searching with new term '{new_manual_term}' for topic: {topic_for_group}...")
+                            # Search YouTube with the new manual term, using the original count for this topic
+                            new_videos = search_youtube(youtube_api_key_secret, new_manual_term, count_from_editor)
+
                             if new_videos is not None:
                                 st.session_state.api_search_results[search_key]['videos'] = new_videos
-                                # Optionally update the displayed original_term for this group to the new manual one:
-                                st.session_state.api_search_results[search_key]['original_term'] = new_manual_term
-                                st.toast(f"Updated results for '{topic}' with new term.", icon="🔄")
+                                st.session_state.api_search_results[search_key]['original_term'] = new_manual_term # Update displayed term
+                                st.toast(f"Updated results for '{topic_for_group}' with new term.", icon="🔄")
                             else:
-                                st.toast(f"Search with new term failed for '{topic}'.", icon="⚠️")
+                                st.toast(f"Search with new term failed for '{topic_for_group}'. API error.", icon="⚠️")
 
                             st.session_state.search_more_manual_input_visible[search_key] = False # Hide after submit
                             st.session_state.search_more_manual_query[search_key] = "" # Clear the input
                             st.rerun()
                         else:
-                            st.warning("Please enter a search term.")
+                            st.warning("Please enter a search term for manual refinement.")
             # --- "Search More" Logic END ---
+        # --- End of term_container ---
 
-
-else:
-    if 'api_search_results' in st.session_state and not st.session_state.api_search_results:
-        st.info("The previous search returned no results for any term/topic.")
-    else:
+else: # No api_search_results yet
+    if 'search_triggered' in st.session_state and st.session_state.search_triggered == False and not st.session_state.api_search_results:
+         # This condition might be true if a search was run but yielded absolutely nothing for any input row.
+        st.info("The previous search returned no results for any of the topics/terms.")
+    else: # Initial state or after clearing
         st.info("Perform a search using the sidebar to see video results here.")
-
 
 
 # The rest of the script (yt-dlp fetching, batch processing, sidebar display) follows...
