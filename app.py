@@ -250,7 +250,8 @@ def search_youtube(api_key, query, max_results_per_term=5,max_retries = 5):
 
     for term in terms:
         tries = 0
-        while max_retries < tries:
+        flag = False
+        while max_retries < tries or flag:
             # term = term.replace("|","%7C")
             if 1==2:
                 st.warning(f"Reached overall result limit ({MAX_TOTAL_RESULTS}). Stopping search.")
@@ -293,7 +294,7 @@ def search_youtube(api_key, query, max_results_per_term=5,max_retries = 5):
                             })
                             processed_ids_this_term.add(video_id)
                             total_fetched += 1
-                            break
+                            flag =True
                 else:
                     tries += 1
             except requests.exceptions.Timeout:
