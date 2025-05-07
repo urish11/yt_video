@@ -1473,7 +1473,7 @@ if 'api_search_results' not in st.session_state:
 # Input DataFrame for search terms and topics
 if 'search_data' not in st.session_state:
     st.session_state.search_data = pd.DataFrame([
-        {'Topic': 'sofa sale', 'Search Term': 'auto', 'Language': 'English', "Script Angle": "default", 'Video Results': 5, 'BG Music' : False, 'TTS Voice': 'sage'}
+        {'Topic': 'sofa sale', 'Search Term': 'auto', 'Language': 'English', "Script Angle": "default", 'Video Results': 40, 'BG Music' : False, 'TTS Voice': 'sage'}
     ])
 # Snapshot for data editor comparison
 if 'search_data_snapshot' not in st.session_state:
@@ -1689,7 +1689,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
                 generated_term = gemini_text_lib(f"""
                                 You are a Viral Video Ad Scout. Your mission is to find YouTube Shorts search terms that uncover visually compelling, user-generated style content perfect for remixing into high-performing Facebook video ads. The key is to think about what *actual users* are likely to upload as Shorts – authentic, engaging moments rather than polished ads.
 
-                                Given a topic, return the top 3 YouTube Shorts search terms that meet these criteria:
+                                Given a topic, return the top 4 YouTube Shorts search terms that meet these criteria 1 of them is the topic itself as consice as possible, the others:
 
                                 1.  **Concise & Visual:** 2-3 words, clearly describing *tangible actions, objects, or visual transformations* viewers will see. Focus on the visual verb or noun.
                                 2.  **Emotionally Resonant:** Leads to content triggering surprise, satisfaction, curiosity, awe, or joy. Think "wow moments."
@@ -1713,15 +1713,15 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
 
                                 Example 1:
                                 Input: sofa
-                                Output: 'sofa transformation #shorts | hidden storage sofa #shorts | modular sofa setup #shorts'
+                                Output: 'sofa transformation #shorts | hidden storage sofa #shorts | modular sofa setup #shorts| sofa #shorts'
 
                                 Example 2:
                                 Input: car finance bad credit no deposit
-                                Output: 'new car day reaction #shorts | dream car surprise #shorts | first car celebration #shorts'
+                                Output: 'new car day reaction #shorts | dream car surprise #shorts | first car celebration #shorts | car #shorts'
 
                                 Example 3:
                                 Input: home cleaning service
-                                Output: 'dirty to clean house #shorts | satisfying home clean #shorts | messy room makeover #shorts'
+                                Output: 'dirty to clean house #shorts | satisfying home clean #shorts | messy room makeover #shorts | home cleaning service #shorts'
                                 return just the output no intros or explaining
                                 My topic: {topic}
                                 """,
@@ -1935,7 +1935,7 @@ if st.session_state.api_search_results:
                         prompt_for_new_terms = f"""
                                         You are a Viral Video Ad Scout. Your mission is to find YouTube Shorts search terms that uncover visually compelling, user-generated style content perfect for remixing into high-performing Facebook video ads. The key is to think about what *actual users* are likely to upload as Shorts – authentic, engaging moments rather than polished ads.
 
-                                        Given a topic, return the top 3 YouTube Shorts search terms that meet these criteria:
+                                        Given a topic, return the top 4 YouTube Shorts search terms that meet these criteria 1 of them is the topic itself as consice as possible, the others:
 
                                         1.  **Concise & Visual:** 2-3 words, clearly describing *tangible actions, objects, or visual transformations* viewers will see. Focus on the visual verb or noun.
                                         2.  **Emotionally Resonant:** Leads to content triggering surprise, satisfaction, curiosity, awe, or joy. Think "wow moments."
@@ -1959,15 +1959,15 @@ if st.session_state.api_search_results:
 
                                         Example 1:
                                         Input: sofa
-                                        Output: 'sofa transformation #shorts | hidden storage sofa #shorts | modular sofa setup #shorts'
+                                        Output: 'sofa transformation #shorts | hidden storage sofa #shorts | modular sofa setup #shorts| sofa #shorts'
 
                                         Example 2:
                                         Input: car finance bad credit no deposit
-                                        Output: 'new car day reaction #shorts | dream car surprise #shorts | first car celebration #shorts'
+                                        Output: 'new car day reaction #shorts | dream car surprise #shorts | first car celebration #shorts | car #shorts'
 
                                         Example 3:
                                         Input: home cleaning service
-                                        Output: 'dirty to clean house #shorts | satisfying home clean #shorts | messy room makeover #shorts'
+                                        Output: 'dirty to clean house #shorts | satisfying home clean #shorts | messy room makeover #shorts | home cleaning service #shorts'
                                         return just the output no intros or explaining
                                         My topic: {topic_for_group}
                                         """
