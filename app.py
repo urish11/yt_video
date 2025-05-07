@@ -273,6 +273,7 @@ def search_youtube(api_key, query, max_results_per_term=5,max_retries = 5):
                 results = response.json()
                 st.text(response.text)
                 input()
+                st.stop()
                 processed_ids_this_term = set() # Avoid adding duplicates from the same term search
 
                 if 'items' in results:
