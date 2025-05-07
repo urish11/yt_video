@@ -243,7 +243,7 @@ def search_youtube(api_key, query, max_results_per_term=5,max_retries = 5):
         terms = [query] # Treat as a single term
         count = max_results_per_term
 
-    st.write(f"Searching for terms: {terms} (Max {max_results_per_term} results per term)")
+    st.write(f"Searching for terms: {terms} (Max {count} results per term)")
 
     total_fetched = 0
     MAX_TOTAL_RESULTS = 100 # Overall limit across all terms for safety
