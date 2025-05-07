@@ -11,3 +11,4 @@ Pillow
 numpy
 ffmpeg-python 
 anthropic
+google
