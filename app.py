@@ -1910,6 +1910,7 @@ if st.session_state.api_search_results:
             st.markdown("---") # Visual separator
 
             if st.button("🔎 Search More / Refine This Topic's Search", key=f"search_more_btn_{search_key}"):
+                st.text(input_search_term_from_editor.lower())
                 if input_search_term_from_editor.lower() == 'auto':
                     # "Auto Mode": Generate NEW AI terms for the original topic and then search
                     st.info(f"Attempting to generate NEW search terms for 'auto' topic: {topic_for_group}...")
