@@ -251,6 +251,8 @@ def search_youtube(api_key, query, max_results_per_term=5,max_retries = 5):
     for term in terms:
         tries = 0
         flag = False
+        st.text(max_retries + tries )
+        input()
         while max_retries < tries or flag:
             api_key_choice = random.choice(api_key)
             # term = term.replace("|","%7C")
