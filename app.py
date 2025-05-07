@@ -231,7 +231,7 @@ def search_youtube(api_key, query, max_results_per_term=5):
     """
     videos_res = []
     # Split query into multiple terms if it contains '|' or handle 'auto' case (which generates '|' separated terms)
-    if '@' in query:
+    if '|' in query:
         # Clean up potential extra quotes from GPT generation
         query = query.replace('"','').replace("'",'')
         terms = [term.strip() for term in query.split('|') if term.strip()]
@@ -246,7 +246,7 @@ def search_youtube(api_key, query, max_results_per_term=5):
     MAX_TOTAL_RESULTS = 100 # Overall limit across all terms for safety
 
     for term in terms:
-        term = term.replace("|","%7C")
+        # term = term.replace("|","%7C")
         if 1==2:
             st.warning(f"Reached overall result limit ({MAX_TOTAL_RESULTS}). Stopping search.")
             break
