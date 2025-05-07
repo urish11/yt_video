@@ -322,7 +322,8 @@ def search_youtube(api_key, query, max_results_per_term=5,max_retries = 5):
                 st.error(f"An unexpected error occurred during search for '{term}': {e}", icon="💥")
                 import traceback
                 st.error(traceback.format_exc())
-            tries += 1
+            finally:
+                tries += 1
 
 
     # Return collected results, respecting the overall MAX_TOTAL_RESULTS implicitly
