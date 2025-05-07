@@ -252,6 +252,7 @@ def search_youtube(api_key, query, max_results_per_term=5,max_retries = 5):
         tries = 0
         flag = False
         while max_retries < tries or flag:
+            api_key_choice = random.choice(api_key)
             # term = term.replace("|","%7C")
             if 1==2:
                 st.warning(f"Reached overall result limit ({MAX_TOTAL_RESULTS}). Stopping search.")
@@ -260,7 +261,7 @@ def search_youtube(api_key, query, max_results_per_term=5,max_retries = 5):
             params = {
                 'part': 'snippet',
                 'q': term,
-                'key': random.choice(api_key),
+                'key': api_key_choice,
                 'type': 'video',
                 'maxResults': count,
                 # 'videoEmbeddable': 'true',
