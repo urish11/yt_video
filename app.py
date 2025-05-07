@@ -1661,7 +1661,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
                                 Output: 'dirty to clean house #shorts | satisfying home clean #shorts | messy room makeover #shorts'
                                 return just the output no intros or explaining
                                 My topic: {topic}
-                                """, is_thinking=True)
+                                """)
 
                 if not generated_term:
                     st.warning(f"Failed to generate search terms for '{topic}'. Skipping.", icon="🤖")
