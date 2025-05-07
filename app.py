@@ -1623,7 +1623,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
 
                 # {topic}""", client=openai_client, model="gpt-4") # Use your full validated prompt  
 
-                generated_term = chatGPT(f"""
+                generated_term = claude(f"""
                                 You are a Viral Video Ad Scout. Your mission is to find YouTube Shorts search terms that uncover visually compelling, user-generated style content perfect for remixing into high-performing Facebook video ads. The key is to think about what *actual users* are likely to upload as Shorts – authentic, engaging moments rather than polished ads.
 
                                 Given a topic, return the top 3 YouTube Shorts search terms that meet these criteria:
@@ -1661,7 +1661,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
                                 Output: 'dirty to clean house #shorts | satisfying home clean #shorts | messy room makeover #shorts'
 
                                 My topic: {topic}
-                                """, client=openai_client, model="gpt-4")
+                                """, is_thinking=True)
 
                 if not generated_term:
                     st.warning(f"Failed to generate search terms for '{topic}'. Skipping.", icon="🤖")
