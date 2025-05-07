@@ -351,7 +351,7 @@ def get_yt_dlp_info(video_url):
     # Format 18: mp4 [360p], Format 22: mp4 [720p]
     # Fallback to best mp4, then best overall
     YDL_OPTS = {
-        'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best/22/18',   #        'format': '22/18/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+        'format': 'bestvideo[ext=mp4]',   #        'format': '22/18/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
         'quiet': True,
         'no_warnings': True,
         'skip_download': True, # Don't download, just get info
