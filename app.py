@@ -1725,7 +1725,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
                                 return just the output no intros or explaining
                                 My topic: {topic}
                                 """,
-                                model = "gemini-2.0-flash"
+                                model = "gemini-2.5-flash-preview-04-17"
 
                                 )
 
@@ -1972,7 +1972,7 @@ if st.session_state.api_search_results:
                                         My topic: {topic_for_group}
                                         """
                         # Replace with your actual LLM call
-                        new_ai_generated_terms = gemini_text_lib(prompt_for_new_terms, model="gemini-2.0-flash")
+                        new_ai_generated_terms = gemini_text_lib(prompt_for_new_terms, model="gemini-2.5-flash-preview-04-17")
                         # Or: new_ai_generated_terms = chatGPT(prompt_for_new_terms, client=openai_client)
                         # Or: new_ai_generated_terms = claude(prompt_for_new_terms)
 
