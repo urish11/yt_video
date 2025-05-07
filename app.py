@@ -262,7 +262,7 @@ def search_youtube(api_key, query, max_results_per_term=5):
             'maxResults': count,
             # 'videoEmbeddable': 'true',
             # 'order': 'relevance' # Default is relevance
-            # 'regionCode': 'US' # Optional: Bias results towards a region
+            'regionCode': 'US' # Optional: Bias results towards a region
         }
         try:
             response = requests.get(YOUTUBE_API_BASE_URL, params=params, timeout=15)
