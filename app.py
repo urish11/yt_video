@@ -311,7 +311,7 @@ def search_youtube(api_key, query, max_results_per_term=5,max_retries = 5):
                 if response.status_code == 403:
                     st.text("Received 403 Forbidden. Check your YouTube API Key and Quota.")
                     
-                    return None # Signal critical error
+                    # return None # Signal critical error
                 if response.status_code == 400:
                     st.text(f"Received 400 Bad Request. Check API parameters. Details: {response.text}")
                     
