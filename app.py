@@ -263,7 +263,7 @@ def search_youtube(api_key, query, max_results_per_term=5,max_retries = 5):
 
             params = {
                 'part': 'snippet',
-                'q': term,
+                'q': term.replace("#",""),
                 'key': api_key_choice,
                 'type': 'video',
                 'maxResults': count,
