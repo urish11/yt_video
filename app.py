@@ -1703,7 +1703,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
                                 return just the output no intros or explaining
                                 My topic: {topic}
                                 """,
-                                model = "gemini-2.5-flash-preview-04-17"
+                                model = "gemini-2.0-flash"
 
                                 )
 
