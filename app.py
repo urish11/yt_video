@@ -1669,7 +1669,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
 
                                 Given a topic, return the top 3 YouTube Shorts search terms that meet these criteria:
 
-                                1.  **Concise & Visual:** 2-5 words, clearly describing *tangible actions, objects, or visual transformations* viewers will see. Focus on the visual verb or noun.
+                                1.  **Concise & Visual:** 2-3 words, clearly describing *tangible actions, objects, or visual transformations* viewers will see. Focus on the visual verb or noun.
                                 2.  **Emotionally Resonant:** Leads to content triggering surprise, satisfaction, curiosity, awe, or joy. Think "wow moments."
                                 3.  **Remix-Ready:** Content should be inspiring for new ad creatives, focusing on:
                                     * **Transformations:** Before & after, makeovers, redesigns.
