@@ -253,10 +253,9 @@ def search_youtube(api_key, query, max_results_per_term=5,max_retries = 5):
         flag = False
         # st.text(str(max_retries)+   str(tries ))
         # input()
-        while max_retries < tries or flag:
+        while max_retries > tries or flag:
             api_key_choice = random.choice(api_key)
-            st.text(api_key_choice)
-            input()
+            
             # term = term.replace("|","%7C")
             if 1==2:
                 st.warning(f"Reached overall result limit ({MAX_TOTAL_RESULTS}). Stopping search.")
