@@ -302,27 +302,27 @@ def search_youtube(api_key, query, max_results_per_term=5,max_retries = 5):
                             break
                     
             except requests.exceptions.Timeout:
-                st.error(f"API Request Timeout for query '{term}'.", icon="⏱️")
+                st.text(f"API Request Timeout for query '{term}'.", icon="⏱️")
                 
             except requests.exceptions.HTTPError as http_err:
-                st.error(f"API HTTP Error for query '{term}': {http_err}", icon="🔥")
+                st.text(f"API HTTP Error for query '{term}': {http_err}", icon="🔥")
                 
                 # Check for common quota/key errors
                 if response.status_code == 403:
-                    st.error("Received 403 Forbidden. Check your YouTube API Key and Quota.", icon="🚫")
+                    st.text("Received 403 Forbidden. Check your YouTube API Key and Quota.", icon="🚫")
                     
                     return None # Signal critical error
                 if response.status_code == 400:
-                    st.error(f"Received 400 Bad Request. Check API parameters. Details: {response.text}", icon="❓")
+                    st.text(f"Received 400 Bad Request. Check API parameters. Details: {response.text}", icon="❓")
                     
 
             except requests.exceptions.RequestException as e:
-                st.error(f"API Request Error for query '{term}': {e}", icon="🌐")
+                st.text(f"API Request Error for query '{term}': {e}", icon="🌐")
                 
             except Exception as e:
-                st.error(f"An unexpected error occurred during search for '{term}': {e}", icon="💥")
+                st.text(f"An unexpected error occurred during search for '{term}': {e}", icon="💥")
                 import traceback
-                st.error(traceback.format_exc())
+                st.text(traceback.format_exc())
             finally:
                 tries += 1
 
