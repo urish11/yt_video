@@ -16,6 +16,7 @@ import tempfile
 from io import BytesIO
 import anthropic # Make sure anthropic client is installed: pip install anthropic
 import moviepy.audio.fx.all as afx
+from google import genai
 # Ensure MoviePy is installed: pip install moviepy
 # Ensure Pillow is installed: pip install Pillow
 # Ensure pydub is installed: pip install pydub
@@ -87,6 +88,8 @@ BG_VER_OPTIONS =[True, False, "mix"]
 TTS_VOICE_OPTIONS =['sage','redneck','announcer']
 # --- Load Secrets ---
 try:
+    GEMINI_API_KEY =st.secrets.get("GEMINI_API_KEY")
+
     youtube_api_key_secret = st.secrets["YOUTUBE_API_KEY"]
     openai_api_key = st.secrets["GPT_API_KEY1"]
     anthropic_api_key = st.secrets["ANTHROPIC_API_KEY"] # Added Anthropic Key
@@ -438,6 +441,44 @@ def get_yt_dlp_info(video_url):
 
 
 # --- Helper Function: Generate Script with ChatGPT ---
+
+def gemini_text_lib(prompt,model ='gemini-2.5-pro-exp-03-25', is_with_file=False,file_url = None ):
+    # if is_pd_policy : prompt += predict_policy
+
+
+
+
+    client = genai.Client(api_key=random.choice(GEMINI_API_KEY))
+
+
+    try:
+        if is_with_file:
+            file_extension ='jpg'
+            with tempfile.NamedTemporaryFile(delete=False, mode='wb', suffix=file_extension or '.tmp') as temp_file:
+                st.text(file_url)
+                res = requests.get(file_url)
+                res.raise_for_status()  
+                temp_file.write(res.content)
+                
+                file = client.files.upload(file=temp_file.name, config={'mime_type' :'image/jpeg'})
+                response = client.models.generate_content(
+                    model=model, contents=  [prompt, file]
+
+                )
+        elif not is_with_file:
+            response = client.models.generate_content(
+                model=model, contents=  prompt
+            )
+
+        return response.text
+    except Exception as e:
+        st.text('gemini_text_lib error ' + str(e))
+        time.sleep(4)
+        return None
+
+
+
+
 def chatGPT(prompt, client, model="gpt-4o", temperature=1.0):
     """Generates text using OpenAI Chat Completion."""
     try:
@@ -1623,7 +1664,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
 
                 # {topic}""", client=openai_client, model="gpt-4") # Use your full validated prompt  
 
-                generated_term = claude(f"""
+                generated_term = gemini_text_lib(f"""
                                 You are a Viral Video Ad Scout. Your mission is to find YouTube Shorts search terms that uncover visually compelling, user-generated style content perfect for remixing into high-performing Facebook video ads. The key is to think about what *actual users* are likely to upload as Shorts – authentic, engaging moments rather than polished ads.
 
                                 Given a topic, return the top 3 YouTube Shorts search terms that meet these criteria:
@@ -1661,7 +1702,10 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
                                 Output: 'dirty to clean house #shorts | satisfying home clean #shorts | messy room makeover #shorts'
                                 return just the output no intros or explaining
                                 My topic: {topic}
-                                """)
+                                """,
+                                model = "gemini-2.5-flash-preview-04-17"
+
+                                )
 
                 if not generated_term:
                     st.warning(f"Failed to generate search terms for '{topic}'. Skipping.", icon="🤖")
