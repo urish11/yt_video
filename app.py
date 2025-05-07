@@ -1624,7 +1624,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
         script_ver = item["Script Angle"] # Already stripped in sync
         bg_music = item["BG Music"]
         tts_voice = item["TTS Voice"]
-
+        og_term = term
         # Handle 'auto' search term generation
         if term.lower() == 'auto':
             if not topic: # Should be caught by earlier validation, but double-check
@@ -1746,7 +1746,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
                 'bg_music' : bg_music,
                 'original_input_count': count,
                 'tts_voice' : tts_voice,
-                'input_search_term': term,
+                'input_search_term': og_term,
             }
             time.sleep(0.1) # Brief pause
 
