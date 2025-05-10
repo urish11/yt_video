@@ -2351,7 +2351,7 @@ if st.session_state.batch_processing_active and st.session_state.generation_queu
                         tts_voice = video_data.get('TTS Voice', 'sage')
                         base_video_direct_url = video_data.get("Direct URL") # Use the fetched direct URL
                         copy_num = video_data.get('Copy Number', 0),
-                        platform = video_data.get('platform')
+                        platform = video_data.get('platform' , "na")
 
                         if not base_video_direct_url:
                             raise ValueError("Direct video URL missing.")
