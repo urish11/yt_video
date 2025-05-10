@@ -1976,7 +1976,7 @@ if st.session_state.api_search_results:
                                     try:
                                         if platform == 'yt':
                                             iframe_code = f"""
-                                            <iframe width="315" height="c"
+                                            <iframe width="315" height="560"
                                             src="https://www.youtube.com/embed/{video_id}"
                                             title="YouTube video player" frameborder="0"
                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media;
@@ -1984,7 +1984,7 @@ if st.session_state.api_search_results:
                                             allowfullscreen></iframe>"""
                                         if platform == 'tk':
                                             iframe_code = f"""
-                                            <iframe height="315" width= "315" src="https://www.tiktok.com/player/v1/{video_id}"
+                                            <iframe height="560" width= "315" src="https://www.tiktok.com/player/v1/{video_id}"
                                               allow="fullscreen" title="test"></iframe>
 
 
