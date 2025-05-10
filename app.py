@@ -374,7 +374,7 @@ def search_tiktok_links_google(api_key, cx_id, query, num_results=5, max_retries
             response.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
             results_data = response.json()
             st.text(results_data)
-            input()
+            # input()
             # print(results_data) # Original debug print from your function, consider removing for production
 
             if 'items' in results_data:
