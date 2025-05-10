@@ -348,9 +348,9 @@ def search_tiktok_links_google(api_key, cx_id, query, num_results=5, max_retries
         list: A list of video dictionaries [{'title': '', 'tiktok_page_url': '', 'thumbnail_url': '', 'snippet': ''}]
               or None if a critical API error occurs.
     """
-    if not (1 <= num_results <= 10):
-        print("Warning: num_results for Google Search should be between 1 and 10. Defaulting to 5.")
-        num_results = 5
+    # if not (1 <= num_results <= 10):
+    #     print("Warning: num_results for Google Search should be between 1 and 10. Defaulting to 5.")
+    #     num_results = 5
 
     # Modify query to target TikTok
     search_query_on_google = f"{query.strip()} site:www.tiktok.com/@"
