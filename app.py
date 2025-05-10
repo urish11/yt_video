@@ -361,7 +361,7 @@ def search_tiktok_links_google(api_key, cx_id, query, num_results=5, max_retries
         'cx': cx_id,
         'q': search_query_on_google,
         # 'searchType': 'image', # REMOVED: We want web pages, not just images
-        'num': num_results
+        'num': int(num_results)
     }
 
     st.write(f"\nSearching Google for TikTok links with: '{search_query_on_google}'...") # Changed log message
