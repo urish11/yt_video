@@ -2032,7 +2032,8 @@ if st.session_state.api_search_results:
                                             'Status': 'Selected, Fetching URL...',
                                             'Script Angle': script_ver_for_group, # Use script_ver_for_group
                                             'BG Music' : bg_music_for_group,    # Use bg_music_for_group
-                                            'TTS Voice' : tts_voice_for_group   # Use tts_voice_for_group
+                                            'TTS Voice' : tts_voice_for_group,   # Use tts_voice_for_group
+                                            'platform' :platform
                                         }
                                         st.toast(f"Queued Job #{next_copy_number} ({current_lang_for_job}) for: {video_title}", icon="➕")
                                     st.rerun()
