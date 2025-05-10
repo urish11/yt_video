@@ -334,119 +334,81 @@ def search_youtube(api_key, query, max_results_per_term=5,max_retries = 5):
     return videos_res
 
 
-def search_tiktok_links_google(api_key, cx_id, query, num_results=5, max_retries=3):
+def search_tiktok_links_google(api_key, cx_id, query, num_results=20, max_retries=3):
     """
-    Searches for TikTok video pages using Google Custom Search API.
-    Appends 'site:www.tiktok.com/@' to the query.
+    Searches for TikTok video pages using Google Custom Search API, supporting pagination for more than 10 results.
     Args:
-        api_key (str): Your Google API Key for Custom Search.
-        cx_id (str): Your Custom Search Engine ID (CX).
-        query (str): The search query.
-        num_results (int): The number of results to return (max 10 per request).
-        max_retries (int): Number of retries for the API request.
+        api_key (str): Google API Key.
+        cx_id (str): Custom Search Engine ID.
+        query (str): Search query.
+        num_results (int): Total number of results to return (max 100).
+        max_retries (int): Retry count on errors.
     Returns:
-        list: A list of video dictionaries [{'title': '', 'tiktok_page_url': '', 'thumbnail_url': '', 'snippet': ''}]
-              or None if a critical API error occurs.
+        list: List of video dictionaries or None if critical error.
     """
-    # if not (1 <= num_results <= 10):
-    #     print("Warning: num_results for Google Search should be between 1 and 10. Defaulting to 5.")
-    #     num_results = 5
+    import requests, time
+    from urllib.parse import urlencode
 
-    # Modify query to target TikTok
     search_query_on_google = f"{query.strip()} site:www.tiktok.com/@"
-    
-    url = "https://customsearch.googleapis.com/customsearch/v1"
-    params = {
-        'key': api_key,
-        'cx': cx_id,
-        'q': search_query_on_google,
-        # 'searchType': 'image', # REMOVED: We want web pages, not just images
-        'num': int(num_results)
-    }
-
-    st.write(f"\nSearching Google for TikTok links with: '{search_query_on_google}'...") # Changed log message
-    
+    max_per_page = 10
     video_links_info = []
-    tries = 0
-    while tries < max_retries:
-        try:
-            response = requests.get(url, params=params, timeout=15)
-            response.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
-            results_data = response.json()
-            st.text(results_data)
-            # input()
-            # print(results_data) # Original debug print from your function, consider removing for production
 
-            if 'items' in results_data:
-                for i, item in enumerate(results_data['items']):
-                    title = item.get("title","")
-                    videoId = item.get("htmlFormattedUrl").split("/")[-1]
-                    url =item.get("htmlFormattedUrl")
-                    thumbnail_url = item['pagemap']['cse_thumbnail'][0]['src']
+    st.write(f"\nSearching Google for TikTok links with: '{search_query_on_google}'...")
 
-                    
-                    if 'video' in url: # We need a link to the TikTok page
-                        video_links_info.append({
-                            'title': title,
-                            'url': url, # This is the URL to the TikTok page
-                            'thumbnail_url': thumbnail_url, # This is the Google-derived thumbnail
-                            'videoId' :videoId,
-                            'platform' :'tk'
-                        })
-                        # Debug print from your original function, adapted
-                        # print(f"  Result {i+1}:")
-                        # print(f"    Title: {title}")
-                        # print(f"    TikTok Page URL: {page_url}")
-                        # print(f"    Extracted Thumbnail URL: {thumbnail_url if thumbnail_url else 'N/A'}")
-                        # print("-" * 20)
-                
-                if not video_links_info and 'items' in results_data and results_data['items']: # Found items but couldn't process
-                     st.warning(f"Google API returned items for '{search_query_on_google}', but no suitable TikTok page links with details could be extracted.", icon="ℹ️")
-                elif not video_links_info:
-                     st.write(f"No TikTok page results found in Google Search items for '{search_query_on_google}'.")
+    for start in range(1, num_results + 1, max_per_page):
+        tries = 0
+        while tries < max_retries:
+            try:
+                params = {
+                    'key': api_key,
+                    'cx': cx_id,
+                    'q': search_query_on_google,
+                    'num': min(max_per_page, num_results - len(video_links_info)),
+                    'start': start
+                }
 
+                response = requests.get("https://customsearch.googleapis.com/customsearch/v1", params=params, timeout=15)
+                response.raise_for_status()
+                results_data = response.json()
+                st.text(results_data)
 
-            else: # No 'items' in results_data
-                st.write(f"No 'items' found in Google Search API response for '{search_query_on_google}'.")
-                if 'error' in results_data:
-                    error = results_data['error']
-                    st.error(f"Google API Error Code: {error.get('code')}, Message: {error.get('message')}", icon="🚨")
-                    if 'details' in error:
-                        for detail in error.get('details', []):
-                            st.error(f"  Reason: {detail.get('reason')}, Domain: {detail.get('domain')}")
-                    if error.get('code') == 403 or error.get('code') == 400: # Quota or bad request often means stop
-                         return None # Signal critical error
+                if 'items' in results_data:
+                    for item in results_data['items']:
+                        title = item.get("title", "")
+                        url = item.get("htmlFormattedUrl", "")
+                        video_id = url.split("/")[-1]
+                        thumbnail_url = item.get('pagemap', {}).get('cse_thumbnail', [{}])[0].get('src', "")
 
-            return video_links_info # Return successfully processed list or empty list
+                        if 'video' in url:
+                            video_links_info.append({
+                                'title': title,
+                                'url': url,
+                                'thumbnail_url': thumbnail_url,
+                                'videoId': video_id,
+                                'platform': 'tk'
+                            })
 
-        except requests.exceptions.Timeout:
-            st.warning(f"Google Search API Request Timeout for query '{search_query_on_google}'. Retrying ({tries+1}/{max_retries})...", icon="⏳")
-        except requests.exceptions.HTTPError as http_err:
-            st.error(f"Google Search API HTTP Error for query '{search_query_on_google}': {http_err}", icon="🚨")
-            if response.status_code == 403 or response.status_code == 400 : # Critical, stop retrying
-                 st.error(f"Response content: {response.text}")
-                 return None # Signal critical error
-            st.warning(f"Retrying ({tries+1}/{max_retries})...")
-        except requests.exceptions.RequestException as req_err:
-            st.error(f"Google Search API Request Error for query '{search_query_on_google}': {req_err}", icon="🚨")
-            st.warning(f"Retrying ({tries+1}/{max_retries})...")
-        except json.JSONDecodeError:
-            st.error("Error decoding JSON response from Google Search API. Is the API key valid and API enabled?", icon="🚨")
-            st.text(f"Response content: {response.text if 'response' in locals() else 'No response object'}")
-            return None # Critical error
-        except Exception as e:
-            st.error(f"An unexpected error occurred during Google Search for '{search_query_on_google}': {e}", icon="💥")
-            import traceback
-            st.error(traceback.format_exc())
-            st.warning(f"Retrying ({tries+1}/{max_retries})...")
-        
-        tries += 1
-        if tries < max_retries:
-             time.sleep(1) # Wait a bit before retrying
+                break  # success, break retry loop
 
-    st.error(f"Failed to get results from Google Search for '{search_query_on_google}' after {max_retries} retries.", icon="🚫")
-    return None # Return None if all retries fail
+            except requests.exceptions.RequestException as e:
+                st.warning(f"[Attempt {tries+1}] Request error: {e}")
+            except Exception as e:
+                st.error(f"Unexpected error: {e}")
+                import traceback
+                st.error(traceback.format_exc())
 
+            tries += 1
+            if tries < max_retries:
+                time.sleep(1)
+
+        if tries == max_retries:
+            st.error(f"Failed after {max_retries} retries on page starting at result {start}.")
+            break
+
+        if len(video_links_info) >= num_results:
+            break
+
+    return video_links_info[:num_results] if video_links_info else None
 
 # --- Helper Function: Simple Hash ---
 def simple_hash(s):
