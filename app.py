@@ -2009,7 +2009,7 @@ if st.session_state.api_search_results:
                                         if platform == 'yt':   
                                             st.image(thumbnail_url, use_container_width=True, caption="Video Thumbnail")
                                         if platform == 'tk':   
-                                            st.image(thumbnail_url, use_container_width=True, caption="Video Thumbnail" , width =25)
+                                            st.image(thumbnail_url, use_container_width=False, caption="Video Thumbnail" , width =25)
                                     except:pass
 
                                 toggle_label = "🔼 Hide" if st.session_state[show_video_key] else "▶️ Show"
