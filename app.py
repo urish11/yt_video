@@ -1981,7 +1981,7 @@ if st.session_state.api_search_results:
                                     try:
                                         if platform == 'yt':
                                             iframe_code = f"""
-                                            <iframe width="315" height="560"
+                                            <iframe width="350" height="600"
                                             src="https://www.youtube.com/embed/{video_id}"
                                             title="YouTube video player" frameborder="0"
                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media;
