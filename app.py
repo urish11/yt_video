@@ -297,6 +297,7 @@ def search_youtube(api_key, query, max_results_per_term=5,max_retries = 5):
                                     'title': title,
                                     'videoId': video_id,
                                     'url': standard_url, # Store the standard watch URL
+                                    'platform': 'yt'
                                     # 'thumbnail' : thumbnail_url
                                 })
                                 processed_ids_this_term.add(video_id)
