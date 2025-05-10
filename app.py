@@ -376,9 +376,9 @@ def search_tiktok_links_google(api_key, cx_id, query, num_results=20, max_retrie
                 if 'items' in results_data:
                     for item in results_data['items']:
                         title = item.get("title", "")
-                        url = item.get("htmlFormattedUrl", "")
+                        url = item['image'].get("contextLink", "")
                         video_id = url.split("/")[-1]
-                        thumbnail_url = item.get('pagemap', {}).get('cse_thumbnail', [{}])[0].get('src', "")
+                        thumbnail_url = item['image'].get("thumbnailLink", "")
 
                         if 'video' in url:
                             video_links_info.append({
