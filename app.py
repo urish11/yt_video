@@ -2270,6 +2270,7 @@ if not st.session_state.batch_processing_active:
                 current_state = st.session_state.selected_videos.get(fetch_job_key)
                 current_state['fetching_dlp'] = False
                 current_state['Direct URL'] = standard_url
+                current_state['Status'] = 'Ready'
 
 
 
