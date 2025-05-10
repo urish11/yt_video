@@ -381,7 +381,7 @@ def search_tiktok_links_google(api_key, cx_id, query, num_results=5, max_retries
                 for i, item in enumerate(results_data['items']):
                     title = item.get("title","")
                     videoId = item.get("htmlFormattedUrl").split("/")[-1]
-                    url =item['image'].get("htmlFormattedUrl")
+                    url =item.get("htmlFormattedUrl")
                     thumbnail_url = item['items'][0]['pagemap']['cse_thumbnail'][0]['src']
 
                     
