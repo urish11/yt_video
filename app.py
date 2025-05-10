@@ -2483,6 +2483,9 @@ You are an expert scriptwriter for high-performing short-form video ads. Generat
 
                         # Pass Direct URL and other necessary data
                         # This function now downloads the direct url, processes, and returns temp output path
+
+                        st.text('ffsafa ' + platform)
+                        input()
                         final_video_path = process_video_with_tts(
                             base_video_url=base_video_direct_url, # Pass the direct URL
                             audio_path=audio_path,
