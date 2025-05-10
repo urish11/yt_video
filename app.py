@@ -539,12 +539,11 @@ def get_yt_dlp_info(video_url):
 
             # --- Return result ---
             if direct_url:
-                st.text({
-                    'direct_url': direct_url,
-                    'format_details': format_details,
-                    'error': None
-                })
-                input()
+                # st.text({
+                #     'direct_url': direct_url,
+                #     'format_details': format_details,
+                #     'error': None
+                # })
                 return {
                     'direct_url': direct_url,
                     'format_details': format_details,
@@ -580,7 +579,44 @@ def get_yt_dlp_info(video_url):
         st.error(traceback.format_exc())
         return {'direct_url': None, 'format_details': 'Error', 'error': f"Unexpected yt-dlp error: {e}"}
 
+def download_vid_ytdlp(video_url, output_dir="downloads", filename_template="%(title).80s.%(ext)s"):
+    """
+    Downloads a video using yt-dlp and returns the path to the downloaded file.
+    Args:
+        video_url (str): The video URL to download.
+        output_dir (str): Directory where the video will be saved.
+        filename_template (str): Template for the output filename.
 
+    Returns:
+        str: Path to the downloaded file, or None if failed.
+    """
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    output_path_template = os.path.join(output_dir, filename_template)
+
+    ydl_opts = {
+        'format': 'bestvideo+bestaudio/best',
+        'outtmpl': output_path_template,
+        'quiet': True,
+        'noplaylist': True,
+        'merge_output_format': 'mp4',  # ensures muxing into a single MP4 if needed
+    }
+
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(video_url, download=True)
+            downloaded_file = ydl.prepare_filename(info)
+            # If merged into mp4, manually fix extension
+            if 'ext' in info and info['ext'] != 'mp4':
+                downloaded_file = os.path.splitext(downloaded_file)[0] + '.mp4'
+            return downloaded_file
+    except yt_dlp.utils.DownloadError as e:
+        print(f"[yt-dlp error] {e}")
+        return None
+    except Exception as e:
+        print(f"[unexpected error] {e}")
+        return None
 # --- Helper Function: Generate Script with ChatGPT ---
 
 def gemini_text_lib(prompt,model ='gemini-2.5-pro-exp-03-25', is_with_file=False,file_url = None ):
@@ -1156,7 +1192,7 @@ def download_direct_url(url, suffix=".mp4"):
 
 
 # --- Helper Function: Process Video with TTS and Subtitles ---
-def process_video_with_tts(base_video_url, audio_path, word_timings, topic, lang, copy_num, with_music=False):
+def process_video_with_tts(base_video_url, audio_path, word_timings, topic, lang, copy_num, with_music=False ,platform='yt'):
     """
     Loads video (using downloaded path), adds TTS audio, loops/trims, adds subtitles.
     Returns the path to the final processed temporary video file, or None on failure.
@@ -1184,15 +1220,19 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic, lang
         st.write(f"⏳ Downloading base video content from direct URL...")
         # Use the download_direct_url helper, or stick with yt-dlp if preferred
         # Using download_direct_url for potentially simpler direct downloads
-        local_vid_path = download_direct_url(base_video_url, suffix=".mp4")
-        # Alternative: If yt-dlp download is preferred even for direct URLs:
-        # local_vid_path = download_with_ytdlp(base_video_url, cookie_file_path=COOKIE_FILE_PATH)
+        if platform == 'yt':
+            local_vid_path = download_direct_url(base_video_url, suffix=".mp4")
+            # Alternative: If yt-dlp download is preferred even for direct URLs:
+            # local_vid_path = download_with_ytdlp(base_video_url, cookie_file_path=COOKIE_FILE_PATH)
 
-        if not local_vid_path:
-            raise ValueError(f"Failed to download base video content from: {base_video_url}")
+            if not local_vid_path:
+                raise ValueError(f"Failed to download base video content from: {base_video_url}")
 
-        # 2. Load downloaded video with MoviePy
-        st.write(f"➡️ Loading downloaded video: {local_vid_path}")
+            # 2. Load downloaded video with MoviePy
+            st.write(f"➡️ Loading downloaded video: {local_vid_path}")
+        if platform == 'tk':
+
+            local_vid_path = download_with_ytdlp(base_video_url)
         # Ensure target_resolution is set for potential resizing during load
         base_video = VideoFileClip(local_vid_path, audio=False, target_resolution=(720, 1280))
 
@@ -2206,6 +2246,9 @@ else: # No api_search_results yet
 # 4. yt-dlp Fetching Logic (Runs after UI render if needed)
 # (Use the corrected version that works with job_keys and caches results)
 if not st.session_state.batch_processing_active:
+
+
+
     job_keys_to_fetch = [
         job_key for job_key, data in st.session_state.selected_videos.items()
         if data.get('fetching_dlp') # Check the flag
@@ -2218,42 +2261,54 @@ if not st.session_state.batch_processing_active:
         if video_data:
             standard_url = video_data.get('Standard URL')
             title = video_data.get('Video Title', fetch_job_key)
+            platform = video_data.get('platform')
+            if platform =='tk':
+                current_state = st.session_state.selected_videos.get(fetch_job_key)
+                current_state['fetching_dlp'] = False
+                current_state['Direct URL'] = standard_url
 
-            # Only show spinner if fetching is needed
-            with st.spinner(f"Fetching video details for '{title}' (Job: {fetch_job_key} {standard_url})..."):
-                dlp_info = None
-                # Check cache first using the standard watch URL
-                if standard_url and standard_url in st.session_state.get('resolved_vid_urls', {}):
-                    dlp_info = st.session_state['resolved_vid_urls'][standard_url]
-                    print(f"Cache hit for {standard_url}") # Debug
-                elif standard_url:
-                    print(f"Cache miss - Fetching NEW URL info for {standard_url}") # Debug
-                    # Fetch info using yt-dlp helper function
-                    dlp_info = get_yt_dlp_info(standard_url)
-                    # Update cache ONLY if fetch was successful AND returned a direct URL
+
+
+            if platform == 'yt':
+                # Only show spinner if fetching is needed
+                with st.spinner(f"Fetching video details for '{title}' (Job: {fetch_job_key} {standard_url})..."):
+                    dlp_info = None
+                    # Check cache first using the standard watch URL
+
+                    
+
+
+                    if standard_url and standard_url in st.session_state.get('resolved_vid_urls', {}):
+                        dlp_info = st.session_state['resolved_vid_urls'][standard_url]
+                        print(f"Cache hit for {standard_url}") # Debug
+                    elif standard_url:
+                        print(f"Cache miss - Fetching NEW URL info for {standard_url}") # Debug
+                        # Fetch info using yt-dlp helper function
+                        dlp_info = get_yt_dlp_info(standard_url)
+                        # Update cache ONLY if fetch was successful AND returned a direct URL
+                        if dlp_info and dlp_info.get('direct_url'):
+                            st.session_state.setdefault('resolved_vid_urls', {})[standard_url] = dlp_info
+                    else:
+                        dlp_info = {'error': 'Missing Standard URL in job data.'} # Cannot fetch without URL
+
+                # Update state for the specific job_key
+                current_state = st.session_state.selected_videos.get(fetch_job_key)
+                if current_state:
+                    current_state['fetching_dlp'] = False # Mark fetch attempt as done
+
                     if dlp_info and dlp_info.get('direct_url'):
-                         st.session_state.setdefault('resolved_vid_urls', {})[standard_url] = dlp_info
-                else:
-                     dlp_info = {'error': 'Missing Standard URL in job data.'} # Cannot fetch without URL
-
-            # Update state for the specific job_key
-            current_state = st.session_state.selected_videos.get(fetch_job_key)
-            if current_state:
-                current_state['fetching_dlp'] = False # Mark fetch attempt as done
-
-                if dlp_info and dlp_info.get('direct_url'):
-                    current_state['Direct URL'] = dlp_info['direct_url'] # Store the direct URL
-                    current_state['Format Details'] = dlp_info.get('format_details', 'N/A')
-                    current_state['yt_dlp_error'] = None
-                    current_state['Status'] = 'Ready' # Ready for processing
-                    st.toast(f"Direct URL loaded for job '{fetch_job_key}'", icon="✅")
-                else: # Handle errors or missing URL from dlp_info
-                    error_detail = dlp_info.get('error', "Could not get direct URL") if dlp_info else "yt-dlp fetch failed critically"
-                    current_state['Direct URL'] = None
-                    current_state['Format Details'] = "Error"
-                    current_state['yt_dlp_error'] = error_detail
-                    current_state['Status'] = f"Error: {error_detail}" # Update status to reflect error
-                    st.toast(f"yt-dlp failed for job '{fetch_job_key}': {error_detail}", icon="⚠️")
+                        current_state['Direct URL'] = dlp_info['direct_url'] # Store the direct URL
+                        current_state['Format Details'] = dlp_info.get('format_details', 'N/A')
+                        current_state['yt_dlp_error'] = None
+                        current_state['Status'] = 'Ready' # Ready for processing
+                        st.toast(f"Direct URL loaded for job '{fetch_job_key}'", icon="✅")
+                    else: # Handle errors or missing URL from dlp_info
+                        error_detail = dlp_info.get('error', "Could not get direct URL") if dlp_info else "yt-dlp fetch failed critically"
+                        current_state['Direct URL'] = None
+                        current_state['Format Details'] = "Error"
+                        current_state['yt_dlp_error'] = error_detail
+                        current_state['Status'] = f"Error: {error_detail}" # Update status to reflect error
+                        st.toast(f"yt-dlp failed for job '{fetch_job_key}': {error_detail}", icon="⚠️")
 
                 # Save updated state
                 st.session_state.selected_videos[fetch_job_key] = current_state
@@ -2291,7 +2346,8 @@ if st.session_state.batch_processing_active and st.session_state.generation_queu
                         bg_music = video_data.get('BG Music', False)
                         tts_voice = video_data.get('TTS Voice', 'sage')
                         base_video_direct_url = video_data.get("Direct URL") # Use the fetched direct URL
-                        copy_num = video_data.get('Copy Number', 0)
+                        copy_num = video_data.get('Copy Number', 0),
+                        platform = video_data.get('platform')
 
                         if not base_video_direct_url:
                             raise ValueError("Direct video URL missing.")
@@ -2430,7 +2486,8 @@ You are an expert scriptwriter for high-performing short-form video ads. Generat
                             topic=topic,
                             lang=lang,
                             copy_num=copy_num,
-                            with_music=current_with_music
+                            with_music=current_with_music,
+                            platform= platform
                         )
                         if not final_video_path: raise ValueError("Video processing (MoviePy) failed.")
 
