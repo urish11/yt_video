@@ -1990,7 +1990,7 @@ if st.session_state.api_search_results:
                                         if platform == 'tk':
                                             iframe_code = f"""
                                             <iframe 
-                                            height="600" 
+                                            height="550" 
                                             width="320" 
                                             src="https://www.tiktok.com/embed/v2/{video_id}?autoplay=1"
                                             allowfullscreen 
