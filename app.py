@@ -2002,8 +2002,9 @@ if st.session_state.api_search_results:
                                     if platform == 'tk':
                                         thumbnail_url = thumbnail
 
-                                        
-                                    st.image(thumbnail_url, use_container_width=True, caption="Video Thumbnail")
+                                    try:    
+                                        st.image(thumbnail_url, use_container_width=True, caption="Video Thumbnail")
+                                    except:pass
 
                                 toggle_label = "🔼 Hide" if st.session_state[show_video_key] else "▶️ Show"
                                 if st.button(f"{toggle_label} Preview", key=f"toggle_vid_btn_{grid_instance_key}", help="Show/hide video preview", use_container_width=True):
