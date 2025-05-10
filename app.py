@@ -380,9 +380,9 @@ def search_tiktok_links_google(api_key, cx_id, query, num_results=5, max_retries
             if 'items' in results_data:
                 for i, item in enumerate(results_data['items']):
                     title = item.get("title","")
-                    videoId = item['image'].get("contextLink").split("/")[-1]
-                    url =item['image'].get("contextLink")
-                    thumbnail_url = item['image'].get("thumbnailLink")
+                    videoId = item.get("htmlFormattedUrl").split("/")[-1]
+                    url =item['image'].get("htmlFormattedUrl")
+                    thumbnail_url = item['items'][0]['pagemap']['cse_thumbnail'][0]['src']
 
                     
                     if url: # We need a link to the TikTok page
