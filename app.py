@@ -539,6 +539,12 @@ def get_yt_dlp_info(video_url):
 
             # --- Return result ---
             if direct_url:
+                st.text({
+                    'direct_url': direct_url,
+                    'format_details': format_details,
+                    'error': None
+                })
+                input()
                 return {
                     'direct_url': direct_url,
                     'format_details': format_details,
