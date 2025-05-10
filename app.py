@@ -1989,8 +1989,8 @@ if st.session_state.api_search_results:
                                             allowfullscreen></iframe>"""
                                         if platform == 'tk':
                                             iframe_code = f"""
-                                            <iframe height="560" width= "315" src="https://www.tiktok.com/player/v1/{video_id}?autoplay=1"
-                                              allow="fullscreen" title="test"></iframe>
+                                            <iframe height="560" width= "315" src="https://www.tiktok.com/embed/v2/{video_id}?autoplay=1"
+                                              allow="fullscreen" allow="encrypted-media;" title="test"></iframe>
 
 
 
