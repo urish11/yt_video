@@ -296,7 +296,8 @@ def search_youtube(api_key, query, max_results_per_term=5,max_retries = 5):
                                 videos_res.append({
                                     'title': title,
                                     'videoId': video_id,
-                                    'url': standard_url # Store the standard watch URL
+                                    'url': standard_url, # Store the standard watch URL
+                                    'thumnnail' : thumbnail_url
                                 })
                                 processed_ids_this_term.add(video_id)
                                 total_fetched += 1
@@ -331,6 +332,118 @@ def search_youtube(api_key, query, max_results_per_term=5,max_retries = 5):
     # Return collected results, respecting the overall MAX_TOTAL_RESULTS implicitly
     # No need to slice here as the loop breaks early
     return videos_res
+
+
+def search_tiktok_links_google(api_key, cx_id, query, num_results=5, max_retries=3):
+    """
+    Searches for TikTok video pages using Google Custom Search API.
+    Appends 'site:www.tiktok.com/@' to the query.
+    Args:
+        api_key (str): Your Google API Key for Custom Search.
+        cx_id (str): Your Custom Search Engine ID (CX).
+        query (str): The search query.
+        num_results (int): The number of results to return (max 10 per request).
+        max_retries (int): Number of retries for the API request.
+    Returns:
+        list: A list of video dictionaries [{'title': '', 'tiktok_page_url': '', 'thumbnail_url': '', 'snippet': ''}]
+              or None if a critical API error occurs.
+    """
+    if not (1 <= num_results <= 10):
+        print("Warning: num_results for Google Search should be between 1 and 10. Defaulting to 5.")
+        num_results = 5
+
+    # Modify query to target TikTok
+    search_query_on_google = f"{query.strip()} site:www.tiktok.com/@"
+    
+    url = "https://customsearch.googleapis.com/customsearch/v1"
+    params = {
+        'key': api_key,
+        'cx': cx_id,
+        'q': search_query_on_google,
+        # 'searchType': 'image', # REMOVED: We want web pages, not just images
+        'num': num_results
+    }
+
+    st.write(f"\nSearching Google for TikTok links with: '{search_query_on_google}'...") # Changed log message
+    
+    video_links_info = []
+    tries = 0
+    while tries < max_retries:
+        try:
+            response = requests.get(url, params=params, timeout=15)
+            response.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
+            results_data = response.json()
+            # print(results_data) # Original debug print from your function, consider removing for production
+
+            if 'items' in results_data:
+                for i, item in enumerate(results_data['items']):
+                    title = item.get("title","")
+                    videoId = item['image'].get("contextLink").split("/")[-1]
+                    url =item['image'].get("contextLink")
+                    thumbnail_url = item['image'].get("thumbnailLink")
+
+                    
+                    if url: # We need a link to the TikTok page
+                        video_links_info.append({
+                            'title': title,
+                            'url': url, # This is the URL to the TikTok page
+                            'thumbnail_url': thumbnail_url, # This is the Google-derived thumbnail
+                            'videoId' :videoId
+                        })
+                        # Debug print from your original function, adapted
+                        # print(f"  Result {i+1}:")
+                        # print(f"    Title: {title}")
+                        # print(f"    TikTok Page URL: {page_url}")
+                        # print(f"    Extracted Thumbnail URL: {thumbnail_url if thumbnail_url else 'N/A'}")
+                        # print("-" * 20)
+                
+                if not video_links_info and 'items' in results_data and results_data['items']: # Found items but couldn't process
+                     st.warning(f"Google API returned items for '{search_query_on_google}', but no suitable TikTok page links with details could be extracted.", icon="ℹ️")
+                elif not video_links_info:
+                     st.write(f"No TikTok page results found in Google Search items for '{search_query_on_google}'.")
+
+
+            else: # No 'items' in results_data
+                st.write(f"No 'items' found in Google Search API response for '{search_query_on_google}'.")
+                if 'error' in results_data:
+                    error = results_data['error']
+                    st.error(f"Google API Error Code: {error.get('code')}, Message: {error.get('message')}", icon="🚨")
+                    if 'details' in error:
+                        for detail in error.get('details', []):
+                            st.error(f"  Reason: {detail.get('reason')}, Domain: {detail.get('domain')}")
+                    if error.get('code') == 403 or error.get('code') == 400: # Quota or bad request often means stop
+                         return None # Signal critical error
+
+            return video_links_info # Return successfully processed list or empty list
+
+        except requests.exceptions.Timeout:
+            st.warning(f"Google Search API Request Timeout for query '{search_query_on_google}'. Retrying ({tries+1}/{max_retries})...", icon="⏳")
+        except requests.exceptions.HTTPError as http_err:
+            st.error(f"Google Search API HTTP Error for query '{search_query_on_google}': {http_err}", icon="🚨")
+            if response.status_code == 403 or response.status_code == 400 : # Critical, stop retrying
+                 st.error(f"Response content: {response.text}")
+                 return None # Signal critical error
+            st.warning(f"Retrying ({tries+1}/{max_retries})...")
+        except requests.exceptions.RequestException as req_err:
+            st.error(f"Google Search API Request Error for query '{search_query_on_google}': {req_err}", icon="🚨")
+            st.warning(f"Retrying ({tries+1}/{max_retries})...")
+        except json.JSONDecodeError:
+            st.error("Error decoding JSON response from Google Search API. Is the API key valid and API enabled?", icon="🚨")
+            st.text(f"Response content: {response.text if 'response' in locals() else 'No response object'}")
+            return None # Critical error
+        except Exception as e:
+            st.error(f"An unexpected error occurred during Google Search for '{search_query_on_google}': {e}", icon="💥")
+            import traceback
+            st.error(traceback.format_exc())
+            st.warning(f"Retrying ({tries+1}/{max_retries})...")
+        
+        tries += 1
+        if tries < max_retries:
+             time.sleep(1) # Wait a bit before retrying
+
+    st.error(f"Failed to get results from Google Search for '{search_query_on_google}' after {max_retries} retries.", icon="🚫")
+    return None # Return None if all retries fail
+
 
 # --- Helper Function: Simple Hash ---
 def simple_hash(s):
@@ -1532,7 +1645,8 @@ search_button = col1.button(
 clear_button = col2.button("🧹 Clear All", use_container_width=True, type="secondary", disabled=st.session_state.batch_processing_active)
 # with_music = col1.checkbox("With BG music?", value=False)
 # with_music_rand = col2.checkbox("With BG music randomly?", value=False)
-
+is_youtube = st.checkbox("YT")
+is_tiktok = st.checkbox("tk")
 if clear_button:
     # Reset all relevant states
     st.session_state.selected_videos = {}
@@ -1747,7 +1861,12 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
 
         if unique_search_key not in results_cache:
             # Pass MAX_RESULTS_PER_QUERY defined earlier
-            videos = search_youtube(youtube_api_key_secret, term, count)
+            if is_youtube:
+                videos = search_youtube(youtube_api_key_secret, term, count)
+
+            elif is_tiktok:
+
+                videos = search_tiktok_links_google('AIzaSyDa84wqGF2miHPZ1XNOifrwerQZeykoM4U',"331dbbc80d31342af",term,count)
 
             if videos is None: # Critical API error signalled from search_youtube
                  st.error(f"Stopping search due to critical API issue.", icon="🚫")
@@ -1755,6 +1874,10 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
                  break
 
             # Store results
+            if is_youtube:
+                platform = "yt"
+            if is_tiktok:
+                platform = 'tk'
             results_cache[unique_search_key] = {
                 'videos': videos,
                 'topic': topic,
@@ -1765,6 +1888,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
                 'original_input_count': count,
                 'tts_voice' : tts_voice,
                 'input_search_term': og_term,
+                'platform' : platform
             }
             time.sleep(0.1) # Brief pause
 
@@ -1793,7 +1917,7 @@ if st.session_state.api_search_results:
         current_search_terms_for_group_display = result_data['original_term']
         bg_music_for_group = result_data.get('bg_music', False) # Default if not present
         tts_voice_for_group = result_data.get('tts_voice', 'sage') # Default if not present
-
+        platfrom = result_data.get('platform')
         # These are from the original data editor input for this topic/row
         # Ensure these keys ('input_search_term', 'original_input_count') were stored when api_search_results was populated
         input_search_term_from_editor = result_data.get('input_search_term', current_search_terms_for_group_display)
@@ -1822,7 +1946,8 @@ if st.session_state.api_search_results:
                             with cols[j]:
                                 video_id = video['videoId']
                                 video_title = video['title']
-                                standard_video_url = video.get('url', f"https://www.youtube.com/watch?v={video_id}") # Standard YT URL
+                                thumbnail = video.get('thumbnail_url',"")
+                                standard_video_url = video.get('url') # Standard YT URL
                                 grid_instance_key = f"vid_{video_id}_{search_key}_{i}_{j}" # More specific key
 
                                 show_video_key = f"show_player_{grid_instance_key}"
@@ -1833,18 +1958,35 @@ if st.session_state.api_search_results:
 
                                 if st.session_state[show_video_key]:
                                     try:
-                                        iframe_code = f"""
-                                        <iframe width="315" height="560"
-                                        src="https://www.youtube.com/embed/{video_id}"
-                                        title="YouTube video player" frameborder="0"
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media;
-                                        gyroscope; picture-in-picture; web-share"
-                                        allowfullscreen></iframe>"""
+                                        if platform == 'yt':
+                                            iframe_code = f"""
+                                            <iframe width="315" height="c"
+                                            src="https://www.youtube.com/embed/{video_id}"
+                                            title="YouTube video player" frameborder="0"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media;
+                                            gyroscope; picture-in-picture; web-share"
+                                            allowfullscreen></iframe>"""
+                                        if platform == 'tk':
+                                            iframe_code = f"""
+                                            <iframe height="315" width= "315" src="https://www.tiktok.com/player/v1/{video_id}"
+                                              allow="fullscreen" title="test"></iframe>
+
+
+
+
+                                            """
+
                                         st.markdown(iframe_code, unsafe_allow_html=True)
                                     except Exception as e:
                                         st.error(f"Video preview failed: {e}")
                                 else:
-                                    thumbnail_url = f"https://i.ytimg.com/vi/{video_id}/mqdefault.jpg"
+                                    if platform == 'yt':
+                                        thumbnail_url = f"https://i.ytimg.com/vi/{video_id}/mqdefault.jpg"
+
+                                    if platform == 'tk':
+                                        thumbnail_url = thumbnail
+
+                                        
                                     st.image(thumbnail_url, use_container_width=True, caption="Video Thumbnail")
 
                                 toggle_label = "🔼 Hide" if st.session_state[show_video_key] else "▶️ Show"
