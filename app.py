@@ -2212,7 +2212,7 @@ if not st.session_state.batch_processing_active:
             title = video_data.get('Video Title', fetch_job_key)
 
             # Only show spinner if fetching is needed
-            with st.spinner(f"Fetching video details for '{title}' (Job: {fetch_job_key})..."):
+            with st.spinner(f"Fetching video details for '{title}' (Job: {fetch_job_key} {standard_url})..."):
                 dlp_info = None
                 # Check cache first using the standard watch URL
                 if standard_url and standard_url in st.session_state.get('resolved_vid_urls', {}):
