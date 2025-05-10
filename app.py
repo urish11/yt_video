@@ -479,7 +479,7 @@ def get_yt_dlp_info(video_url):
         # 'cookiefile': COOKIE_FILE_PATH if COOKIE_FILE_PATH and os.path.exists(COOKIE_FILE_PATH) else None,
     }
     if 'tiktok' in video_url:
-        YDL_OPTS['foramt'] = 'best'
+        YDL_OPTS['format'] = 'best'
     # Add cookiefile only if path exists
     if COOKIE_FILE_PATH and os.path.exists(COOKIE_FILE_PATH):
         YDL_OPTS['cookiefile'] = COOKIE_FILE_PATH
