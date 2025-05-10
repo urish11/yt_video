@@ -370,7 +370,7 @@ def search_tiktok_links_google(api_key, cx_id, query, num_results=20, max_retrie
                 response = requests.get("https://customsearch.googleapis.com/customsearch/v1", params=params, timeout=15)
                 response.raise_for_status()
                 results_data = response.json()
-                st.text(results_data)
+                # st.text(results_data)
 
                 if 'items' in results_data:
                     for item in results_data['items']:
@@ -1193,7 +1193,7 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic, lang
             # 2. Load downloaded video with MoviePy
             st.write(f"➡️ Loading downloaded video: {local_vid_path}")
         if platform == 'tk':
-            st.text('tk')
+            # st.text('tk')
             # input()
 
             local_vid_path = download_with_ytdlp(base_video_url)
@@ -1959,7 +1959,7 @@ if st.session_state.api_search_results:
                         if video_index < num_videos:
                             video = videos[video_index]
                             with cols[j]:
-                                st.text(video)
+                                # st.text(video)
                                 video_id = video['videoId']
                                 video_title = video['title']
                                 thumbnail = video.get('thumbnail_url',"")
