@@ -1231,6 +1231,8 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic, lang
             # 2. Load downloaded video with MoviePy
             st.write(f"➡️ Loading downloaded video: {local_vid_path}")
         if platform == 'tk':
+            st.text('tk')
+            input()
 
             local_vid_path = download_with_ytdlp(base_video_url)
         # Ensure target_resolution is set for potential resizing during load
@@ -2263,7 +2265,7 @@ if not st.session_state.batch_processing_active:
             title = video_data.get('Video Title', fetch_job_key)
             platform = video_data.get('platform')
 
-            
+
             if platform =='tk':
                 current_state = st.session_state.selected_videos.get(fetch_job_key)
                 current_state['fetching_dlp'] = False
