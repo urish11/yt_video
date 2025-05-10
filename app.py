@@ -2331,7 +2331,7 @@ if st.session_state.batch_processing_active and st.session_state.generation_queu
     if video_data and video_data.get('Direct URL') and not video_data.get('yt_dlp_error'):
         processed_count_display = st.session_state.batch_processed_count + 1
         total_count_display = st.session_state.batch_total_count
-        st.header(f"⚙️ Processing Job {processed_count_display}/{total_count_display}: {video_data['Video Title']} (Copy #{video_data.get('Copy Number', '?')})")
+        st.header(f"⚙️ Processing Job {processed_count_display}/{total_count_display}: {video_data['Video Title']} (Copy #{video_data.get('Copy Number', '?')} platform {video_data.get('platform' , "na")})")
         gen_placeholder = st.container() # Container for logs of this specific job run
 
         try:
@@ -2484,8 +2484,7 @@ You are an expert scriptwriter for high-performing short-form video ads. Generat
                         # Pass Direct URL and other necessary data
                         # This function now downloads the direct url, processes, and returns temp output path
 
-                        st.text('ffsafa ' + platform)
-                        input()
+                        
                         final_video_path = process_video_with_tts(
                             base_video_url=base_video_direct_url, # Pass the direct URL
                             audio_path=audio_path,
