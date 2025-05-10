@@ -382,7 +382,7 @@ def search_tiktok_links_google(api_key, cx_id, query, num_results=5, max_retries
                     title = item.get("title","")
                     videoId = item.get("htmlFormattedUrl").split("/")[-1]
                     url =item.get("htmlFormattedUrl")
-                    thumbnail_url = item['items'][0]['pagemap']['cse_thumbnail'][0]['src']
+                    thumbnail_url = item['pagemap']['cse_thumbnail'][0]['src']
 
                     
                     if url: # We need a link to the TikTok page
