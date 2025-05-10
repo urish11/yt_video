@@ -1232,7 +1232,7 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic, lang
             st.write(f"➡️ Loading downloaded video: {local_vid_path}")
         if platform == 'tk':
             st.text('tk')
-            input()
+            # input()
 
             local_vid_path = download_with_ytdlp(base_video_url)
         # Ensure target_resolution is set for potential resizing during load
