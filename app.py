@@ -1946,6 +1946,7 @@ if st.session_state.api_search_results:
                         if video_index < num_videos:
                             video = videos[video_index]
                             with cols[j]:
+                                st.text(video)
                                 video_id = video['videoId']
                                 video_title = video['title']
                                 thumbnail = video.get('thumbnail_url',"")
