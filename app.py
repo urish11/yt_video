@@ -364,13 +364,14 @@ def search_tiktok_links_google(api_key, cx_id, query, num_results=20, max_retrie
                     'cx': cx_id,
                     'q': search_query_on_google,
                     'num': min(max_per_page, num_results - len(video_links_info)),
-                    'start': start
+                    'start': start,
+                    'searchType' :'image'
                 }
 
                 response = requests.get("https://customsearch.googleapis.com/customsearch/v1", params=params, timeout=15)
                 response.raise_for_status()
                 results_data = response.json()
-                # st.text(results_data)
+                st.text(results_data)
 
                 if 'items' in results_data:
                     for item in results_data['items']:
