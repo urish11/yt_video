@@ -2262,6 +2262,8 @@ if not st.session_state.batch_processing_active:
             standard_url = video_data.get('Standard URL')
             title = video_data.get('Video Title', fetch_job_key)
             platform = video_data.get('platform')
+
+            
             if platform =='tk':
                 current_state = st.session_state.selected_videos.get(fetch_job_key)
                 current_state['fetching_dlp'] = False
@@ -2269,7 +2271,7 @@ if not st.session_state.batch_processing_active:
 
 
 
-            if platform == 'yt':
+            elif platform == 'yt':
                 # Only show spinner if fetching is needed
                 with st.spinner(f"Fetching video details for '{title}' (Job: {fetch_job_key} {standard_url})..."):
                     dlp_info = None
@@ -2310,9 +2312,9 @@ if not st.session_state.batch_processing_active:
                         current_state['Status'] = f"Error: {error_detail}" # Update status to reflect error
                         st.toast(f"yt-dlp failed for job '{fetch_job_key}': {error_detail}", icon="⚠️")
 
-                # Save updated state
-                st.session_state.selected_videos[fetch_job_key] = current_state
-                st.rerun() # Rerun to update UI display
+            # Save updated state
+            st.session_state.selected_videos[fetch_job_key] = current_state
+            st.rerun() # Rerun to update UI display
 
 
 # 5. Video Generation Logic (BATCH PROCESSING)
