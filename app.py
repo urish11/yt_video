@@ -1698,7 +1698,7 @@ search_button = col1.button(
 clear_button = col2.button("🧹 Clear All", use_container_width=True, type="secondary", disabled=st.session_state.batch_processing_active)
 # with_music = col1.checkbox("With BG music?", value=False)
 # with_music_rand = col2.checkbox("With BG music randomly?", value=False)
-is_youtube = col1.checkbox("YT")
+is_youtube = col1.checkbox("YT") 
 is_tiktok = col1.checkbox("tk")
 if clear_button:
     # Reset all relevant states
