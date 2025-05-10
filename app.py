@@ -334,7 +334,7 @@ def search_youtube(api_key, query, max_results_per_term=5,max_retries = 5):
     return videos_res
 
 
-def search_tiktok_links_google(api_key, cx_id, query, num_results=20, max_retries=3):
+def search_tiktok_links_google(api_keys, cx_id, query, num_results=20, max_retries=3):
     """
     Searches for TikTok video pages using Google Custom Search API, supporting pagination for more than 10 results.
     Args:
@@ -358,7 +358,9 @@ def search_tiktok_links_google(api_key, cx_id, query, num_results=20, max_retrie
     for start in range(1, num_results + 1, max_per_page):
         tries = 0
         while tries < max_retries:
+            
             try:
+                api_key = random.choice(api_keys)
                 params = {
                     'key': api_key,
                     'cx': cx_id,
@@ -1882,7 +1884,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
 
             elif is_tiktok:
 
-                videos = search_tiktok_links_google('AIzaSyDa84wqGF2miHPZ1XNOifrwerQZeykoM4U',"331dbbc80d31342af",term,count)
+                videos = search_tiktok_links_google(youtube_api_key_secret,"331dbbc80d31342af",term,count)
 
             if videos is None: # Critical API error signalled from search_youtube
                  st.error(f"Stopping search due to critical API issue.", icon="🚫")
