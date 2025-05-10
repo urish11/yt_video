@@ -390,7 +390,8 @@ def search_tiktok_links_google(api_key, cx_id, query, num_results=5, max_retries
                             'title': title,
                             'url': url, # This is the URL to the TikTok page
                             'thumbnail_url': thumbnail_url, # This is the Google-derived thumbnail
-                            'videoId' :videoId
+                            'videoId' :videoId,
+                            'platform' :'tk'
                         })
                         # Debug print from your original function, adapted
                         # print(f"  Result {i+1}:")
