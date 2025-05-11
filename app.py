@@ -336,31 +336,26 @@ def search_youtube(api_key, query, max_results_per_term=5,max_retries = 5):
 
 
 def search_tiktok_links_google(api_keys, cx_id, query, num_results=20, max_retries=3):
-    """
-    Searches for TikTok video pages using Google Custom Search API, supporting multiple terms and pagination.
-    Args:
-        api_keys (list): List of Google API Keys.
-        cx_id (str): Custom Search Engine ID.
-        query (str): Pipe-separated search terms, e.g. 'car|drift'.
-        num_results (int): Total number of results to return (max 100).
-        max_retries (int): Retry count on errors.
-    Returns:
-        list: List of TikTok video dictionaries.
-    """
     import requests, time, random
-    from urllib.parse import urlencode
 
     max_per_page = 10
     query_terms = query.split("|")
-    num_results = min(num_results, 100)  # CSE API limit
-    results_per_term = max(1, num_results // len(query_terms))
+    num_results = min(num_results, 100)
     video_links_info = []
+    total_collected = 0
+    term_cycle = query_terms * ((num_results // len(query_terms)) + 1)  # cycle terms to reach total target
 
-    for term in query_terms:
+    for term in term_cycle:
+        if total_collected >= num_results:
+            break
+
         search_query = f"site:tiktok.com inurl:/video/ {term.replace('#','').replace('shorts','').replace(\"'\", '')}"
-        collected = 0
+        collected_for_term = 0
 
-        for start in range(1, results_per_term + 1, max_per_page):
+        for start in range(1, 100, max_per_page):  # CSE allows up to start=91
+            if total_collected >= num_results:
+                break
+
             tries = 0
             while tries < max_retries:
                 try:
@@ -369,13 +364,13 @@ def search_tiktok_links_google(api_keys, cx_id, query, num_results=20, max_retri
                         'key': api_key,
                         'cx': cx_id,
                         'q': search_query,
-                        'num': min(max_per_page, results_per_term - collected),
+                        'num': min(max_per_page, num_results - total_collected),
                         'start': start,
                         'searchType': 'image',
                         'gl': 'us'
                     }
 
-                    response = requests.get("https://customsearch.googleapis.com/customsearch/v1", params=params, timeout=15)
+                    response = requests.get("https://customsearch.googleapis.com/customsearch/v1", params=params, timeout=10)
                     response.raise_for_status()
                     results_data = response.json()
 
@@ -384,6 +379,7 @@ def search_tiktok_links_google(api_keys, cx_id, query, num_results=20, max_retri
                             url = item['image'].get("contextLink", "")
                             if 'video' not in url:
                                 continue
+
                             video_id = url.split("/")[-1]
                             title = item.get("title", "")
                             thumbnail_url = item.get("link", "")
@@ -395,24 +391,23 @@ def search_tiktok_links_google(api_keys, cx_id, query, num_results=20, max_retri
                                 'videoId': video_id,
                                 'platform': 'tk'
                             })
-                            collected += 1
 
-                    break  # success
+                            total_collected += 1
+                            collected_for_term += 1
 
-                except requests.exceptions.RequestException as e:
-                    print(f"[Retry {tries+1}] Request error: {e}")
+                    break
+
                 except Exception as e:
-                    print(f"Unexpected error: {e}")
-                    import traceback
-                    print(traceback.format_exc())
-                tries += 1
-                if tries < max_retries:
-                    time.sleep(1)
+                    print(f"[Retry {tries+1}] Error: {e}")
+                    tries += 1
+                    if tries < max_retries:
+                        time.sleep(1)
 
-            if collected >= results_per_term:
-                break
+            if collected_for_term == 0:
+                break  # this term exhausted
 
-    return video_links_info[:num_results] if video_links_info else None
+    return video_links_info
+
 
 # --- Helper Function: Simple Hash ---
 def simple_hash(s):
