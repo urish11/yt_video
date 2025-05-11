@@ -349,7 +349,7 @@ def search_tiktok_links_google(api_keys, cx_id, query, num_results=20, max_retri
         if total_collected >= num_results:
             break
 
-        search_query = f"site:tiktok.com inurl:/video/ {term.replace('#','').replace('shorts','').replace(\"'\", '')}"
+        search_query = f"site:tiktok.com inurl:/video/ {term.replace('#','').replace('shorts','').replace("'", '')}"
         collected_for_term = 0
 
         for start in range(1, 100, max_per_page):  # CSE allows up to start=91
