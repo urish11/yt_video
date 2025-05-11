@@ -337,90 +337,79 @@ def search_youtube(api_key, query, max_results_per_term=5,max_retries = 5):
 
 def search_tiktok_links_google(api_keys, cx_id, query, num_results=20, max_retries=3):
     """
-    Searches for TikTok video pages using Google Custom Search API, supporting pagination for more than 10 results.
+    Searches for TikTok video pages using Google Custom Search API, supporting multiple terms and pagination.
     Args:
-        api_key (str): Google API Key.
+        api_keys (list): List of Google API Keys.
         cx_id (str): Custom Search Engine ID.
-        query (str): Search query.
+        query (str): Pipe-separated search terms, e.g. 'car|drift'.
         num_results (int): Total number of results to return (max 100).
         max_retries (int): Retry count on errors.
     Returns:
-        list: List of video dictionaries or None if critical error.
+        list: List of TikTok video dictionaries.
     """
-    import requests, time 
+    import requests, time, random
     from urllib.parse import urlencode
 
-
     max_per_page = 10
+    query_terms = query.split("|")
+    num_results = min(num_results, 100)  # CSE API limit
+    results_per_term = max(1, num_results // len(query_terms))
     video_links_info = []
 
-    
-    query = query.split("|")
-    num_results = num_results // len (query)  +1
-    for term in query:
+    for term in query_terms:
+        search_query = f"site:tiktok.com inurl:/video/ {term.replace('#','').replace('shorts','').replace(\"'\", '')}"
+        collected = 0
 
-        # search_query_on_google = f"{query.replace("#","").replace('shorts','')} site:www.tiktok.com/@"
-        search_query_on_google = f" site:tiktok.com inurl:/video/ {term.replace("#","").replace('shorts','').replace("'","")} "
-        st.write(f"\nSearching Google for TikTok links with: '{search_query_on_google}'...")
-
-
-        for start in range(1, num_results + 1, max_per_page):
+        for start in range(1, results_per_term + 1, max_per_page):
             tries = 0
             while tries < max_retries:
-                
                 try:
                     api_key = random.choice(api_keys)
                     params = {
                         'key': api_key,
                         'cx': cx_id,
-                        'q': search_query_on_google,
-                        'num': min(max_per_page, num_results - len(video_links_info)),
+                        'q': search_query,
+                        'num': min(max_per_page, results_per_term - collected),
                         'start': start,
-                        'searchType' :'image',
-                        'gl' : 'us'
+                        'searchType': 'image',
+                        'gl': 'us'
                     }
 
                     response = requests.get("https://customsearch.googleapis.com/customsearch/v1", params=params, timeout=15)
                     response.raise_for_status()
                     results_data = response.json()
-                    st.text(results_data)
 
                     if 'items' in results_data:
                         for item in results_data['items']:
-                            title = item.get("title", "")
                             url = item['image'].get("contextLink", "")
+                            if 'video' not in url:
+                                continue
                             video_id = url.split("/")[-1]
-                            # thumbnail_url = item['image'].get("thumbnailLink", "")
+                            title = item.get("title", "")
                             thumbnail_url = item.get("link", "")
 
+                            video_links_info.append({
+                                'title': title,
+                                'url': url,
+                                'thumbnail_url': thumbnail_url,
+                                'videoId': video_id,
+                                'platform': 'tk'
+                            })
+                            collected += 1
 
-                            if 'video' in url:
-                                video_links_info.append({
-                                    'title': title,
-                                    'url': url,
-                                    'thumbnail_url': thumbnail_url,
-                                    'videoId': video_id,
-                                    'platform': 'tk'
-                                })
-
-                    break  # success, break retry loop
+                    break  # success
 
                 except requests.exceptions.RequestException as e:
-                    st.warning(f"[Attempt {tries+1}] Request error: {e}")
+                    print(f"[Retry {tries+1}] Request error: {e}")
                 except Exception as e:
-                    st.error(f"Unexpected error: {e}")
+                    print(f"Unexpected error: {e}")
                     import traceback
-                    st.error(traceback.format_exc())
-
+                    print(traceback.format_exc())
                 tries += 1
                 if tries < max_retries:
                     time.sleep(1)
 
-            if tries == max_retries:
-                st.error(f"Failed after {max_retries} retries on page starting at result {start}.")
-                break
-
-            if len(video_links_info) >= num_results:
+            if collected >= results_per_term:
                 break
 
     return video_links_info[:num_results] if video_links_info else None
