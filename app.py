@@ -1896,7 +1896,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
 
                 # {topic}""", client=openai_client, model="gpt-4") # Use your full validated prompt  
 
-                generated_term = gemini_text_lib(f"""
+                generated_term = chatGPT(f"""
                                 You are a Viral Video Ad Scout. Your mission is to find YouTube Shorts search terms that uncover visually compelling, user-generated style content perfect for remixing into high-performing Facebook video ads. The key is to think about what *actual users* are likely to upload as Shorts – authentic, engaging moments rather than polished ads.
 
                                 Given a topic, return the top 4 YouTube Shorts search terms that meet these criteria 1 of them is the topic itself as consice as possible, the others:
@@ -1936,9 +1936,9 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
                                 My topic: {topic}
                                 """,
 
-                                model = "gemini-2.5-flash-preview-04-17"
-
-                                ) #client=openai_client
+                                # model = "gemini-2.5-flash-preview-04-17"
+                                client=openai_client
+                                ) 
 
                 if not generated_term:
                     st.warning(f"Failed to generate search terms for '{topic}'. Skipping.", icon="🤖")
