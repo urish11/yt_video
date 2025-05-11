@@ -1715,7 +1715,7 @@ edited_df = st.sidebar.data_editor(
     st.session_state.search_data, # Use the main state data
     column_config={
         "Script Angle": st.column_config.SelectboxColumn("Script Angle", options=SCRIPT_VER_OPTIONS, default="default", required=True),
-        "Video Results": st.column_config.NumberColumn("Video Results", min_value=1, max_value=50, step=1, default=5, required=True),
+        "Video Results": st.column_config.NumberColumn("Video Results", min_value=1, max_value=100, step=1, default=5, required=True),
         "Language": st.column_config.TextColumn("Language", default="English", required=True),
         "Topic": st.column_config.TextColumn("Topic"),
         "Search Term": st.column_config.TextColumn("Search Term (or 'auto')"),
