@@ -1622,7 +1622,7 @@ def sync_search_data():
         # Type conversion and validation
         try:
             current_df['Video Results'] = pd.to_numeric(current_df['Video Results'], errors='coerce').fillna(5).astype(int)
-            current_df['Video Results'] = current_df['Video Results'].apply(lambda x: max(1, min(x, 50))) # Clamp 1-50
+            current_df['Video Results'] = current_df['Video Results'].apply(lambda x: max(1, min(x, 100))) # Clamp 1-50
         except Exception: current_df['Video Results'] = 5
         current_df['Topic'] = current_df['Topic'].fillna('').astype(str).str.strip()
         current_df['Search Term'] = current_df['Search Term'].fillna('').astype(str).str.strip()
