@@ -368,7 +368,8 @@ def search_tiktok_links_google(api_keys, cx_id, query, num_results=20, max_retri
                     'q': search_query_on_google,
                     'num': min(max_per_page, num_results - len(video_links_info)),
                     'start': start,
-                    'searchType' :'image'
+                    'searchType' :'image',
+                    'gl' : 'us'
                 }
 
                 response = requests.get("https://customsearch.googleapis.com/customsearch/v1", params=params, timeout=15)
