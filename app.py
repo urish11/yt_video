@@ -1941,7 +1941,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
                 #                 ) 
                 generated_term= gemini_text_lib(f"""You are a Viral Video Ad Scout tasked with finding top YouTube Shorts search terms that reveal
                                                  visually compelling, user-generated content perfect for remixing into high-performing Facebook video ads.
-                                                 Given a topic, return 4 concise, emotionally engaging, remix-ready search terms (one being the topic itself),
+                                                 Given a topic, return 4 concise,  remix-ready search terms (one being the topic itself),
                                                  each ending with #shorts and separated by |\n\n\{topic}""", model ='gemini-2.5-flash-preview-04-17')
                 if not generated_term:
                     st.warning(f"Failed to generate search terms for '{topic}'. Skipping.", icon="🤖")
