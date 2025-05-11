@@ -354,13 +354,14 @@ def search_tiktok_links_google(api_keys, cx_id, query, num_results=20, max_retri
     max_per_page = 10
     video_links_info = []
 
-    st.write(f"\nSearching Google for TikTok links with: '{search_query_on_google}'...")
+    
     query = query.split("|")
     num_results = num_results // len (query)  +1
     for term in query:
 
         # search_query_on_google = f"{query.replace("#","").replace('shorts','')} site:www.tiktok.com/@"
         search_query_on_google = f" site:tiktok.com inurl:/video/ {term.replace("#","").replace('shorts','').replace("'","")} "
+        st.write(f"\nSearching Google for TikTok links with: '{search_query_on_google}'...")
 
 
         for start in range(1, num_results + 1, max_per_page):
