@@ -407,7 +407,7 @@ def search_youtube(api_key, query, max_results_per_term=5,max_retries = 5):
     #             break  # this term exhausted
 
     # return video_links_info
-def search_tiktok_links_google(api_keys, cx_id, query, num_results=20, max_retries=3):
+def search_tiktok_links_google(api_keys, cx_id, query, num_results=20, max_retries=6):
     """
     Searches for TikTok video pages using Google Custom Search API, supporting pagination for more than 10 results.
     Args:
