@@ -350,7 +350,9 @@ def search_tiktok_links_google(api_keys, cx_id, query, num_results=20, max_retri
     import requests, time
     from urllib.parse import urlencode
 
-    search_query_on_google = f"{query.replace("#","").replace('shorts','')} site:www.tiktok.com/@"
+    # search_query_on_google = f"{query.replace("#","").replace('shorts','')} site:www.tiktok.com/@"
+    search_query_on_google = f" site:tiktok.com inurl:/video/ {query.replace("#","").replace('shorts','')} "
+
     max_per_page = 10
     video_links_info = []
 
@@ -375,7 +377,7 @@ def search_tiktok_links_google(api_keys, cx_id, query, num_results=20, max_retri
                 response = requests.get("https://customsearch.googleapis.com/customsearch/v1", params=params, timeout=15)
                 response.raise_for_status()
                 results_data = response.json()
-                # st.text(results_data)
+                st.text(results_data)
 
                 if 'items' in results_data:
                     for item in results_data['items']:
