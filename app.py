@@ -350,72 +350,77 @@ def search_tiktok_links_google(api_keys, cx_id, query, num_results=20, max_retri
     import requests, time 
     from urllib.parse import urlencode
 
-    # search_query_on_google = f"{query.replace("#","").replace('shorts','')} site:www.tiktok.com/@"
-    search_query_on_google = f" site:tiktok.com inurl:/video/ {query.replace("#","").replace('shorts','').replace("'","")} "
 
     max_per_page = 10
     video_links_info = []
 
     st.write(f"\nSearching Google for TikTok links with: '{search_query_on_google}'...")
+    query = query.split("|")
+    num_results = num_results // len (query)  +1
+    for term in query:
 
-    for start in range(1, num_results + 1, max_per_page):
-        tries = 0
-        while tries < max_retries:
-            
-            try:
-                api_key = random.choice(api_keys)
-                params = {
-                    'key': api_key,
-                    'cx': cx_id,
-                    'q': search_query_on_google,
-                    'num': min(max_per_page, num_results - len(video_links_info)),
-                    'start': start,
-                    'searchType' :'image',
-                    'gl' : 'us'
-                }
-
-                response = requests.get("https://customsearch.googleapis.com/customsearch/v1", params=params, timeout=15)
-                response.raise_for_status()
-                results_data = response.json()
-                st.text(results_data)
-
-                if 'items' in results_data:
-                    for item in results_data['items']:
-                        title = item.get("title", "")
-                        url = item['image'].get("contextLink", "")
-                        video_id = url.split("/")[-1]
-                        # thumbnail_url = item['image'].get("thumbnailLink", "")
-                        thumbnail_url = item.get("link", "")
+        # search_query_on_google = f"{query.replace("#","").replace('shorts','')} site:www.tiktok.com/@"
+        search_query_on_google = f" site:tiktok.com inurl:/video/ {term.replace("#","").replace('shorts','').replace("'","")} "
 
 
-                        if 'video' in url:
-                            video_links_info.append({
-                                'title': title,
-                                'url': url,
-                                'thumbnail_url': thumbnail_url,
-                                'videoId': video_id,
-                                'platform': 'tk'
-                            })
+        for start in range(1, num_results + 1, max_per_page):
+            tries = 0
+            while tries < max_retries:
+                
+                try:
+                    api_key = random.choice(api_keys)
+                    params = {
+                        'key': api_key,
+                        'cx': cx_id,
+                        'q': search_query_on_google,
+                        'num': min(max_per_page, num_results - len(video_links_info)),
+                        'start': start,
+                        'searchType' :'image',
+                        'gl' : 'us'
+                    }
 
-                break  # success, break retry loop
+                    response = requests.get("https://customsearch.googleapis.com/customsearch/v1", params=params, timeout=15)
+                    response.raise_for_status()
+                    results_data = response.json()
+                    st.text(results_data)
 
-            except requests.exceptions.RequestException as e:
-                st.warning(f"[Attempt {tries+1}] Request error: {e}")
-            except Exception as e:
-                st.error(f"Unexpected error: {e}")
-                import traceback
-                st.error(traceback.format_exc())
+                    if 'items' in results_data:
+                        for item in results_data['items']:
+                            title = item.get("title", "")
+                            url = item['image'].get("contextLink", "")
+                            video_id = url.split("/")[-1]
+                            # thumbnail_url = item['image'].get("thumbnailLink", "")
+                            thumbnail_url = item.get("link", "")
 
-            tries += 1
-            if tries < max_retries:
-                time.sleep(1)
 
-        if tries == max_retries:
-            st.error(f"Failed after {max_retries} retries on page starting at result {start}.")
-            break
+                            if 'video' in url:
+                                video_links_info.append({
+                                    'title': title,
+                                    'url': url,
+                                    'thumbnail_url': thumbnail_url,
+                                    'videoId': video_id,
+                                    'platform': 'tk'
+                                })
 
-        if len(video_links_info) >= num_results:
-            break
+                    break  # success, break retry loop
+
+                except requests.exceptions.RequestException as e:
+                    st.warning(f"[Attempt {tries+1}] Request error: {e}")
+                except Exception as e:
+                    st.error(f"Unexpected error: {e}")
+                    import traceback
+                    st.error(traceback.format_exc())
+
+                tries += 1
+                if tries < max_retries:
+                    time.sleep(1)
+
+            if tries == max_retries:
+                st.error(f"Failed after {max_retries} retries on page starting at result {start}.")
+                break
+
+            if len(video_links_info) >= num_results:
+                break
 
     return video_links_info[:num_results] if video_links_info else None
 
