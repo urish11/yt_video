@@ -1494,7 +1494,7 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic, lang
             )
         except Exception as e:
             st.status(f"blur_subtitles_in_video_unified error: {e}")
-            input()
+            st.stop()
         base_video = VideoFileClip(local_vid_path, audio=False, target_resolution=(720, 1280))
 
         video_duration = base_video.duration
