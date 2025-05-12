@@ -2351,7 +2351,17 @@ if st.session_state.api_search_results:
 
                                     try:
                                             
-                                        st.image(thumbnail_url, use_container_width=False, caption="Video Thumbnail",width=200)
+                                        # st.image(thumbnail_url, use_container_width=False, caption="Video Thumbnail",width=200)
+                                        st.markdown(
+                                            f"""
+                                            <div style="text-align: center;">
+                                                <img src="{thumbnail_url}" alt="Video Thumbnail" width="200" style="margin:auto; display:block;" />
+                                                <p style="font-size: small; color: gray;">Video Thumbnail</p>
+                                            </div>
+                                            """,
+                                            unsafe_allow_html=True
+)
+
    
                                     except:pass
 
