@@ -1522,22 +1522,24 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic, lang
         # Ensure target_resolution is set for potential resizing during load
         with tempfile.NamedTemporaryFile(delete=False, suffix="_blurred.mp4") as tmp_blur_file:
             blurred_vid_path = tmp_blur_file.name
+        if is_blur:
+            try:
+                st.text("blur_subtitles_in_video_unified")
+                blur_subtitles_in_video_unified(
+                    local_vid_path,
+                    blurred_vid_path,
+                    sample_time_sec=3.0,
+                    ocr_min_confidence=10,
+                    ocr_y_start_ratio=0.05, # Adjust if subtitles are higher/lower
+                    ocr_padding=20,
+                    blur_kernel_size=(51, 51), # Stronger blur
+                    # tesseract_cmd_path=r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+                    debug_save_frames=True # Set to True to see intermediate images
+                )
+                local_vid_path = blurred_vid_path
+            except Exception as e:
+                st.status(f"blur_subtitles_in_video_unified error: {e}")
 
-        try:
-            st.text("blur_subtitles_in_video_unified")
-            blur_subtitles_in_video_unified(
-                local_vid_path,
-                blurred_vid_path,
-                sample_time_sec=3.0,
-                ocr_min_confidence=10,
-                ocr_y_start_ratio=0.05, # Adjust if subtitles are higher/lower
-                ocr_padding=20,
-                blur_kernel_size=(51, 51), # Stronger blur
-                # tesseract_cmd_path=r"C:\Program Files\Tesseract-OCR\tesseract.exe",
-                debug_save_frames=True # Set to True to see intermediate images
-            )
-        except Exception as e:
-            st.status(f"blur_subtitles_in_video_unified error: {e}")
         base_video = VideoFileClip(local_vid_path, audio=False, target_resolution=(720, 1280))
 
         video_duration = base_video.duration
@@ -2002,6 +2004,7 @@ clear_button = col2.button("🧹 Clear All", use_container_width=True, type="sec
 # with_music_rand = col2.checkbox("With BG music randomly?", value=False)
 is_youtube = col1.checkbox("YT") 
 is_tiktok = col1.checkbox("tk")
+is_blur = col2.checkbox("Blur captions?")
 if clear_button:
     # Reset all relevant states
     st.session_state.selected_videos = {}
