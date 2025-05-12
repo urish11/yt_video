@@ -2507,10 +2507,10 @@ if st.session_state.api_search_results:
                             st.info(f"Searching with new term '{new_manual_term}' for topic: {topic_for_group}...")
                             # Search YouTube with the new manual term, using the original count for this topic
                             if platform == 'yt':
-                                new_videos = search_youtube(youtube_api_key_secret, new_ai_generated_terms, count_from_editor)
+                                new_videos = search_youtube(youtube_api_key_secret, new_manual_term, count_from_editor)
                             elif platform == 'tk':
 
-                                new_videos = search_tiktok_links_google(youtube_api_key_secret,"331dbbc80d31342af",new_ai_generated_terms,count_from_editor)
+                                new_videos = search_tiktok_links_google(youtube_api_key_secret,"331dbbc80d31342af",new_manual_term,count_from_editor)
 
                             
 
