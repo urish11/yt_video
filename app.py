@@ -286,13 +286,13 @@ def blur_subtitles_in_video_unified(
         print(f"Error: Input video '{video_path}' not found.")
         return
 
-    if tesseract_cmd_path:
-        pytesseract.pytesseract.tesseract_cmd = tesseract_cmd_path
-        print(f"Using Tesseract from: {tesseract_cmd_path}")
-    elif os.name == 'nt' and not any(os.access(os.path.join(path, 'tesseract.exe'), os.X_OK) for path in os.environ["PATH"].split(os.pathsep)):
-        # Basic check for Tesseract in PATH on Windows if no explicit path given
-        print("Warning: Tesseract command path not specified and tesseract.exe might not be in PATH.")
-        print("If OCR fails, please provide 'tesseract_cmd_path'.")
+    # if tesseract_cmd_path:
+    #     pytesseract.pytesseract.tesseract_cmd = tesseract_cmd_path
+    #     print(f"Using Tesseract from: {tesseract_cmd_path}")
+    # elif os.name == 'nt' and not any(os.access(os.path.join(path, 'tesseract.exe'), os.X_OK) for path in os.environ["PATH"].split(os.pathsep)):
+    #     # Basic check for Tesseract in PATH on Windows if no explicit path given
+    #     print("Warning: Tesseract command path not specified and tesseract.exe might not be in PATH.")
+    #     print("If OCR fails, please provide 'tesseract_cmd_path'.")
 
 
     print(f"Loading video: {video_path}")
@@ -1494,7 +1494,6 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic, lang
             )
         except Exception as e:
             st.status(f"blur_subtitles_in_video_unified error: {e}")
-            st.stop()
         base_video = VideoFileClip(local_vid_path, audio=False, target_resolution=(720, 1280))
 
         video_duration = base_video.duration
