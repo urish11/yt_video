@@ -95,7 +95,7 @@ SUBTITLE_WORDS_PER_GROUP = 2 # Group words for subtitles
 SUBTITLE_COLOR = '#FFFF00' # Yellow
 SUBTITLE_BG_COLOR = 'rgba(0, 0, 0, 0.6)' # Semi-transparent black
 st.set_page_config(layout="wide", page_title="YouTube Video Generator", page_icon="🎥")
-SCRIPT_VER_OPTIONS =create_combos(["default", "default_v2", "1st_person" ,"mix"])
+SCRIPT_VER_OPTIONS =create_combos(["default", "default_v2", "1st_person" ])
 BG_VER_OPTIONS =[True, False, "mix"]
 TTS_VOICE_OPTIONS = create_combos(['sage','redneck','announcer'])
 # --- Load Secrets ---
