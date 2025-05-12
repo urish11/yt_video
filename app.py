@@ -33,6 +33,8 @@ if 'resolved_vid_urls' not in st.session_state:
   st.session_state['resolved_vid_urls'] = {} # youtube_url: dlp_info_dict
 
 logging.basicConfig(level=logging.DEBUG, force=True)
+os.write(1,b'Something was executed.\n')
+
 
 try:
     from moviepy.editor import (
