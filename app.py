@@ -2351,7 +2351,7 @@ if st.session_state.api_search_results:
 
                                     try:
                                             
-                                        st.image(thumbnail_url, use_container_width=True, caption="Video Thumbnail",width=200)
+                                        st.image(thumbnail_url, use_container_width=True, caption="Video Thumbnail",width=100)
    
                                     except:pass
 
