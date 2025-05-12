@@ -2289,8 +2289,8 @@ if st.session_state.api_search_results:
             else:
                 num_videos = len(videos)
                 num_cols = 3 # Adjust number of columns as desired
-                # if platfrom == 'tk':
-                #     num_cols = 4 
+                if platfrom == 'tk':
+                    num_cols = 5 
                 for i in range(0, num_videos, num_cols):
                     cols = st.columns(num_cols)
                     for j in range(num_cols):
@@ -2350,20 +2350,21 @@ if st.session_state.api_search_results:
                                         thumbnail_url = thumbnail
 
                                     try:
-                                            
-                                        # st.image(thumbnail_url, use_container_width=False, caption="Video Thumbnail",width=200)
-                                        st.markdown(
-    f"""
-    <div style="text-align: center;">
-        <img src="{thumbnail_url}" alt="Video Thumbnail" width="200"
-             style="margin:auto; display:block; border-radius: 12px;" />
-        <p style="font-size: small; color: gray;">Video Thumbnail</p>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+                                        if platform == 'yt':
+                                            st.image(thumbnail_url, use_container_width=False, caption="Video Thumbnail",width=200)
+                                        if platform == 'tk':
+                                            st.markdown(
+                                                            f"""
+                                                            <div style="text-align: center;">
+                                                                <img src="{thumbnail_url}" alt="Video Thumbnail" width="200"
+                                                                    style="margin:auto; display:block; border-radius: 8px;" />
+                                                                <p style="font-size: small; color: gray;">Video Thumbnail</p>
+                                                            </div>
+                                                            """,
+                                                            unsafe_allow_html=True
+                                                        )
 
-   
+    
                                     except:pass
 
                                 toggle_label = "🔼 Hide" if st.session_state[show_video_key] else "▶️ Show"
