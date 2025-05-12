@@ -219,6 +219,7 @@ def blur_subtitles_in_video_unified(
             # Pytesseract will use the tesseract_cmd set by the parent function (if any),
             # or search in PATH otherwise.
             ocr_data = pytesseract.image_to_data(frame_pil_local, output_type=pytesseract.Output.DICT)
+            st.text(ocr_data)
         except pytesseract.TesseractNotFoundError:
             logging.error(
                 "TESSERACT NOT FOUND. On Streamlit Cloud, ensure 'tesseract-ocr' (and language packs like 'tesseract-ocr-eng') "
