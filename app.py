@@ -1128,7 +1128,7 @@ def generate_audio_with_timestamps(text, client, voice_id="sage"):
 
     except Exception as e:
         st.error(f"OpenAI API Error in TTS/Timestamp: {e}", icon="🤖")
-        last_error = api_err
+        # last_error = api_err
   
 
     # --- Cleanup on Error ---
@@ -1518,7 +1518,7 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic, lang
         if is_blur:
             try:
                 st.text("blur_subtitles_in_video_unified")
-                blur_subtitles_in_video_unified(
+                res = blur_subtitles_in_video_unified(
                     local_vid_path,
                     blurred_vid_path,
                     sample_time_sec=3.0,
@@ -1529,7 +1529,8 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic, lang
                     # tesseract_cmd_path=r"C:\Program Files\Tesseract-OCR\tesseract.exe",
                     debug_save_frames=True # Set to True to see intermediate images
                 )
-                local_vid_path = blurred_vid_path
+                if res:
+                    local_vid_path = blurred_vid_path
             except Exception as e:
                 st.status(f"blur_subtitles_in_video_unified error: {e}")
 
