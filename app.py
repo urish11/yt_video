@@ -1038,7 +1038,7 @@ def generate_audio_with_timestamps(text, client, voice_id="sage"):
             raise ValueError("Input text for TTS cannot be empty.")
 
         instructions_per_voice ={
-            'redneck': {'instructions':'talk like an older ameircan redneck heavy accent. deep voice','voice' :'ash'},
+            'redneck': {'instructions':'talk like an older ameircan redneck heavy accent. deep voice, enthusiastic','voice' :'ash'},
             'announcer': {'instructions':'Polished announcer voice, American accent','voice' :'ash'}
 
 
