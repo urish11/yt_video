@@ -17,6 +17,7 @@ from io import BytesIO
 import anthropic # Make sure anthropic client is installed: pip install anthropic
 import moviepy.audio.fx.all as afx
 from google import genai
+import itertools
 # Ensure MoviePy is installed: pip install moviepy
 # Ensure Pillow is installed: pip install Pillow
 # Ensure pydub is installed: pip install pydub
@@ -56,6 +57,12 @@ try:
 except ImportError:
     st.error("Missing required library: boto3. Please install it.")
     st.stop()
+def create_combos(items):
+    all_combos = []
+    for r in range(1, len(items)+1):
+        all_combos.extend(itertools.combinations(items, r))
+    return all_combos
+
 
 # --- Configuration ---
 YOUTUBE_API_BASE_URL = "https://www.googleapis.com/youtube/v3/search"
@@ -88,9 +95,9 @@ SUBTITLE_WORDS_PER_GROUP = 2 # Group words for subtitles
 SUBTITLE_COLOR = '#FFFF00' # Yellow
 SUBTITLE_BG_COLOR = 'rgba(0, 0, 0, 0.6)' # Semi-transparent black
 st.set_page_config(layout="wide", page_title="YouTube Video Generator", page_icon="🎥")
-SCRIPT_VER_OPTIONS =["default", "default_v2", "1st_person" ,"mix"]
+SCRIPT_VER_OPTIONS =create_combos(["default", "default_v2", "1st_person" ,"mix"])
 BG_VER_OPTIONS =[True, False, "mix"]
-TTS_VOICE_OPTIONS =['sage','redneck','announcer']
+TTS_VOICE_OPTIONS = create_combos(['sage','redneck','announcer'])
 # --- Load Secrets ---
 try:
     GEMINI_API_KEY =st.secrets.get("GEMINI_API_KEY")
@@ -165,6 +172,7 @@ except Exception as e:
     pass # Continue without patch
 
 # --- Helper Function: create_topic_summary_dataframe ---
+
 def create_topic_summary_dataframe(selected_videos_dict):
     """
     Creates a DataFrame summarizing generated videos grouped by a normalized
@@ -1725,7 +1733,7 @@ edited_df = st.sidebar.data_editor(
         "Topic": st.column_config.TextColumn("Topic"),
         "Search Term": st.column_config.TextColumn("Search Term (or 'auto')"),
         "BG Music": st.column_config.SelectboxColumn("BG Music", options=BG_VER_OPTIONS, default=False, required=True),
-        "TTS Voice": st.column_config.SelectboxColumn("TTS Voice", options=TTS_VOICE_OPTIONS, default="sage", required=False)
+        "TTS Voice": st.column_config.SelectboxColumn("TTS Voice", options=TTS_VOICE_OPTIONS, default="sage", required=True)
         },
     num_rows="dynamic",
     use_container_width=True,
