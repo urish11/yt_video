@@ -180,7 +180,8 @@ except Exception as e:
 
 
 def blur_subtitles_in_video_unified(
-    video_path, # Input path
+    video_path,
+    output_path, # This MUST be different from video_path
     sample_time_sec=5.0,
     ocr_min_confidence=40,
     ocr_y_start_ratio=0.70,
@@ -190,21 +191,22 @@ def blur_subtitles_in_video_unified(
     debug_save_frames=False
 ):
     """
-    Loads a video, determines a subtitle bounding box, blurs this region,
-    and returns the processed MoviePy VideoClip object (or the original if no blur).
-    Returns None on critical failure.
-    The CALLER is responsible for closing the returned clip object.
+    Loads a video, determines a subtitle bounding box from a sample frame using
+    Pytesseract, and then blurs this region throughout the video.
+    Saves the processed video to output_path.
     """
 
-    # --- Nested Helper Functions (_determine_subtitle_bbox_from_frame, _blur_region_in_frame) ---
-    # (Keep these as they are, ensuring no st.* calls in _determine_subtitle_bbox_from_frame)
+    # --- Nested Helper Function: Determine Subtitle Bounding Box ---
     def _determine_subtitle_bbox_from_frame(
-        frame_pil_local, min_confidence_local, expected_y_start_ratio_local, padding_local
+        frame_pil_local,
+        min_confidence_local,
+        expected_y_start_ratio_local,
+        padding_local
     ):
-        # ... (Same logic as before, ensure no st.image/st.text)
-        # ... (Use logging for debug, save debug_ocr_sample_input_for_blur.png if needed)
         try:
-            if debug_save_frames:
+            # CRITICAL: Removed Streamlit st.image and st.text calls
+            # For debugging OCR:
+            if debug_save_frames: # You can control this with the main function's arg
                 try:
                     frame_pil_local.save("debug_ocr_sample_input_for_blur.png")
                     logging.info("Saved 'debug_ocr_sample_input_for_blur.png'")
@@ -212,10 +214,15 @@ def blur_subtitles_in_video_unified(
                     logging.warning(f"Could not save debug_ocr_sample_input_for_blur.png: {e_save_debug}")
 
             ocr_data = pytesseract.image_to_data(frame_pil_local, output_type=pytesseract.Output.DICT)
-            logging.debug(f"OCR Data for blur function: {ocr_data}")
+            logging.debug(f"OCR Data for blur function: {ocr_data}") # Use logging
 
         except pytesseract.TesseractNotFoundError:
-            logging.error("BLUR_FUNC: TESSERACT NOT FOUND...") # Truncated for brevity
+            logging.error(
+                "BLUR_FUNC: TESSERACT NOT FOUND. On Streamlit Cloud, ensure 'tesseract-ocr' "
+                "is in packages.txt. Locally, ensure Tesseract is installed and in PATH, "
+                "or provide tesseract_cmd_path."
+            )
+            logging.error(f"BLUR_FUNC: Pytesseract's current tesseract_cmd: '{pytesseract.pytesseract.tesseract_cmd}'")
             return None
         except Exception as e:
             logging.error(f"BLUR_FUNC: An error occurred during Pytesseract OCR: {e}")
@@ -230,8 +237,12 @@ def blur_subtitles_in_video_unified(
             confidence = int(ocr_data['conf'][i])
             if confidence > min_confidence_local:
                 text = ocr_data['text'][i].strip()
-                if not text: continue
-                x, y, w, h = (ocr_data['left'][i], ocr_data['top'][i], ocr_data['width'][i], ocr_data['height'][i])
+                if not text:
+                    continue
+                x, y, w, h = (
+                    ocr_data['left'][i], ocr_data['top'][i],
+                    ocr_data['width'][i], ocr_data['height'][i]
+                )
                 if (y + (h / 2)) > expected_subtitle_y_start_pixel:
                     subtitle_word_boxes.append((x, y, x + w, y + h))
 
@@ -243,33 +254,43 @@ def blur_subtitles_in_video_unified(
         min_y = min(b[1] for b in subtitle_word_boxes)
         max_x = max(b[2] for b in subtitle_word_boxes)
         max_y = max(b[3] for b in subtitle_word_boxes)
-        final_bbox = (max(0, min_x - padding_local), max(0, min_y - padding_local),
-                      min(img_width, max_x + padding_local), min(img_height, max_y + padding_local))
+
+        final_bbox = (
+            max(0, min_x - padding_local), max(0, min_y - padding_local),
+            min(img_width, max_x + padding_local), min(img_height, max_y + padding_local)
+        )
         logging.info(f"BLUR_FUNC: Determined subtitle bounding box: {final_bbox}")
         return final_bbox
 
+    # --- Nested Helper Function: Blur a Region in a Frame ---
     def _blur_region_in_frame(frame_np_local, bbox_local, kernel_local):
-        if bbox_local is None: return frame_np_local
+        if bbox_local is None:
+            return frame_np_local
         x1, y1, x2, y2 = [int(c) for c in bbox_local]
         h_img, w_img = frame_np_local.shape[:2]
         x1, y1 = max(0, x1), max(0, y1)
         x2, y2 = min(w_img, x2), min(h_img, y2)
+
         if x1 >= x2 or y1 >= y2: return frame_np_local
         region_to_blur = frame_np_local[y1:y2, x1:x2]
         if region_to_blur.size == 0: return frame_np_local
+
         blurred_region = cv2.GaussianBlur(region_to_blur, kernel_local, 0)
         output_frame = frame_np_local.copy()
         output_frame[y1:y2, x1:x2] = blurred_region
         return output_frame
-    # --- End Nested Helper Functions ---
 
+    # --- Main logic of blur_subtitles_in_video_unified ---
     if not os.path.exists(video_path):
         logging.error(f"BLUR_FUNC: Input video not found: '{video_path}'")
-        return None
+        return False # Indicate failure
+
+    if video_path == output_path:
+        logging.error(f"BLUR_FUNC: Input path and output path cannot be the same: '{video_path}'")
+        return False # Indicate failure
 
     original_pytesseract_cmd = pytesseract.pytesseract.tesseract_cmd
     tesseract_path_was_set = False
-    # ... (Tesseract path configuration logic - keep as is) ...
     if tesseract_cmd_path and tesseract_cmd_path.strip():
         if os.path.exists(tesseract_cmd_path) and os.access(tesseract_cmd_path, os.X_OK):
             try:
@@ -283,84 +304,101 @@ def blur_subtitles_in_video_unified(
     else:
         logging.info("BLUR_FUNC: No explicit Tesseract path. Using system PATH.")
 
-
-    input_clip = None # Clip loaded from video_path
-    blurred_clip_object = None # Result of fl_image
-
+    clip = None
+    processed_clip = None
     try:
         logging.info(f"BLUR_FUNC: Loading video: {video_path}")
-        input_clip = VideoFileClip(video_path,audio=False, target_resolution=(720, 1280))
+        clip = VideoFileClip(video_path)
 
-        valid_sample_time_sec = input_clip.duration - 0.1 if input_clip.duration > 0 else 0
+        # Ensure sample_time_sec is within video duration
+        valid_sample_time_sec = clip.duration - 0.1 if clip.duration > 0 else 0
         sample_time_sec = min(sample_time_sec, valid_sample_time_sec)
-        sample_time_sec = max(0, sample_time_sec)
+        sample_time_sec = max(0, sample_time_sec) # ensure non-negative
 
         logging.info(f"BLUR_FUNC: Extracting sample frame at {sample_time_sec:.2f}s...")
-        sample_frame_np = input_clip.get_frame(sample_time_sec)
+        sample_frame_np = clip.get_frame(sample_time_sec)
         sample_frame_pil = Image.fromarray(sample_frame_np)
 
-        if debug_save_frames: # Save original sample frame
-            sample_frame_pil.save("debug_blur_sample_frame_original.png")
-
+        if debug_save_frames:
+            try:
+                sample_frame_pil.save("debug_blur_sample_frame.png")
+                logging.info("BLUR_FUNC: Saved 'debug_blur_sample_frame.png'")
+            except Exception as e_save:
+                logging.warning(f"BLUR_FUNC: Could not save debug_blur_sample_frame.png: {e_save}")
+        
         logging.info("BLUR_FUNC: Determining subtitle bounding box...")
         subtitle_bbox = _determine_subtitle_bbox_from_frame(
             sample_frame_pil, ocr_min_confidence, ocr_y_start_ratio, ocr_padding
         )
 
         if subtitle_bbox is None:
-            logging.warning("BLUR_FUNC: Could not determine subtitle bbox. Returning original clip unmodified.")
-            # DO NOT close input_clip here, as we are returning it.
-            # The caller will be responsible for closing it.
-            return input_clip
+            logging.warning("BLUR_FUNC: Could not determine subtitle bbox. Blurring will not be applied.")
+            # If no bbox, we might just copy the original to output_path or return indication
+            # For now, let's assume we want to output the original if no blur region found.
+            # Or, simply return False and let caller handle it.
+            # A robust way is to copy the file if no processing happens:
+            # import shutil
+            # shutil.copy(video_path, output_path)
+            # logging.info(f"BLUR_FUNC: Copied original video to {output_path} as no blur region found.")
+            # return True # Indicate success (copying is success in this context)
+            # --- OR ---
+            return False # Indicate that blurring did not happen, let caller decide.
 
-        if debug_save_frames: # Save sample frame with bbox
-            # ... (logic to draw rectangle and save debug_blur_sample_frame_with_bbox.png) ...
+        if debug_save_frames:
             try:
                 frame_viz = np.array(sample_frame_pil.copy())
-                cv2.rectangle(frame_viz, (int(subtitle_bbox[0]), int(subtitle_bbox[1])),
-                              (int(subtitle_bbox[2]), int(subtitle_bbox[3])), (0, 255, 0), 3)
+                cv2.rectangle(frame_viz,
+                              (int(subtitle_bbox[0]), int(subtitle_bbox[1])),
+                              (int(subtitle_bbox[2]), int(subtitle_bbox[3])),
+                              (0, 255, 0), 3)
                 Image.fromarray(frame_viz).save("debug_blur_sample_frame_with_bbox.png")
-            except Exception as e_df: logging.warning(f"Could not save debug bbox frame: {e_df}")
-
+                logging.info("BLUR_FUNC: Saved 'debug_blur_sample_frame_with_bbox.png'.")
+            except Exception as e_save_bbox:
+                logging.warning(f"BLUR_FUNC: Could not save debug_blur_sample_frame_with_bbox.png: {e_save_bbox}")
 
         def _process_frame_for_moviepy(frame_np_moviepy):
             return _blur_region_in_frame(frame_np_moviepy, subtitle_bbox, blur_kernel_size)
 
-        logging.info("BLUR_FUNC: Applying blur to video frames (in memory)...")
-        blurred_clip_object = input_clip.fl_image(_process_frame_for_moviepy)
+        logging.info("BLUR_FUNC: Applying blur to video frames...")
+        processed_clip = clip.fl_image(_process_frame_for_moviepy)
         
-        # CRITICAL: The original input_clip is now processed into blurred_clip_object.
-        # We should close the original input_clip as fl_image creates a new clip object.
-        if input_clip:
-            try:
-                input_clip.close()
-                logging.info("BLUR_FUNC: Closed original input clip after fl_image.")
-            except Exception as e_close:
-                logging.warning(f"BLUR_FUNC: Error closing original input_clip: {e_close}")
-        input_clip = None # Mark as closed
+        output_dir = os.path.dirname(output_path)
+        if output_dir and not os.path.exists(output_dir):
+            os.makedirs(output_dir) # Ensure output directory exists
 
-        logging.info(f"BLUR_FUNC: Successfully processed video in memory. Returning blurred clip object.")
-        return blurred_clip_object # Return the new, blurred clip
+        logging.info(f"BLUR_FUNC: Writing blurred video to: {output_path}")
+        
+        # Optimized write_videofile call
+        ffmpeg_params_list = ['-movflags', 'faststart'] # Basic for web
+        output_fps = clip.fps if clip.fps and clip.fps > 0 else 24
+        num_threads = os.cpu_count() or 2 # Sensible default
+
+        processed_clip.write_videofile(
+            output_path,
+            codec="libx264",
+            audio_codec="aac", # Retains original audio or adds silent if none
+            threads=num_threads,
+            fps=output_fps,
+            preset='medium', # Balance between speed and quality
+            logger='bar', # Or None
+            ffmpeg_params=ffmpeg_params_list
+        )
+        logging.info(f"BLUR_FUNC: Successfully processed and saved blurred video to: {output_path}")
+        return True # Indicate success
 
     except Exception as e:
         logging.error(f"BLUR_FUNC: Error during video blurring for '{video_path}': {e}", exc_info=True)
-        if input_clip: # Ensure original clip is closed on any error
-            try: input_clip.close()
-            except: pass
-        # blurred_clip_object is unlikely to be valid if an error occurred, no need to close explicitly here.
-        return None # Indicate failure
+        return False # Indicate failure
     finally:
-        # If input_clip still exists here, it means an error occurred AND it wasn't the one returned,
-        # or it was the one meant to be returned but an error happened before return.
-        # This ensures it's closed if it wasn't handled in the try/except return paths.
-        if input_clip:
-            try: input_clip.close()
+        if clip:
+            try: clip.close()
+            except: pass
+        if processed_clip:
+            try: processed_clip.close()
             except: pass
         if tesseract_path_was_set:
             pytesseract.pytesseract.tesseract_cmd = original_pytesseract_cmd
             logging.info("BLUR_FUNC: Restored original Pytesseract command path.")
-
-
 
 
 
@@ -1455,7 +1493,7 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic, lang
     resized_base_video = None
     clips_for_composite = []
     local_vid_path = None # To store the path of the downloaded base video
-    base_video_object_for_processing = None
+
     try:
         # 1. Download the base video using yt-dlp
         # Note: Using the DIRECT URL fetched earlier by get_yt_dlp_info
@@ -1481,15 +1519,15 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic, lang
             # input()
 
             local_vid_path = download_with_ytdlp(base_video_url)
-
-        
         # Ensure target_resolution is set for potential resizing during load
+        with tempfile.NamedTemporaryFile(delete=False, suffix="_blurred.mp4") as tmp_blur_file:
+            blurred_vid_path = tmp_blur_file.name
         if is_blur:
             try:
                 st.text("blur_subtitles_in_video_unified")
-                base_video = blur_subtitles_in_video_unified(
+                blur_subtitles_in_video_unified(
                     local_vid_path,
-                    
+                    blurred_vid_path,
                     sample_time_sec=3.0,
                     ocr_min_confidence=10,
                     ocr_y_start_ratio=0.05, # Adjust if subtitles are higher/lower
@@ -1498,13 +1536,12 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic, lang
                     # tesseract_cmd_path=r"C:\Program Files\Tesseract-OCR\tesseract.exe",
                     debug_save_frames=True # Set to True to see intermediate images
                 )
-                
+                local_vid_path = blurred_vid_path
             except Exception as e:
-                base_video = VideoFileClip(local_vid_path, audio=False, target_resolution=(720, 1280))
                 st.status(f"blur_subtitles_in_video_unified error: {e}")
-        else:
-            base_video = VideoFileClip(local_vid_path, audio=False, target_resolution=(720, 1280))
-        
+
+        base_video = VideoFileClip(local_vid_path, audio=False, target_resolution=(720, 1280))
+
         video_duration = base_video.duration
         w = int(base_video.w) if base_video.w else 720
         h = int(base_video.h) if base_video.h else 1280
@@ -1967,7 +2004,7 @@ clear_button = col2.button("🧹 Clear All", use_container_width=True, type="sec
 # with_music_rand = col2.checkbox("With BG music randomly?", value=False)
 is_youtube = col1.checkbox("YT") 
 is_tiktok = col1.checkbox("tk")
-is_blur = col2.checkbox("Blur captions?", value=True)
+is_blur = col2.checkbox("Blur captions?")
 if clear_button:
     # Reset all relevant states
     st.session_state.selected_videos = {}
