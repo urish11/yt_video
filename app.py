@@ -1126,17 +1126,10 @@ def generate_audio_with_timestamps(text, client, voice_id="sage"):
         # Return path even if timings are empty, but signal timings issue
         return temp_audio_path, word_timings
 
-    except OpenAI.APIError as api_err:
-        st.error(f"OpenAI API Error in TTS/Timestamp: {api_err}", icon="🤖")
-        last_error = api_err
-    except ValueError as ve:
-        st.error(f"Value Error in TTS/Timestamp: {ve}", icon="📄")
-        last_error = ve
     except Exception as e:
-        st.error(f"Unexpected error in TTS/Timestamp generation: {repr(e)}", icon="💥")
-        import traceback
-        traceback.logging.info_exc()
-        last_error = e
+        st.error(f"OpenAI API Error in TTS/Timestamp: {e}", icon="🤖")
+        last_error = api_err
+  
 
     # --- Cleanup on Error ---
     if temp_audio_path and os.path.exists(temp_audio_path):
