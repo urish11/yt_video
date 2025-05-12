@@ -1725,7 +1725,7 @@ edited_df = st.sidebar.data_editor(
         "Topic": st.column_config.TextColumn("Topic"),
         "Search Term": st.column_config.TextColumn("Search Term (or 'auto')"),
         "BG Music": st.column_config.SelectboxColumn("BG Music", options=BG_VER_OPTIONS, default=False, required=True),
-        "TTS Voice": st.column_config.SelectboxColumn("TTS Voice", options=TTS_VOICE_OPTIONS, default="sage", required=True)
+        "TTS Voice": st.column_config.SelectboxColumn("TTS Voice", options=TTS_VOICE_OPTIONS, default="sage", required=False)
         },
     num_rows="dynamic",
     use_container_width=True,
