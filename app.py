@@ -2357,6 +2357,8 @@ if st.session_state.api_search_results:
                                             <div style="text-align: center;">
                                                 <img src="{thumbnail_url}" alt="Video Thumbnail" width="200" style="margin:auto; display:block;" />
                                                 <p style="font-size: small; color: gray;">Video Thumbnail</p>
+                                                style="margin:auto; display:block; border-radius: 50%;"
+
                                             </div>
                                             """,
                                             unsafe_allow_html=True
