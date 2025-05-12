@@ -2447,42 +2447,42 @@ if st.session_state.api_search_results:
 
             # --- "Search More" Logic Placed After Video Grid, Within term_container ---
             st.markdown("---") # Visual separator
+            if input_search_term_from_editor.lower() == 'auto':
+                if st.button("🔎 Search More Auto Terms", key=f"search_more_btn_{search_key}"):
+                    # st.text(input_search_term_from_editor.lower() +'ss')
+                    
+                        # "Auto Mode": Generate NEW AI terms for the original topic and then search
+                        st.info(f"Attempting to generate NEW search terms for 'auto' topic: {topic_for_group}...")
+                        new_ai_generated_terms = None
+                        try:
+                            
+                            # Replace with your actual LLM call
+                            new_ai_generated_terms = chatGPT(AUTO_TERMS_PROMPT + topic_for_group,client=openai_client) # model="gemini-2.5-flash-preview-04-17"
+                            # Or: new_ai_generated_terms = chatGPT(prompt_for_new_terms, client=openai_client)
+                            # Or: new_ai_generated_terms = claude(prompt_for_new_terms)
 
-            if st.button("🔎 Search More / Refine This Topic's Search", key=f"search_more_btn_{search_key}"):
-                # st.text(input_search_term_from_editor.lower() +'ss')
-                if input_search_term_from_editor.lower() == 'auto':
-                    # "Auto Mode": Generate NEW AI terms for the original topic and then search
-                    st.info(f"Attempting to generate NEW search terms for 'auto' topic: {topic_for_group}...")
-                    new_ai_generated_terms = None
-                    try:
-                        
-                        # Replace with your actual LLM call
-                        new_ai_generated_terms = chatGPT(AUTO_TERMS_PROMPT + topic_for_group,client=openai_client) # model="gemini-2.5-flash-preview-04-17"
-                        # Or: new_ai_generated_terms = chatGPT(prompt_for_new_terms, client=openai_client)
-                        # Or: new_ai_generated_terms = claude(prompt_for_new_terms)
-
-                        if not new_ai_generated_terms or not new_ai_generated_terms.strip():
-                            st.error(f"LLM failed to generate new valid terms for '{topic_for_group}'. Original results retained.")
-                        else:
-                            st.write(f"Newly generated terms for '{topic_for_group}': {new_ai_generated_terms}")
-                            # Search YouTube with these NEW terms, using the original count for this topic
-                            if platform == 'yt':
-                                new_videos = search_youtube(youtube_api_key_secret, new_ai_generated_terms, count_from_editor)
-                            elif platform == 'tk':
-
-                                new_videos = search_tiktok_links_google(youtube_api_key_secret,"331dbbc80d31342af",new_ai_generated_terms,count_from_editor)
-                            if new_videos is not None: # search_youtube returns [] for no results, None for critical error
-                                st.session_state.api_search_results[search_key]['videos'] = new_videos
-                                st.session_state.api_search_results[search_key]['original_term'] = new_ai_generated_terms # Update displayed term
-                                st.toast(f"Fetched new 'auto' results for '{topic_for_group}' using fresh AI terms.", icon="🔄")
+                            if not new_ai_generated_terms or not new_ai_generated_terms.strip():
+                                st.error(f"LLM failed to generate new valid terms for '{topic_for_group}'. Original results retained.")
                             else:
-                                st.toast(f"Failed to fetch new 'auto' results for '{topic_for_group}'. Search API error.", icon="⚠️")
-                            st.rerun()
-                    except Exception as e:
-                        st.error(f"An error occurred while generating new terms or searching: {e}")
-                        # Not rerunning here to allow user to see the error
+                                st.write(f"Newly generated terms for '{topic_for_group}': {new_ai_generated_terms}")
+                                # Search YouTube with these NEW terms, using the original count for this topic
+                                if platform == 'yt':
+                                    new_videos = search_youtube(youtube_api_key_secret, new_ai_generated_terms, count_from_editor)
+                                elif platform == 'tk':
 
-                else: # Original input_search_term was not 'auto', so this is for manual refinement
+                                    new_videos = search_tiktok_links_google(youtube_api_key_secret,"331dbbc80d31342af",new_ai_generated_terms,count_from_editor)
+                                if new_videos is not None: # search_youtube returns [] for no results, None for critical error
+                                    st.session_state.api_search_results[search_key]['videos'] = new_videos
+                                    st.session_state.api_search_results[search_key]['original_term'] = new_ai_generated_terms # Update displayed term
+                                    st.toast(f"Fetched new 'auto' results for '{topic_for_group}' using fresh AI terms.", icon="🔄")
+                                else:
+                                    st.toast(f"Failed to fetch new 'auto' results for '{topic_for_group}'. Search API error.", icon="⚠️")
+                                st.rerun()
+                        except Exception as e:
+                            st.error(f"An error occurred while generating new terms or searching: {e}")
+                            # Not rerunning here to allow user to see the error
+                if st.button("🔎 Search More Auto Terms", key=f"search_more_btn_{search_key}"):
+                 # Original input_search_term was not 'auto', so this is for manual refinement
                     st.session_state.search_more_manual_input_visible[search_key] = not st.session_state.search_more_manual_input_visible[search_key]
                     if not st.session_state.search_more_manual_input_visible[search_key]: # If hiding, clear query
                         st.session_state.search_more_manual_query[search_key] = ""
