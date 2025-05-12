@@ -15,4 +15,3 @@ google-genai
 pytesseract
 opencv-python
 tesseract-ocr
-tesseract-ocr-eng 
