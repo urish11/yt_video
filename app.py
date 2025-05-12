@@ -1072,7 +1072,7 @@ def generate_audio_with_timestamps(text, client, voice_id="sage"):
         else:
              st.warning("Whisper did not return word timestamps in the expected format.", icon="⏱️")
              # Log the response structure for debugging if necessary
-             print( flush=True,value="Unexpected transcription response structure:", transcribe_response)
+             print( "Unexpected transcription response structure:", transcribe_response)
 
 
         # Return path and timings if successful
