@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # <<< START: IMPORT STATEMENTS AND HELPER FUNCTIONS >>> 
 import streamlit as st
+import logging
 import requests
 import pandas as pd
 import json
@@ -126,6 +127,7 @@ openai_client = get_openai_client()
 # Note: Anthropic client doesn't benefit as much from @st.cache_resource
 # as it's typically lightweight to initialize. Initialize it where needed or globally.
 # client = anthropic.Anthropic(api_key=anthropic_api_key) # Or initialize inside claude function
+logging.basicConfig(level=logging.INFO)
 
 @st.cache_resource
 def get_s3_client():
