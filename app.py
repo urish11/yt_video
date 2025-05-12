@@ -214,7 +214,7 @@ def blur_subtitles_in_video_unified(
         try:
             ocr_data = pytesseract.image_to_data(frame_pil_local, output_type=pytesseract.Output.DICT)
         except pytesseract.TesseractNotFoundError:
-            print( flush=True,value= flush=True,value= "ERROR: Tesseract not found. Please ensure it's installed and in your PATH,")
+            print(  flush=True,value= "ERROR: Tesseract not found. Please ensure it's installed and in your PATH,")
             print( flush=True,value="or set the TESSDATA_PREFIX environment variable, or provide tesseract_cmd_path.")
             return None
         except Exception as e:
