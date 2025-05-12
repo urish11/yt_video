@@ -2399,6 +2399,8 @@ if st.session_state.batch_processing_active and st.session_state.generation_queu
                         st.write(f"1/5: Generating script (Angle: {script_ver})...")
                         if script_ver == "mix":
                             script_ver_temp = random.choice([opt for opt in SCRIPT_VER_OPTIONS if opt != 'mix'])
+                        if ',' in script_ver:
+                            script_ver_temp = random.choice(script_ver.split(","))
                         else:
                             script_ver_temp = script_ver
                         # --- Construct the full script prompt based on script_ver_temp ---
@@ -2504,13 +2506,14 @@ You are an expert scriptwriter for high-performing short-form video ads. Generat
 
                          # --- 3. select voice id ---
 
-                        voice_id = tts_voice
 
 
                         # --- 3. Generate TTS ---
+                        if ',' in tts_voice:
+                            tts_voice_temp = random.choice(tts_voice.split(","))
                         st.write(f"2/5: Generating TTS audio & timestamps...")
                         audio_path, word_timings = generate_audio_with_timestamps(
-                            script_text, client=openai_client, voice_id=voice_id
+                            script_text, client=openai_client, voice_id=tts_voice_temp
                         )
                         if audio_path is None or word_timings is None: # Check both for failure
                             raise ValueError("Failed to generate TTS audio or timestamps.")
