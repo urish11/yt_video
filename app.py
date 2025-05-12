@@ -289,7 +289,7 @@ def blur_subtitles_in_video_unified(
 
     try:
         logging.info(f"BLUR_FUNC: Loading video: {video_path}")
-        input_clip = VideoFileClip(video_path)
+        input_clip = VideoFileClip(video_path,audio=False, target_resolution=(720, 1280))
 
         valid_sample_time_sec = input_clip.duration - 0.1 if input_clip.duration > 0 else 0
         sample_time_sec = min(sample_time_sec, valid_sample_time_sec)
@@ -1504,7 +1504,7 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic, lang
                 st.status(f"blur_subtitles_in_video_unified error: {e}")
         else:
             base_video = VideoFileClip(local_vid_path, audio=False, target_resolution=(720, 1280))
-
+        
         video_duration = base_video.duration
         w = int(base_video.w) if base_video.w else 720
         h = int(base_video.h) if base_video.h else 1280
