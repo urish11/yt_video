@@ -14,4 +14,3 @@ anthropic
 google-genai
 pytesseract
 opencv-python
-tesseract-ocr
