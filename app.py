@@ -32,6 +32,7 @@ import pytesseract
 if 'resolved_vid_urls' not in st.session_state:
   st.session_state['resolved_vid_urls'] = {} # youtube_url: dlp_info_dict
 
+logging.basicConfig(level=logging.DEBUG, force=True)
 
 try:
     from moviepy.editor import (
@@ -127,7 +128,6 @@ openai_client = get_openai_client()
 # Note: Anthropic client doesn't benefit as much from @st.cache_resource
 # as it's typically lightweight to initialize. Initialize it where needed or globally.
 # client = anthropic.Anthropic(api_key=anthropic_api_key) # Or initialize inside claude function
-logging.basicConfig(level=logging.DEBUG)
 
 @st.cache_resource
 def get_s3_client():
