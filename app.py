@@ -1543,7 +1543,7 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic, lang
                 local_vid_path,
                 local_vid_path,
                 sample_time_sec=3.0,
-                ocr_min_confidence=15,
+                ocr_min_confidence=10,
                 ocr_y_start_ratio=0.05, # Adjust if subtitles are higher/lower
                 ocr_padding=20,
                 blur_kernel_size=(30, 30), # Stronger blur
