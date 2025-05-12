@@ -41,7 +41,7 @@ try:
     try:
         import moviepy.video.fx.resize as moviepy_resize
     except ImportError:
-        print( flush=True,value="Note: moviepy.video.fx.resize not found (may be integrated in newer MoviePy).")
+        print("Note: moviepy.video.fx.resize not found (may be integrated in newer MoviePy).")
         moviepy_resize = None # Define as None if not found
 
     from pydub import AudioSegment
@@ -166,11 +166,11 @@ try:
             return np.array(resized)
 
         moviepy_resize.resizer = patched_resizer
-        print( flush=True,value="Applied patched resizer.")
+        print("Applied patched resizer.")
     else:
-         print( flush=True,value="Skipping resizer patch: moviepy.video.fx.resize not found.")
+         print("Skipping resizer patch: moviepy.video.fx.resize not found.")
 except Exception as e:
-    print( flush=True,value=f"Could not apply patched resizer: {e}")
+    print(f"Could not apply patched resizer: {e}")
     pass # Continue without patch
 
 # --- Helper Function: create_topic_summary_dataframe ---
@@ -214,11 +214,11 @@ def blur_subtitles_in_video_unified(
         try:
             ocr_data = pytesseract.image_to_data(frame_pil_local, output_type=pytesseract.Output.DICT)
         except pytesseract.TesseractNotFoundError:
-            print(  flush=True,value= "ERROR: Tesseract not found. Please ensure it's installed and in your PATH,")
-            print( flush=True,value="or set the TESSDATA_PREFIX environment variable, or provide tesseract_cmd_path.")
+            print(  "ERROR: Tesseract not found. Please ensure it's installed and in your PATH," ,flush=True)
+            print("or set the TESSDATA_PREFIX environment variable, or provide tesseract_cmd_path.",flush=True)
             return None
         except Exception as e:
-            print( flush=True,value=f"An error occurred during OCR: {e}")
+            print(f"An error occurred during OCR: {e}",flush=True)
             return None
 
         n_boxes = len(ocr_data['level'])
@@ -242,7 +242,7 @@ def blur_subtitles_in_video_unified(
                     subtitle_word_boxes.append((x, y, x + w, y + h))
 
         if not subtitle_word_boxes:
-            print( flush=True,value="No subtitle-like text found in the expected region or with sufficient confidence on the sample frame.")
+            print("No subtitle-like text found in the expected region or with sufficient confidence on the sample frame.",flush=True)
             return None
 
         min_x = min(b[0] for b in subtitle_word_boxes)
@@ -256,7 +256,7 @@ def blur_subtitles_in_video_unified(
             min(img_width, max_x + padding_local),
             min(img_height, max_y + padding_local),
         )
-        print( flush=True,value=f"Determined subtitle bounding box (x1,y1,x2,y2): {final_bbox}")
+        print(f"Determined subtitle bounding box (x1,y1,x2,y2): {final_bbox}",flush=True)
         return final_bbox
 
     # --- Nested Helper Function: Blur a Region in a Frame ---
@@ -283,40 +283,40 @@ def blur_subtitles_in_video_unified(
 
     # --- Main logic of blur_subtitles_in_video_unified ---
     if not os.path.exists(video_path):
-        print( flush=True,value=f"Error: Input video '{video_path}' not found.")
+        print(f"Error: Input video '{video_path}' not found.",flush=True)
         return
 
     # if tesseract_cmd_path:
     #     pytesseract.pytesseract.tesseract_cmd = tesseract_cmd_path
-    #     print( flush=True,value=f"Using Tesseract from: {tesseract_cmd_path}")
+    #     print(f"Using Tesseract from: {tesseract_cmd_path}")
     # elif os.name == 'nt' and not any(os.access(os.path.join(path, 'tesseract.exe'), os.X_OK) for path in os.environ["PATH"].split(os.pathsep)):
     #     # Basic check for Tesseract in PATH on Windows if no explicit path given
-    #     print( flush=True,value="Warning: Tesseract command path not specified and tesseract.exe might not be in PATH.")
-    #     print( flush=True,value="If OCR fails, please provide 'tesseract_cmd_path'.")
+    #     print("Warning: Tesseract command path not specified and tesseract.exe might not be in PATH.")
+    #     print("If OCR fails, please provide 'tesseract_cmd_path'.")
 
 
-    print( flush=True,value=f"Loading video: {video_path}")
+    print(f"Loading video: {video_path}",flush=True)
     clip = None
     processed_clip = None
     try:
         clip = VideoFileClip(video_path)
     except Exception as e:
-        print( flush=True,value=f"Error loading video '{video_path}': {e}")
+        print(f"Error loading video '{video_path}': {e}",flush=True)
         return
 
-    print( flush=True,value=f"Extracting sample frame at {sample_time_sec} seconds...")
+    print(f"Extracting sample frame at {sample_time_sec} seconds...",flush=True)
     try:
         sample_frame_np = clip.get_frame(sample_time_sec)
         sample_frame_pil = Image.fromarray(sample_frame_np)
         if debug_save_frames:
             sample_frame_pil.save("debug_sample_frame.png")
-            print( flush=True,value="Saved 'debug_sample_frame.png'")
+            print("Saved 'debug_sample_frame.png'",flush=True)
     except Exception as e:
-        print( flush=True,value=f"Error extracting sample frame: {e}")
+        print(f"Error extracting sample frame: {e}",flush=True)
         if clip: clip.close()
         return
 
-    print( flush=True,value="Determining subtitle bounding box using Pytesseract...")
+    print("Determining subtitle bounding box using Pytesseract...",flush=True)
     subtitle_bbox = _determine_subtitle_bbox_from_frame(
         sample_frame_pil,
         ocr_min_confidence,
@@ -325,7 +325,7 @@ def blur_subtitles_in_video_unified(
     )
 
     if subtitle_bbox is None:
-        print( flush=True,value="Could not determine subtitle bounding box. Aborting video processing.")
+        print("Could not determine subtitle bounding box. Aborting video processing.",flush=True)
         if clip: clip.close()
         return
 
@@ -336,26 +336,26 @@ def blur_subtitles_in_video_unified(
                       (int(subtitle_bbox[2]), int(subtitle_bbox[3])),
                       (0, 255, 0), 3) # Thicker line for visibility
         Image.fromarray(frame_viz).save("debug_sample_frame_with_bbox.png")
-        print( flush=True,value="Saved 'debug_sample_frame_with_bbox.png' for verification.")
+        print("Saved 'debug_sample_frame_with_bbox.png' for verification.",flush=True)
 
     # This closure will capture subtitle_bbox and blur_kernel_size
     def _process_frame_for_moviepy(frame_np_moviepy):
         return _blur_region_in_frame(frame_np_moviepy, subtitle_bbox, blur_kernel_size)
 
-    print( flush=True,value="Applying blur to video frames...")
+    print("Applying blur to video frames...",flush=True)
     try:
         processed_clip = clip.fl_image(_process_frame_for_moviepy)
         # Ensure output directory exists if output_path includes a path
         output_dir = os.path.dirname(output_path)
         if output_dir and not os.path.exists(output_dir):
             os.makedirs(output_dir)
-            print( flush=True,value=f"Created output directory: {output_dir}")
+            print(f"Created output directory: {output_dir}",flush=True)
 
         processed_clip.write_videofile(output_path, codec="libx264", audio_codec="aac")
-        print( flush=True,value=f"Successfully processed video saved to: {output_path}")
+        print(f"Successfully processed video saved to: {output_path}",flush=True)
     except Exception as e:
-        print( flush=True,value=f"Error during video processing or writing to '{output_path}': {e}")
-        print( flush=True,value="Ensure FFmpeg is installed and accessible by MoviePy. Check write permissions.")
+        print(f"Error during video processing or writing to '{output_path}': {e}",flush=True)
+        print("Ensure FFmpeg is installed and accessible by MoviePy. Check write permissions.",flush=True)
     finally:
         if clip: clip.close()
         if processed_clip: processed_clip.close()
@@ -598,7 +598,7 @@ def search_youtube(api_key, query, max_results_per_term=5,max_retries = 5):
     #                 break
 
     #             except Exception as e:
-    #                 print( flush=True,value=f"[Retry {tries+1}] Error: {e}")
+    #                 print(f"[Retry {tries+1}] Error: {e}")
     #                 tries += 1
     #                 if tries < max_retries:
     #                     time.sleep(1)
@@ -725,9 +725,9 @@ def get_yt_dlp_info(video_url):
     # Add cookiefile only if path exists
     if COOKIE_FILE_PATH and os.path.exists(COOKIE_FILE_PATH):
         YDL_OPTS['cookiefile'] = COOKIE_FILE_PATH
-        print( flush=True,value=f"yt-dlp: Using cookie file: {COOKIE_FILE_PATH}")
+        print(f"yt-dlp: Using cookie file: {COOKIE_FILE_PATH}")
     elif COOKIE_FILE_PATH:
-        print( flush=True,value=f"yt-dlp: Cookie file path provided but not found: {COOKIE_FILE_PATH}")
+        print(f"yt-dlp: Cookie file path provided but not found: {COOKIE_FILE_PATH}")
 
 
     try:
@@ -746,7 +746,7 @@ def get_yt_dlp_info(video_url):
             # --- Fallback: Check 'formats' list if top-level 'url' is missing ---
             # This can happen for some sites or if specific format selection failed slightly differently
             if not direct_url and 'formats' in info:
-                print( flush=True,value=f"yt-dlp: Top-level URL missing for {video_url}. Checking formats list...")
+                print(f"yt-dlp: Top-level URL missing for {video_url}. Checking formats list...")
                 selected_format = None
                 # Check the format yt-dlp claims it selected first
                 if format_id != 'N/A':
@@ -766,7 +766,7 @@ def get_yt_dlp_info(video_url):
 
 
                 if selected_format:
-                    print( flush=True,value=f"yt-dlp: Found URL in formats list (Format ID: {selected_format.get('format_id')})")
+                    print(f"yt-dlp: Found URL in formats list (Format ID: {selected_format.get('format_id')})")
                     direct_url = selected_format.get('url')
                     # Update details based on the found format
                     format_id = selected_format.get('format_id', format_id)
@@ -793,7 +793,7 @@ def get_yt_dlp_info(video_url):
                 }
             else:
                 # Log available info if URL extraction failed unexpectedly
-                print( flush=True,value=f"Warning: Could not extract direct URL for {video_url} even after checking formats. Info keys: {info.keys()}")
+                print(f"Warning: Could not extract direct URL for {video_url} even after checking formats. Info keys: {info.keys()}")
                 # Try to find a reason
                 reason = "Unknown reason"
                 if info.get('availability'): reason = f"Availability: {info['availability']}"
@@ -854,10 +854,10 @@ def download_vid_ytdlp(video_url, output_dir="downloads", filename_template="%(t
                 downloaded_file = os.path.splitext(downloaded_file)[0] + '.mp4'
             return downloaded_file
     except yt_dlp.utils.DownloadError as e:
-        print( flush=True,value=f"[yt-dlp error] {e}")
+        print(f"[yt-dlp error] {e}")
         return None
     except Exception as e:
-        print( flush=True,value=f"[unexpected error] {e}")
+        print(f"[unexpected error] {e}")
         return None
 # --- Helper Function: Generate Script with ChatGPT ---
 
@@ -911,7 +911,7 @@ def chatGPT(prompt, client, model="gpt-4o", temperature=1.0):
         return content
     except Exception as e:
         st.error(f"Error calling OpenAI (Model: {model}): {e}", icon="🤖")
-        # Consider logging the full error: print( flush=True,value=f"OpenAI Error: {e}")
+        # Consider logging the full error: print(f"OpenAI Error: {e}")
         return None
 
 
@@ -975,7 +975,7 @@ def claude(prompt , model = "claude-3-7-sonnet-20250219", temperature=1 , is_thi
         
         
         
-            print( flush=True,value=message)
+            print(message)
             return message.content[0].text
 
         except Exception as e:
@@ -1033,7 +1033,7 @@ def generate_audio_with_timestamps(text, client, voice_id="sage"):
             # Adjust dB boost as needed (+6 dB approx doubles loudness)
             boosted_audio = boosted_audio + 8 # Boost by 8 dB
             boosted_audio.export(temp_audio_path, format="mp3")
-            # print( flush=True,value=f"Audio volume boosted for {temp_audio_path}") # Debug log
+            # print(f"Audio volume boosted for {temp_audio_path}") # Debug log
         except Exception as boost_err:
             st.warning(f"Could not boost audio volume: {boost_err}", icon="🔊")
 
@@ -1072,7 +1072,7 @@ def generate_audio_with_timestamps(text, client, voice_id="sage"):
         else:
              st.warning("Whisper did not return word timestamps in the expected format.", icon="⏱️")
              # Log the response structure for debugging if necessary
-             print( "Unexpected transcription response structure:", transcribe_response)
+             print("Unexpected transcription response structure:", transcribe_response)
 
 
         # Return path and timings if successful
@@ -1100,7 +1100,7 @@ def generate_audio_with_timestamps(text, client, voice_id="sage"):
     if temp_audio_path and os.path.exists(temp_audio_path):
         try:
             os.remove(temp_audio_path)
-            print( flush=True,value=f"Cleaned up temp audio file on error: {temp_audio_path}") # Debug log
+            print(f"Cleaned up temp audio file on error: {temp_audio_path}") # Debug log
         except Exception as rm_err:
             st.warning(f"Could not remove temp audio file {temp_audio_path} during error handling: {rm_err}")
 
@@ -1130,9 +1130,9 @@ def group_words_with_timing(word_timings, words_per_group=2):
                            "end": end_time
                       })
                  # else: # Optional: Log skipped groups
-                 #    print( flush=True,value=f"Skipping invalid subtitle group: {group_words_data}")
+                 #    print(f"Skipping invalid subtitle group: {group_words_data}")
             # else: # Optional: Log missing start/end
-            #    print( flush=True,value=f"Skipping group due to missing time data: {group_words_data}")
+            #    print(f"Skipping group due to missing time data: {group_words_data}")
 
     return grouped_timings
 
@@ -1340,7 +1340,7 @@ def download_with_ytdlp(video_url, cookie_file_path=None):
             # Add cookie option if path is valid and file exists
             'cookiefile': cookie_file_path if cookie_file_path and os.path.exists(cookie_file_path) else None,
             # Add progress hook for potential Streamlit progress bar update (advanced)
-            # 'progress_hooks': [lambda d: print( flush=True,value=d['status'], d.get('filename'))], # Example hook
+            # 'progress_hooks': [lambda d: print(d['status'], d.get('filename'))], # Example hook
         }
 
         st.write(f"⏳ Starting yt-dlp download to: {temp_path}")
@@ -1403,7 +1403,7 @@ def download_direct_url(url, suffix=".mp4"):
         # Create a temporary file
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
             local_path = temp_file.name
-            print( flush=True,value=f"Attempting to download direct URL '{url}' to temp file: {local_path}")
+            print(f"Attempting to download direct URL '{url}' to temp file: {local_path}")
 
             # Make the request, stream=True for potentially large files
             with requests.get(url, stream=True, timeout=60, headers=headers) as response:
@@ -1412,19 +1412,19 @@ def download_direct_url(url, suffix=".mp4"):
                 for chunk in response.iter_content(chunk_size=8192):
                     temp_file.write(chunk)
 
-        print( flush=True,value=f"✔️ Direct download successful: {local_path}")
+        print(f"✔️ Direct download successful: {local_path}")
         # Basic check
         if os.path.getsize(local_path) == 0:
-            print( flush=True,value=f"⚠️ Warning: Direct download resulted in an empty file: {local_path}")
+            print(f"⚠️ Warning: Direct download resulted in an empty file: {local_path}")
             # Optionally remove empty file?
             # os.remove(local_path)
             # return None
         return local_path
 
     except requests.exceptions.RequestException as e:
-        print( flush=True,value=f"❌ Direct Download failed (Network/HTTP Error): {e}")
+        print(f"❌ Direct Download failed (Network/HTTP Error): {e}")
     except Exception as e:
-        print( flush=True,value=f"❌ Direct Download failed (Other Error): {e}")
+        print(f"❌ Direct Download failed (Other Error): {e}")
 
     # Cleanup on failure
     if local_path and os.path.exists(local_path):
@@ -1861,7 +1861,7 @@ def sync_search_data():
         # Update the main session state and create a fresh snapshot
         st.session_state.search_data = current_df.reset_index(drop=True)
         st.session_state.search_data_snapshot = st.session_state.search_data.copy()
-        # print( flush=True,value="Data editor sync complete.") # Debug log
+        # print("Data editor sync complete.") # Debug log
     except Exception as sync_err:
          st.error(f"Error syncing data editor state: {sync_err}")
          # Fallback: Keep the previous state? Or reset?
@@ -2526,9 +2526,9 @@ if not st.session_state.batch_processing_active:
 
                     if standard_url and standard_url in st.session_state.get('resolved_vid_urls', {}):
                         dlp_info = st.session_state['resolved_vid_urls'][standard_url]
-                        print( flush=True,value=f"Cache hit for {standard_url}") # Debug
+                        print(f"Cache hit for {standard_url}") # Debug
                     elif standard_url:
-                        print( flush=True,value=f"Cache miss - Fetching NEW URL info for {standard_url}") # Debug
+                        print(f"Cache miss - Fetching NEW URL info for {standard_url}") # Debug
                         # Fetch info using yt-dlp helper function
                         dlp_info = get_yt_dlp_info(standard_url)
                         # Update cache ONLY if fetch was successful AND returned a direct URL
