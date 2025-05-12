@@ -2353,15 +2353,14 @@ if st.session_state.api_search_results:
                                             
                                         # st.image(thumbnail_url, use_container_width=False, caption="Video Thumbnail",width=200)
                                         st.markdown(
-                                            f"""
-                                            <div style="text-align: center;">
-                                                <img src="{thumbnail_url}" alt="Video Thumbnail" width="200" style="margin:auto; display:block;" />
-                                                <p style="font-size: small; color: gray;">Video Thumbnail</p>
-                                                style="margin:auto; display:block; border-radius: 50%;"
-
-                                            </div>
-                                            """,
-                                            unsafe_allow_html=True
+    f"""
+    <div style="text-align: center;">
+        <img src="{thumbnail_url}" alt="Video Thumbnail" width="200"
+             style="margin:auto; display:block; border-radius: 12px;" />
+        <p style="font-size: small; color: gray;">Video Thumbnail</p>
+    </div>
+    """,
+    unsafe_allow_html=True
 )
 
    
