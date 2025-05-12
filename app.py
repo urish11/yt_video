@@ -2489,7 +2489,7 @@ if st.session_state.api_search_results:
                     st.rerun()
 
             # --- Manual input section (conditionally displayed) ---
-            if st.session_state.search_more_manual_input_visible.get(search_key, False):
+            if st.session_state.search_more_manual_input_visible.get(search_key, False): 
                 cols_manual = st.columns([0.7, 0.3]) # Adjust column ratios as needed
                 with cols_manual[0]:
                     st.session_state.search_more_manual_query[search_key] = st.text_input(
