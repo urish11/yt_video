@@ -1479,19 +1479,22 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic, lang
             local_vid_path = download_with_ytdlp(base_video_url)
         # Ensure target_resolution is set for potential resizing during load
 
-
-        blur_subtitles_in_video_unified(
-            local_vid_path,
-            local_vid_path,
-            sample_time_sec=3.0,
-            ocr_min_confidence=20,
-            ocr_y_start_ratio=0.15, # Adjust if subtitles are higher/lower
-            ocr_padding=20,
-            blur_kernel_size=(71, 71), # Stronger blur
-            # tesseract_cmd_path=r"C:\Program Files\Tesseract-OCR\tesseract.exe",
-            debug_save_frames=True # Set to True to see intermediate images
-        )
-
+        try:
+            st.text("blur_subtitles_in_video_unified")
+            blur_subtitles_in_video_unified(
+                local_vid_path,
+                local_vid_path,
+                sample_time_sec=3.0,
+                ocr_min_confidence=20,
+                ocr_y_start_ratio=0.15, # Adjust if subtitles are higher/lower
+                ocr_padding=20,
+                blur_kernel_size=(71, 71), # Stronger blur
+                # tesseract_cmd_path=r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+                debug_save_frames=True # Set to True to see intermediate images
+            )
+        except Exception as e:
+            st.status(f"blur_subtitles_in_video_unified error: {e}")
+            input()
         base_video = VideoFileClip(local_vid_path, audio=False, target_resolution=(720, 1280))
 
         video_duration = base_video.duration
