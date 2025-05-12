@@ -2193,7 +2193,7 @@ if st.session_state.api_search_results:
                     try:
                         
                         # Replace with your actual LLM call
-                        new_ai_generated_terms = chatGPT(AUTO_TERMS_PROMPT,client=openai_client) # model="gemini-2.5-flash-preview-04-17"
+                        new_ai_generated_terms = chatGPT(AUTO_TERMS_PROMPT + topic_for_group,client=openai_client) # model="gemini-2.5-flash-preview-04-17"
                         # Or: new_ai_generated_terms = chatGPT(prompt_for_new_terms, client=openai_client)
                         # Or: new_ai_generated_terms = claude(prompt_for_new_terms)
 
@@ -2202,8 +2202,11 @@ if st.session_state.api_search_results:
                         else:
                             st.write(f"Newly generated terms for '{topic_for_group}': {new_ai_generated_terms}")
                             # Search YouTube with these NEW terms, using the original count for this topic
-                            new_videos = search_youtube(youtube_api_key_secret, new_ai_generated_terms, count_from_editor)
+                            if platform == 'yt':
+                                new_videos = search_youtube(youtube_api_key_secret, new_ai_generated_terms, count_from_editor)
+                            elif platform == 'tk':
 
+                                search_tiktok_links_google(youtube_api_key_secret,"331dbbc80d31342af",new_ai_generated_terms,count_from_editor)
                             if new_videos is not None: # search_youtube returns [] for no results, None for critical error
                                 st.session_state.api_search_results[search_key]['videos'] = new_videos
                                 st.session_state.api_search_results[search_key]['original_term'] = new_ai_generated_terms # Update displayed term
