@@ -2206,7 +2206,7 @@ if st.session_state.api_search_results:
                                 new_videos = search_youtube(youtube_api_key_secret, new_ai_generated_terms, count_from_editor)
                             elif platform == 'tk':
 
-                                search_tiktok_links_google(youtube_api_key_secret,"331dbbc80d31342af",new_ai_generated_terms,count_from_editor)
+                                new_videos = search_tiktok_links_google(youtube_api_key_secret,"331dbbc80d31342af",new_ai_generated_terms,count_from_editor)
                             if new_videos is not None: # search_youtube returns [] for no results, None for critical error
                                 st.session_state.api_search_results[search_key]['videos'] = new_videos
                                 st.session_state.api_search_results[search_key]['original_term'] = new_ai_generated_terms # Update displayed term
@@ -2242,7 +2242,13 @@ if st.session_state.api_search_results:
                         if new_manual_term:
                             st.info(f"Searching with new term '{new_manual_term}' for topic: {topic_for_group}...")
                             # Search YouTube with the new manual term, using the original count for this topic
-                            new_videos = search_youtube(youtube_api_key_secret, new_manual_term, count_from_editor)
+                            if platform == 'yt':
+                                new_videos = search_youtube(youtube_api_key_secret, new_ai_generated_terms, count_from_editor)
+                            elif platform == 'tk':
+
+                                new_videos = search_tiktok_links_google(youtube_api_key_secret,"331dbbc80d31342af",new_ai_generated_terms,count_from_editor)
+
+                            
 
                             if new_videos is not None:
                                 st.session_state.api_search_results[search_key]['videos'] = new_videos
