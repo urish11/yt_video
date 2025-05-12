@@ -1730,7 +1730,7 @@ edited_df = st.sidebar.data_editor(
     num_rows="dynamic",
     use_container_width=True,
     key="search_topic_editor",
-    on_change=sync_search_data # Sync *after* edits are registered by Streamlit
+    # on_change=sync_search_data # Sync *after* edits are registered by Streamlit
 )
 
 # --- Action Buttons (Sidebar) ---
@@ -1740,7 +1740,7 @@ search_button = col1.button(
     "🔍 Search Videos",
     use_container_width=True,
     disabled=st.session_state.batch_processing_active,
-    # on_click=sync_search_data # Sync now happens via on_change of editor
+    on_click=sync_search_data # Sync now happens via on_change of editor
 )
 clear_button = col2.button("🧹 Clear All", use_container_width=True, type="secondary", disabled=st.session_state.batch_processing_active)
 # with_music = col1.checkbox("With BG music?", value=False)
