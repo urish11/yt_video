@@ -2743,6 +2743,8 @@ You are an expert scriptwriter for high-performing short-form video ads. Generat
                             with_music=current_with_music,
                             platform= platform
                         )
+                        input()
+                        st.stop()
                         if not final_video_path: raise ValueError("Video processing (MoviePy) failed.")
 
                         # --- 5. Construct Unique S3 Filename ---
