@@ -12,6 +12,5 @@ numpy
 ffmpeg-python 
 anthropic
 google-genai
-
 pytesseract
 opencv-python
