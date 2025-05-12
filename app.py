@@ -32,7 +32,7 @@ import pytesseract
 if 'resolved_vid_urls' not in st.session_state:
   st.session_state['resolved_vid_urls'] = {} # youtube_url: dlp_info_dict
 
-logging.basicConfig(level=logging.DEBUG, force=True)
+logging.basicConfig(level=logging.INFO, force=True)
 
 
 try:
