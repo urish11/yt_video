@@ -102,7 +102,7 @@ SUBTITLE_BG_COLOR = 'rgba(0, 0, 0, 0.6)' # Semi-transparent black
 st.set_page_config(layout="wide", page_title="YouTube Video Generator", page_icon="🎥")
 SCRIPT_VER_OPTIONS =create_combos(["default", "default_v2", "1st_person" ])
 BG_VER_OPTIONS =[True, False, "mix"]
-TTS_VOICE_OPTIONS = create_combos(['sage','redneck','announcer'])
+TTS_VOICE_OPTIONS = create_combos(['sage','redneck','announcer','sage uk','announcer uk'])
 # --- Load Secrets ---
 try:
     GEMINI_API_KEY =st.secrets.get("GEMINI_API_KEY")
@@ -1039,7 +1039,9 @@ def generate_audio_with_timestamps(text, client, voice_id="sage"):
 
         instructions_per_voice ={
             'redneck': {'instructions':'talk like an older ameircan redneck heavy accent. deep voice, enthusiastic','voice' :'ash'},
-            'announcer': {'instructions':'Polished announcer voice, American accent','voice' :'ash'}
+            'announcer': {'instructions':'Polished announcer voice, American accent','voice' :'ash'},
+            'sage uk': {'instructions':'Polished announcer voice, British accent','voice' :'sage'},
+            'announcer uk': {'instructions':'Polished announcer voice, British accent','voice' :'ash'}
 
 
 
