@@ -13,6 +13,5 @@ ffmpeg-python
 anthropic
 google-genai
 
-tesseract-ocr
-tesseract-ocr-eng 
+pytesseract
 opencv-python
