@@ -2448,7 +2448,7 @@ if st.session_state.api_search_results:
             # --- "Search More" Logic Placed After Video Grid, Within term_container ---
             st.markdown("---") # Visual separator
             if input_search_term_from_editor.lower() == 'auto':
-                if st.button("🔎 Search More Auto Terms", key=f"search_more_btn_{search_key}"):
+                if st.button("🔎 Search More Auto Terms", key=f"search_more_btn_auto_{search_key}"):
                     # st.text(input_search_term_from_editor.lower() +'ss')
                     
                         # "Auto Mode": Generate NEW AI terms for the original topic and then search
@@ -2481,7 +2481,7 @@ if st.session_state.api_search_results:
                         except Exception as e:
                             st.error(f"An error occurred while generating new terms or searching: {e}")
                             # Not rerunning here to allow user to see the error
-                if st.button("🔎 Search More Auto Terms", key=f"search_more_btn_{search_key}"):
+                if st.button("🔎 Search More Auto Terms", key=f"search_more_btn_manual_{search_key}"):
                  # Original input_search_term was not 'auto', so this is for manual refinement
                     st.session_state.search_more_manual_input_visible[search_key] = not st.session_state.search_more_manual_input_visible[search_key]
                     if not st.session_state.search_more_manual_input_visible[search_key]: # If hiding, clear query
