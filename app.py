@@ -2682,7 +2682,7 @@ if st.session_state.batch_processing_active and st.session_state.generation_queu
 * **NO:** Geographically suggestive terms (e.g., "Near you," "In your area").
 * **NO:** Jargon or overly complex vocabulary.
 * **NO:** DONT make false promises.
-
+NO ('get approved') 'See what's available near you' ' 'available this weekend\month' etc!!!
 
 **Output:** Provide ONLY the raw script text, with no extra explanations or formatting.  """
 
@@ -2711,7 +2711,7 @@ You are an expert scriptwriter for high-performing short-form video ads. Generat
 * Exclude: Fake urgency or scarcity.
 * Exclude: Geographic limitations.
 * Exclude: Complex jargon. Keep words simple.
-
+NO ('get approved') 'See what's available near you' ' 'available this weekend\month' etc!!!
 **Output Requirement:** Return *only* the final script text.
                             
 
@@ -2745,7 +2745,7 @@ You are an expert scriptwriter for high-performing short-form video ads. Generat
                                             - No geographic claims (e.g., "near you," "in your area")
                                             - No "we" or "our" language - keep it personal
                                             - End with "Tap to..." followed by a clear, non-committal action
-                                            * **NO:** DONT make false promises. ('get approved')
+                                            * **NO:** DONT make false promises.NO ('get approved') 'See what's available near you' ' 'available this weekend\month' etc!!!
                                             Return only the script text itself, nothing else.
                                             """
 
