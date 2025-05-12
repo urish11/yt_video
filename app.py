@@ -2772,6 +2772,7 @@ You are an expert scriptwriter for high-performing short-form video ads. Generat
                         # --- 3. Generate TTS ---
                         if ',' in tts_voice:
                             tts_voice_temp = random.choice(tts_voice.split(","))
+                        else: tts_voice_temp = tts_voice
                         st.write(f"2/5: Generating TTS audio & timestamps...")
                         audio_path, word_timings = generate_audio_with_timestamps(
                             script_text, client=openai_client, voice_id=tts_voice_temp
