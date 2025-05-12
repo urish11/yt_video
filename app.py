@@ -1548,7 +1548,7 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic, lang
                 ocr_min_confidence=10,
                 ocr_y_start_ratio=0.05, # Adjust if subtitles are higher/lower
                 ocr_padding=20,
-                blur_kernel_size=(30, 30), # Stronger blur
+                blur_kernel_size=(51, 51), # Stronger blur
                 # tesseract_cmd_path=r"C:\Program Files\Tesseract-OCR\tesseract.exe",
                 debug_save_frames=True # Set to True to see intermediate images
             )
