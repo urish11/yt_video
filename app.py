@@ -2481,7 +2481,7 @@ if st.session_state.api_search_results:
                         except Exception as e:
                             st.error(f"An error occurred while generating new terms or searching: {e}")
                             # Not rerunning here to allow user to see the error
-                if st.button("🔎 Search More Auto Terms", key=f"search_more_btn_manual_{search_key}"):
+                if st.button("🔎 Search More Manual Terms", key=f"search_more_btn_manual_{search_key}"):
                  # Original input_search_term was not 'auto', so this is for manual refinement
                     st.session_state.search_more_manual_input_visible[search_key] = not st.session_state.search_more_manual_input_visible[search_key]
                     if not st.session_state.search_more_manual_input_visible[search_key]: # If hiding, clear query
