@@ -23,6 +23,8 @@ import itertools
 # Ensure pydub is installed: pip install pydub
 # Ensure numpy is installed: pip install numpy
 import numpy as np
+import cv2
+import pytesseract
 
 # --- Try importing moviepy components with error handling ---
 # Cache for resolved yt-dlp direct URLs to avoid refetching for the same video ID within a session
@@ -172,6 +174,191 @@ except Exception as e:
     pass # Continue without patch
 
 # --- Helper Function: create_topic_summary_dataframe ---
+
+
+def blur_subtitles_in_video_unified(
+    video_path,
+    output_path,
+    sample_time_sec=5.0,
+    ocr_min_confidence=40,
+    ocr_y_start_ratio=0.70,
+    ocr_padding=15,
+    blur_kernel_size=(51, 51),
+    tesseract_cmd_path=None,
+    debug_save_frames=False # New: flag to save intermediate frames
+):
+    """
+    Loads a video, determines a subtitle bounding box from a sample frame using
+    Pytesseract, and then blurs this region throughout the video.
+    All logic is encapsulated within this single callable function.
+
+    Args:
+        video_path (str): Path to the input video file.
+        output_path (str): Path to save the processed video file.
+        sample_time_sec (float): Time (in seconds) to extract the sample frame for OCR.
+        ocr_min_confidence (int): Min OCR confidence for subtitle detection.
+        ocr_y_start_ratio (float): Expected y-start for subtitles (0.0 to 1.0 from top).
+        ocr_padding (int): Padding around the detected subtitle box.
+        blur_kernel_size (tuple): Kernel size for Gaussian blur (width, height), must be odd.
+        tesseract_cmd_path (str, optional): Path to Tesseract executable if not in PATH.
+        debug_save_frames (bool): If True, saves the sample frame and bbox visualization.
+    """
+
+    # --- Nested Helper Function: Determine Subtitle Bounding Box ---
+    def _determine_subtitle_bbox_from_frame(
+        frame_pil_local,
+        min_confidence_local,
+        expected_y_start_ratio_local,
+        padding_local
+    ):
+        try:
+            ocr_data = pytesseract.image_to_data(frame_pil_local, output_type=pytesseract.Output.DICT)
+        except pytesseract.TesseractNotFoundError:
+            print("ERROR: Tesseract not found. Please ensure it's installed and in your PATH,")
+            print("or set the TESSDATA_PREFIX environment variable, or provide tesseract_cmd_path.")
+            return None
+        except Exception as e:
+            print(f"An error occurred during OCR: {e}")
+            return None
+
+        n_boxes = len(ocr_data['level'])
+        subtitle_word_boxes = []
+        img_width, img_height = frame_pil_local.size
+        expected_subtitle_y_start_pixel = img_height * expected_y_start_ratio_local
+
+        for i in range(n_boxes):
+            if int(ocr_data['conf'][i]) > min_confidence_local:
+                text = ocr_data['text'][i].strip()
+                if not text:
+                    continue
+
+                x, y, w, h = (
+                    ocr_data['left'][i],
+                    ocr_data['top'][i],
+                    ocr_data['width'][i],
+                    ocr_data['height'][i],
+                )
+                if y + (h / 2) > expected_subtitle_y_start_pixel:
+                    subtitle_word_boxes.append((x, y, x + w, y + h))
+
+        if not subtitle_word_boxes:
+            print("No subtitle-like text found in the expected region or with sufficient confidence on the sample frame.")
+            return None
+
+        min_x = min(b[0] for b in subtitle_word_boxes)
+        min_y = min(b[1] for b in subtitle_word_boxes)
+        max_x = max(b[2] for b in subtitle_word_boxes)
+        max_y = max(b[3] for b in subtitle_word_boxes)
+
+        final_bbox = (
+            max(0, min_x - padding_local),
+            max(0, min_y - padding_local),
+            min(img_width, max_x + padding_local),
+            min(img_height, max_y + padding_local),
+        )
+        print(f"Determined subtitle bounding box (x1,y1,x2,y2): {final_bbox}")
+        return final_bbox
+
+    # --- Nested Helper Function: Blur a Region in a Frame ---
+    def _blur_region_in_frame(frame_np_local, bbox_local, kernel_local):
+        if bbox_local is None:
+            return frame_np_local
+
+        x1, y1, x2, y2 = [int(c) for c in bbox_local]
+        h_img, w_img = frame_np_local.shape[:2]
+        x1, y1 = max(0, x1), max(0, y1)
+        x2, y2 = min(w_img, x2), min(h_img, y2)
+
+        if x1 >= x2 or y1 >= y2:
+            return frame_np_local
+
+        region_to_blur = frame_np_local[y1:y2, x1:x2]
+        if region_to_blur.size == 0:
+            return frame_np_local
+
+        blurred_region = cv2.GaussianBlur(region_to_blur, kernel_local, 0)
+        output_frame = frame_np_local.copy()
+        output_frame[y1:y2, x1:x2] = blurred_region
+        return output_frame
+
+    # --- Main logic of blur_subtitles_in_video_unified ---
+    if not os.path.exists(video_path):
+        print(f"Error: Input video '{video_path}' not found.")
+        return
+
+    if tesseract_cmd_path:
+        pytesseract.pytesseract.tesseract_cmd = tesseract_cmd_path
+        print(f"Using Tesseract from: {tesseract_cmd_path}")
+    elif os.name == 'nt' and not any(os.access(os.path.join(path, 'tesseract.exe'), os.X_OK) for path in os.environ["PATH"].split(os.pathsep)):
+        # Basic check for Tesseract in PATH on Windows if no explicit path given
+        print("Warning: Tesseract command path not specified and tesseract.exe might not be in PATH.")
+        print("If OCR fails, please provide 'tesseract_cmd_path'.")
+
+
+    print(f"Loading video: {video_path}")
+    clip = None
+    processed_clip = None
+    try:
+        clip = VideoFileClip(video_path)
+    except Exception as e:
+        print(f"Error loading video '{video_path}': {e}")
+        return
+
+    print(f"Extracting sample frame at {sample_time_sec} seconds...")
+    try:
+        sample_frame_np = clip.get_frame(sample_time_sec)
+        sample_frame_pil = Image.fromarray(sample_frame_np)
+        if debug_save_frames:
+            sample_frame_pil.save("debug_sample_frame.png")
+            print("Saved 'debug_sample_frame.png'")
+    except Exception as e:
+        print(f"Error extracting sample frame: {e}")
+        if clip: clip.close()
+        return
+
+    print("Determining subtitle bounding box using Pytesseract...")
+    subtitle_bbox = _determine_subtitle_bbox_from_frame(
+        sample_frame_pil,
+        ocr_min_confidence,
+        ocr_y_start_ratio,
+        ocr_padding
+    )
+
+    if subtitle_bbox is None:
+        print("Could not determine subtitle bounding box. Aborting video processing.")
+        if clip: clip.close()
+        return
+
+    if debug_save_frames:
+        frame_viz = np.array(sample_frame_pil.copy())
+        cv2.rectangle(frame_viz,
+                      (int(subtitle_bbox[0]), int(subtitle_bbox[1])),
+                      (int(subtitle_bbox[2]), int(subtitle_bbox[3])),
+                      (0, 255, 0), 3) # Thicker line for visibility
+        Image.fromarray(frame_viz).save("debug_sample_frame_with_bbox.png")
+        print("Saved 'debug_sample_frame_with_bbox.png' for verification.")
+
+    # This closure will capture subtitle_bbox and blur_kernel_size
+    def _process_frame_for_moviepy(frame_np_moviepy):
+        return _blur_region_in_frame(frame_np_moviepy, subtitle_bbox, blur_kernel_size)
+
+    print("Applying blur to video frames...")
+    try:
+        processed_clip = clip.fl_image(_process_frame_for_moviepy)
+        # Ensure output directory exists if output_path includes a path
+        output_dir = os.path.dirname(output_path)
+        if output_dir and not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+            print(f"Created output directory: {output_dir}")
+
+        processed_clip.write_videofile(output_path, codec="libx264", audio_codec="aac")
+        print(f"Successfully processed video saved to: {output_path}")
+    except Exception as e:
+        print(f"Error during video processing or writing to '{output_path}': {e}")
+        print("Ensure FFmpeg is installed and accessible by MoviePy. Check write permissions.")
+    finally:
+        if clip: clip.close()
+        if processed_clip: processed_clip.close()
 
 def create_topic_summary_dataframe(selected_videos_dict):
     """
@@ -1291,6 +1478,20 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic, lang
 
             local_vid_path = download_with_ytdlp(base_video_url)
         # Ensure target_resolution is set for potential resizing during load
+
+
+        blur_subtitles_in_video_unified(
+            local_vid_path,
+            local_vid_path,
+            sample_time_sec=3.0,
+            ocr_min_confidence=20,
+            ocr_y_start_ratio=0.15, # Adjust if subtitles are higher/lower
+            ocr_padding=20,
+            blur_kernel_size=(71, 71), # Stronger blur
+            # tesseract_cmd_path=r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+            debug_save_frames=True # Set to True to see intermediate images
+        )
+
         base_video = VideoFileClip(local_vid_path, audio=False, target_resolution=(720, 1280))
 
         video_duration = base_video.duration
