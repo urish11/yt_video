@@ -2342,7 +2342,7 @@ if st.session_state.api_search_results:
                                                 allowfullscreen 
                                                 scrolling="no" 
                                                 loading="lazy"
-                                                style="border:none; border-radius: 16px;">
+                                                style="border:none; border-radius: 12px;">
 
                                                 </iframe>
                                             </div>
