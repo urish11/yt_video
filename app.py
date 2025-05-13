@@ -2325,8 +2325,8 @@ if st.session_state.api_search_results:
                                             allowfullscreen></iframe>"""
                                         if platform == 'tk':
                                                 original_width = 300
-                                                original_height = 540
-                                                target_width = 220
+                                                original_height = 560
+                                                target_width = 210
                                                 scale = target_width / original_width
                                                 scaled_height = int(original_height * scale)                                            
                                                 iframe_code = f"""
