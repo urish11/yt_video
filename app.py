@@ -2329,7 +2329,7 @@ if st.session_state.api_search_results:
                                                                 <iframe 
                                                                     width="100%" 
                                                                     height="100%" 
-                                                                    src="https://www.tiktok.com/embed/v3/{video_id}?autoplay=1&loop=1&controls=0"
+                                                                    src="https://www.tiktok.com/embed/v1/{video_id}?autoplay=1&loop=1&controls=0"
                                                                     loading="lazy"
                                                                     allowfullscreen 
                                                                     allow="encrypted-media"
