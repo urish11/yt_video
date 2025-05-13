@@ -2325,18 +2325,9 @@ if st.session_state.api_search_results:
                                             allowfullscreen></iframe>"""
                                         if platform == 'tk':
                                             iframe_code = f"""
-                                            <iframe 
-                                            height="400" 
-                                            loading="lazy"
-                                            width="220" 
+                                           
                                             src="https://www.tiktok.com/embed/v1/{video_id}?autoplay=1&loop=1&controls=0"
-                                            allowfullscreen 
-                                            allow="encrypted-media"
-                                            scrolling="no"
-                                            style="overflow: hidden; border: none;"
-                                            title="TikTok Embed"
-                                            ></iframe>
-
+                                  
 
 
 
