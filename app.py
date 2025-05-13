@@ -2380,7 +2380,7 @@ if st.session_state.api_search_results:
     <a target="_blank" title="♬ original sound - tiff" href="https://www.tiktok.com/music/original-sound-6689804660171082501?refer=embed">♬ original sound - tiff</a>
   </section>
 </blockquote>
-<script async src="https://www.tiktok.com/embed.js"></script>"""
+<script async src="https://www.tiktok.com/embed.js"></script>""".unescape
                                                         )
 
 
