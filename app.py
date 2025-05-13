@@ -2325,24 +2325,21 @@ if st.session_state.api_search_results:
                                             allowfullscreen></iframe>"""
                                         if platform == 'tk':
                                             iframe_code = f"""
+                                                            <div style="width: 220px; height: 400px; overflow: hidden;">
+                                                                <iframe 
+                                                                    width="100%" 
+                                                                    height="100%" 
+                                                                    src="https://www.tiktok.com/embed/v1/{video_id}?autoplay=1&loop=1&controls=0"
+                                                                    loading="lazy"
+                                                                    allowfullscreen 
+                                                                    allow="encrypted-media"
+                                                                    scrolling="no"
+                                                                    style="border: none;" 
+                                                                    title="TikTok Embed">
+                                                                </iframe>
+                                                            </div>"""
 
-                                                                                                                                    <blockquote class="tiktok-embed"
-                                                                        cite="https://www.tiktok.com/@scout2015/video/6718335390845095173"
-                                                                        data-video-id="6718335390845095173"
-                                                                        data-embed-from="oembed"
-                                                                        style="max-width:605px; min-width:325px;">
-                                                                        <section>
-                                                                            <a target="_blank" title="@scout2015" href="https://www.tiktok.com/@scout2015?refer=embed">@scout2015</a>
-                                                                            <p>Scramble up ur name & I’ll try to guess it😍❤️
-                                                                            <a title="foryoupage" target="_blank" href="https://www.tiktok.com/tag/foryoupage?refer=embed">#foryoupage</a>
-                                                                            <a title="petsoftiktok" target="_blank" href="https://www.tiktok.com/tag/petsoftiktok?refer=embed">#petsoftiktok</a>
-                                                                            <a title="aesthetic" target="_blank" href="https://www.tiktok.com/tag/aesthetic?refer=embed">#aesthetic</a>
-                                                                            </p>
-                                                                            <a target="_blank" title="♬ original sound - tiff" href="https://www.tiktok.com/music/original-sound-6689804660171082501?refer=embed">♬ original sound - tiff</a>
-                                                                        </section>
-                                                                        </blockquote>
-                                                                        <script async src="https://www.tiktok.com/embed.js"></script>
-                                                                        """ 
+     
 
                                         st.markdown(iframe_code, unsafe_allow_html=True)
                                     except Exception as e:
