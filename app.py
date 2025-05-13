@@ -2325,19 +2325,6 @@ if st.session_state.api_search_results:
                                             allowfullscreen></iframe>"""
                                         if platform == 'tk':
                                             iframe_code = f"""
-                                                            # <div style="width: 220px; height: 400px; overflow: hidden;">
-                                                            #     <iframe 
-                                                            #         width="100%" 
-                                                            #         height="100%" 
-                                                            #         src="https://www.tiktok.com/embed/v2/{video_id}?autoplay=1&loop=1&controls=0"
-                                                            #         loading="lazy"
-                                                            #         allowfullscreen 
-                                                            #         allow="encrypted-media"
-                                                            #         scrolling="no"
-                                                            #         style="border: none;" 
-                                                            #         title="TikTok Embed">
-                                                            #     </iframe>
-                                                            # </div>
 
                                                                                                                                     <blockquote class="tiktok-embed"
                                                                         cite="https://www.tiktok.com/@scout2015/video/6718335390845095173"
