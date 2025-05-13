@@ -2327,7 +2327,7 @@ if st.session_state.api_search_results:
                                             iframe_code = f"""
 
 
-                                                    <div style="width: 220px; height: 400px; overflow: hidden; transform: scale(0.75); transform-origin: top left;">
+                                                    <div style="width: 350px; height: 400px; overflow: hidden; transform: scale(0.75); transform-origin: top left;">
                                                         <iframe 
                                                             src="https://www.tiktok.com/embed/v2/{video_id}?autoplay=1&loop=1&controls=0" 
                                                             width="100%" 
