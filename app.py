@@ -2355,15 +2355,35 @@ if st.session_state.api_search_results:
                                             st.image(thumbnail_url, use_container_width=False, caption="Video Thumbnail",width=200)
                                         if platform == 'tk':
                                             st.markdown(
-                                                            f"""
-                                                            <div style="text-align: center;">
-                                                                <img src="{thumbnail_url}" alt="Video Thumbnail" width="200"
-                                                                    style="margin:auto; display:block; border-radius: 8px;" />
-                                                                <p style="font-size: small; color: gray;">Video Thumbnail</p>
-                                                            </div>
-                                                            """,
-                                                            unsafe_allow_html=True
+                                                            # f"""
+                                                            # <div style="text-align: center;">
+                                                            #     <img src="{thumbnail_url}" alt="Video Thumbnail" width="200"
+                                                            #         style="margin:auto; display:block; border-radius: 8px;" />
+                                                            #     <p style="font-size: small; color: gray;">Video Thumbnail</p>
+                                                            # </div>
+                                                            # """,
+                                                            # unsafe_allow_html=True
+
+
+                                                            """<blockquote class="tiktok-embed"
+  cite="https://www.tiktok.com/@scout2015/video/6718335390845095173"
+  data-video-id="6718335390845095173"
+  data-embed-from="oembed"
+  style="max-width:605px; min-width:325px;">
+  <section>
+    <a target="_blank" title="@scout2015" href="https://www.tiktok.com/@scout2015?refer=embed">@scout2015</a>
+    <p>Scramble up ur name & I’ll try to guess it😍❤️
+      <a title="foryoupage" target="_blank" href="https://www.tiktok.com/tag/foryoupage?refer=embed">#foryoupage</a>
+      <a title="petsoftiktok" target="_blank" href="https://www.tiktok.com/tag/petsoftiktok?refer=embed">#petsoftiktok</a>
+      <a title="aesthetic" target="_blank" href="https://www.tiktok.com/tag/aesthetic?refer=embed">#aesthetic</a>
+    </p>
+    <a target="_blank" title="♬ original sound - tiff" href="https://www.tiktok.com/music/original-sound-6689804660171082501?refer=embed">♬ original sound - tiff</a>
+  </section>
+</blockquote>
+<script async src="https://www.tiktok.com/embed.js"></script>"""
                                                         )
+
+
 
     
                                     except:pass
