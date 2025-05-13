@@ -2331,7 +2331,7 @@ if st.session_state.api_search_results:
                                                         <iframe 
                                                             src="https://www.tiktok.com/embed/v2/{video_id}?autoplay=1&loop=1&controls=0" 
                                                             width="100%" 
-                                                            height="80%" 
+                                                            height="100%" 
                                                             allowfullscreen 
                                                             scrolling="no" 
                                                             loading="lazy"
