@@ -2326,7 +2326,7 @@ if st.session_state.api_search_results:
                                         if platform == 'tk':
                                                 original_width = 280
                                                 original_height = 550
-                                                target_width = 240
+                                                target_width = 220
                                                 scale = target_width / original_width
                                                 scaled_height = int(original_height * scale)                                            
                                                 iframe_code = f"""
