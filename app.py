@@ -2330,7 +2330,7 @@ if st.session_state.api_search_results:
                                                     height="400" 
                                                     width="220" 
                                                     loading="lazy"
-                                                    src="https://www.tiktok.com/embed/v1/{video_id}?autoplay=1&loop=1&controls=0"
+                                                    src="https://www.tiktok.com/embed/v2/{video_id}?autoplay=1&loop=1&controls=0"
                                                     allowfullscreen 
                                                     allow="encrypted-media"
                                                     scrolling="no" 
