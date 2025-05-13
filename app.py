@@ -2326,7 +2326,7 @@ if st.session_state.api_search_results:
                                         if platform == 'tk':
                                             iframe_code = f"""
                                            
-                                            src="https://www.tiktok.com/embed/v1/{video_id}?autoplay=1&loop=1&controls=0"
+                                            "https://www.tiktok.com/embed/v1/{video_id}?autoplay=1&loop=1&controls=0"
                                   
 
 
