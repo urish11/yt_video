@@ -2330,26 +2330,25 @@ if st.session_state.api_search_results:
                                                 scale = target_width / original_width
                                                 scaled_height = int(original_height * scale)                                            
                                                 iframe_code = f"""
-                                            <!-- Visible wrapper: clips excess space -->
-                                            <div style="width: {target_width}px; height: {scaled_height}px; overflow: hidden;">
-                                            
-                                            <!-- Inner container: real TikTok player size scaled down -->
-                                            <div style="width: {original_width}px; height: {original_height}px; transform: scale({scale}); transform-origin: top left;">
-                                                <iframe 
-                                                src="https://www.tiktok.com/embed/v2/{video_id}?autoplay=1&loop=1&controls=0" 
-                                                allow="autoplay"
-                                                width="100%" 
-                                                height="100%" 
-                                                allowfullscreen 
-                                                scrolling="no" 
-                                                loading="lazy"
-                                                style="border:none; border-radius: 12px;">
+                                                <!-- Visible wrapper: clips excess space -->
+                                                <div style="width: {target_width}px; height: {scaled_height}px; overflow: hidden;">
 
-                                                </iframe>
-                                            </div>
+                                                <!-- Inner container: real TikTok player size scaled down -->
+                                                <div style="width: {original_width}px; height: {original_height}px; transform: scale({scale}); transform-origin: top left;">
+                                                    <iframe 
+                                                    src="https://www.tiktok.com/embed/v2/{video_id}?autoplay=1&loop=1&controls=0" 
+                                                    allow="autoplay"
+                                                    width="100%" 
+                                                    height="100%" 
+                                                    allowfullscreen 
+                                                    scrolling="no" 
+                                                    loading="lazy"
+                                                    style="border:none; border-radius: 12px;">
+                                                    </iframe>
+                                                </div>
 
-                                            </div>
-                                            """
+                                                </div>
+                                                """
      
 
                                         st.markdown(iframe_code, unsafe_allow_html=True)
