@@ -2324,7 +2324,7 @@ if st.session_state.api_search_results:
                                             gyroscope; picture-in-picture; web-share"
                                             allowfullscreen></iframe>"""
                                         if platform == 'tk':
-                                                original_width = 250
+                                                original_width = 300
                                                 original_height = 550
                                                 target_width = 250
                                                 scale = target_width / original_width
