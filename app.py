@@ -2349,6 +2349,24 @@ if st.session_state.api_search_results:
 
                                                 </div>
                                                 """
+                                                iframe_code = f"""
+                                            <iframe 
+                                            height="400" 
+                                            loading="lazy"
+                                            width="220" 
+                                            src="https://www.tiktok.com/embed/v3/{video_id}?autoplay=1"
+                                            allowfullscreen 
+                                            allow="encrypted-media"
+                                            scrolling="no"
+                                            style="overflow: hidden; border: none;"
+                                            title="TikTok Embed"
+                                            ></iframe>
+
+
+
+
+                                            
+"""
      
 
                                         st.markdown(iframe_code, unsafe_allow_html=True)
