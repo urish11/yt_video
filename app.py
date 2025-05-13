@@ -2336,7 +2336,7 @@ if st.session_state.api_search_results:
                                                 <!-- Inner container: real TikTok player size scaled down -->
                                                 <div style="width: {original_width}px; height: {original_height}px; transform: scale({scale}); transform-origin: top left;">
                                                     <iframe 
-                                                    src="https://www.tiktok.com/embed/v2/{video_id}?autoplay=1&loop=1&controls=0" 
+                                                    src="https://www.tiktok.com/embed/v2/{video_id}" 
                                                     allow="autoplay"
                                                     width="100%" 
                                                     height="100%" 
