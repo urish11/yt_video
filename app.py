@@ -2308,7 +2308,7 @@ if st.session_state.api_search_results:
                                 grid_instance_key = f"vid_{video_id}_{search_key}_{i}_{j}" # More specific key
                                 platform = video['platform']
                                 show_video_key = f"show_player_{grid_instance_key}"
-                                st.session_state.setdefault(show_video_key, True)
+                                st.session_state.setdefault(show_video_key, False)
 
                                 st.write(f"**{textwrap.shorten(video_title, width=50, placeholder='...')}**")
                                 st.caption(f"ID: {video_id}")
@@ -2329,7 +2329,7 @@ if st.session_state.api_search_results:
                                             height="400" 
                                             loading="lazy"
                                             width="220" 
-                                            src="https://www.tiktok.com/embed/v2/{video_id}?autoplay=1"
+                                            src="https://www.tiktok.com/embed/v3/{video_id}?autoplay=1"
                                             allowfullscreen 
                                             allow="encrypted-media"
                                             scrolling="no"
