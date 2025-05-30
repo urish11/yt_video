@@ -1822,7 +1822,7 @@ def sync_search_data():
             current_df = st.session_state.search_data_snapshot.copy()
         else:
             # Fallback: use current state, but this might contain unsynced changes
-            current_df = st.session_state.search_data.copy() if isinstance(st.session_state.search_data, pd.DataFrame) else pd.DataFrame([{'Topic': '', 'Search Term': '', 'Language': 'English', "Script Angle": "default", 'Video Results': 5, 'BG Music' : False, 'TTS Voice': 'sage'}])
+            current_df = st.session_state.search_data.copy() if isinstance(st.session_state.search_data, pd.DataFrame) else pd.DataFrame([{'Topic': '', 'Language': 'English','Search Term': '',  "Script Angle": "default", 'Video Results': 5, 'BG Music' : False, 'TTS Voice': 'sage'}])
 
         # Apply deletions first (indices are based on the snapshot)
         valid_delete_indices = sorted([idx for idx in deleted_rows if idx < len(current_df)], reverse=True)
