@@ -1847,7 +1847,7 @@ def sync_search_data():
 
         # Apply additions
         if added_rows:
-            expected_cols = ["Topic", "Search Term", "Language", "Script Angle", "Video Results","BG Music","TTS Voice"]
+            expected_cols = ["Topic", "Language", "Search Term", "Script Angle", "Video Results","BG Music","TTS Voice"]
             processed_adds = []
             for row_dict in added_rows:
                  if isinstance(row_dict, dict):
@@ -1898,7 +1898,7 @@ def sync_search_data():
 
         # If empty after filtering, add back a default row
         if current_df.empty:
-             current_df = pd.DataFrame([{'Topic': '', 'Search Term': '', 'Language': 'English', "Script Angle": "default", 'Video Results': 5, 'BG Music' : False, 'TTS Voice': 'sage'}])
+             current_df = pd.DataFrame([{'Topic': '',  'Language': 'English','Search Term': '', "Script Angle": "default", 'Video Results': 5, 'BG Music' : False, 'TTS Voice': 'sage'}])
 
         # Update the main session state and create a fresh snapshot
         st.session_state.search_data = current_df.reset_index(drop=True)
@@ -1910,7 +1910,7 @@ def sync_search_data():
          if 'search_data_snapshot' in st.session_state:
               st.session_state.search_data = st.session_state.search_data_snapshot.copy()
          else: # If snapshot missing too, hard reset
-              st.session_state.search_data = pd.DataFrame([{'Topic': '', 'Search Term': '', 'Language': 'English', "Script Angle": "default", 'Video Results': 5, 'BG Music' : False, 'TTS Voice': 'sage'}])
+              st.session_state.search_data = pd.DataFrame([{'Topic': '',  'Language': 'English','Search Term': '', "Script Angle": "default", 'Video Results': 5, 'BG Music' : False, 'TTS Voice': 'sage'}])
               st.session_state.search_data_snapshot = st.session_state.search_data.copy()
 
 
@@ -1940,7 +1940,7 @@ if 'api_search_results' not in st.session_state:
 # Input DataFrame for search terms and topics
 if 'search_data' not in st.session_state:
     st.session_state.search_data = pd.DataFrame([
-        {'Topic': 'sofa sale', 'Search Term': 'auto', 'Language': 'English', "Script Angle": "default", 'Video Results': 40, 'BG Music' : True, 'TTS Voice': 'sage'}
+        {'Topic': 'sofa sale', 'Language': 'English','Search Term': 'auto',  "Script Angle": "default", 'Video Results': 40, 'BG Music' : True, 'TTS Voice': 'sage'}
     ])
 # Snapshot for data editor comparison
 if 'search_data_snapshot' not in st.session_state:
