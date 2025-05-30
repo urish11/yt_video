@@ -2011,7 +2011,7 @@ if clear_button:
     st.session_state.batch_total_count = 0
     st.session_state.batch_processed_count = 0
     st.session_state.resolved_vid_urls = {}
-    st.session_state.search_data = pd.DataFrame([{'Topic': '', 'Search Term': '','Language' : 'English',"Script Angle" : "default", 'Video Results': 5}])
+    st.session_state.search_data = pd.DataFrame([{'Topic': '','Language' : 'English', 'Search Term': '',"Script Angle" : "default", 'Video Results': 5}])
     st.session_state.search_data_snapshot = st.session_state.search_data.copy()
     # Clear the editor state explicitly if possible (might require widget key manipulation - complex)
     # For now, resetting search_data and rerunning should clear the editor visually.
