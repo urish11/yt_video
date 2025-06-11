@@ -661,81 +661,107 @@ def search_tiktok_links_google(api_keys, cx_id, query, num_results=20, start_ind
     Returns:
         list: List of video dictionaries or None if critical error.
     """
-    import requests, time 
+    import requests
+    import time
     from urllib.parse import urlencode
 
-    search_query_on_google = f"{query.replace("#","").replace('shorts','')} site:www.tiktok.com/@"
-    # search_query_on_google = f" site:tiktok.com inurl:/video/ {query.replace("#","").replace('shorts','').replace("'","")} "
+    search_query_on_google = f"{query.replace('#','').replace('shorts','')} site:www.tiktok.com/@"
+    max_per_page = 10  # Google Custom Search API limit for 'num' is 10
+    all_fetched_videos = []
+    current_start_offset = start_index
+    total_videos_fetched_across_pages = 0 # Tracks videos fetched across all internal pages for THIS call
 
-    max_per_page = 10
-    video_links_info = []
+    st.write(f"\nSearching Google for TikTok links with: '{search_query_on_google}', wanting {num_results} starting from {start_index}")
 
-    st.write(f"\nSearching Google for TikTok links with: '{search_query_on_google}'...")
+    while total_videos_fetched_across_pages < num_results:
+        num_to_fetch_this_page = min(max_per_page, num_results - total_videos_fetched_across_pages)
+        if num_to_fetch_this_page <= 0:
+            break # Already fetched enough or invalid request
 
-    # Removed the loop: for start in range(1, num_results + 1, max_per_page):
-    tries = 0
-    while tries < max_retries:
-        try:
-            api_key = random.choice(api_keys)
-            # Ensure num_results does not exceed max_per_page for a single call
-            # The API likely caps 'num' at 10 for this type of search.
-            # Let's make sure we request at most max_per_page, but also respect num_results if it's smaller.
-            num_to_fetch = min(num_results, max_per_page)
+        tries = 0
+        page_videos = []
+        api_call_succeeded = False
 
-            params = {
-                'key': api_key,
-                'cx': cx_id,
-                'q': search_query_on_google,
-                'num': num_to_fetch, # Use the calculated num_to_fetch
-                'start': start_index, # Use the new start_index parameter
-                'searchType': 'image',
-                'gl': 'us'
-            }
+        while tries < max_retries:
+            try:
+                api_key = random.choice(api_keys)
+                params = {
+                    'key': api_key,
+                    'cx': cx_id,
+                    'q': search_query_on_google,
+                    'num': num_to_fetch_this_page,
+                    'start': current_start_offset,
+                    'searchType': 'image',
+                    'gl': 'us'
+                }
+                # st.write(f"API Call Params: {params}") # Debugging
 
-            response = requests.get("https://customsearch.googleapis.com/customsearch/v1", params=params, timeout=15)
-            response.raise_for_status()
-            results_data = response.json()
-            # st.text(results_data)
+                response = requests.get("https://customsearch.googleapis.com/customsearch/v1", params=params, timeout=15)
+                response.raise_for_status()
+                results_data = response.json()
 
-            if 'items' in results_data:
-                for item in results_data['items']:
+                items_on_page = results_data.get('items', [])
+                for item in items_on_page:
                     title = item.get("title", "")
                     url = item['image'].get("contextLink", "")
+                    if 'video' not in url: # Ensure it's a video link
+                        continue
                     video_id = url.split("/")[-1]
                     thumbnail_url = item['image'].get("thumbnailLink", "")
-                    # thumbnail_url = item.get("link", "")
+                    page_videos.append({
+                        'title': title, 'url': url, 'thumbnail_url': thumbnail_url,
+                        'videoId': video_id, 'platform': 'tk'
+                    })
 
+                all_fetched_videos.extend(page_videos)
+                total_videos_fetched_across_pages = len(all_fetched_videos)
+                api_call_succeeded = True
+                # st.write(f"API call success: Fetched {len(page_videos)} items for start {current_start_offset}. Total now: {total_videos_fetched_across_pages}") # Debugging
+                break  # Success for this page, break retry loop
 
-                    if 'video' in url:
-                        video_links_info.append({
-                            'title': title,
-                            'url': url,
-                            'thumbnail_url': thumbnail_url,
-                            'videoId': video_id,
-                            'platform': 'tk'
-                        })
+            except requests.exceptions.RequestException as e:
+                st.warning(f"[Attempt {tries+1}/{max_retries}] Request error for start {current_start_offset}: {e}")
+            except Exception as e:
+                st.error(f"Unexpected error for start {current_start_offset}: {e}")
+                import traceback
+                st.error(traceback.format_exc())
 
-            break  # success, break retry loop
+            tries += 1
+            if tries < max_retries:
+                time.sleep(1) # Wait before retrying
 
-        except requests.exceptions.RequestException as e:
-            st.warning(f"[Attempt {tries+1}] Request error: {e}")
-        except Exception as e:
-            st.error(f"Unexpected error: {e}")
-            import traceback
-            st.error(traceback.format_exc())
+        if not api_call_succeeded:
+            st.error(f"Failed to fetch data for start_index {current_start_offset} after {max_retries} retries.")
+            # Depending on desired strictness, you could 'return ([], None)' here to indicate partial failure
+            # For now, we'll continue and return what we have, but next_page_start_index will be None.
+            return (all_fetched_videos, None) # Critical failure for a page
 
-        tries += 1
-        if tries < max_retries:
-            time.sleep(1)
+        if len(page_videos) < num_to_fetch_this_page:
+            # API returned fewer items than requested for this page, so it's the last page.
+            # st.write(f"API returned fewer items ({len(page_videos)}) than requested ({num_to_fetch_this_page}). Assuming end of results.") # Debugging
+            break # Break from the outer while loop (fetching pages)
 
-    if tries == max_retries:
-        st.error(f"Failed after {max_retries} retries for start_index {start_index}.")
-        # break # Exit while loop for retries
+        # Standard increment for Google CSE pagination for `start` is by the number of items requested for that page.
+        current_start_offset += num_to_fetch_this_page
 
-    # Since we are making only one call, we don't need to check len(video_links_info) >= num_results in a loop.
-    # The API call will fetch up to 'num_to_fetch' results starting from 'start_index'.
+        if total_videos_fetched_across_pages >= num_results:
+            break # Fetched enough videos as requested by num_results
 
-    return video_links_info[:num_results] if video_links_info else None # Return up to the originally requested num_results
+        time.sleep(0.1) # Small delay between calls to be polite to the API
+
+    next_page_start_index = None
+    if total_videos_fetched_across_pages >= num_results : # If we fulfilled or exceeded the request
+        # Check if the *last page fetched* was full. If it was, there *might* be more.
+        # This logic is tricky because we don't know if the API has more unless we query.
+        # A simpler approach: if we fetched *exactly* num_results, and the last page was full,
+        # then it's likely there are more.
+        # However, the prompt asks: "if num_results videos were successfully fetched), next_page_start_index = start_index + len(all_fetched_videos)"
+        # This implies next_page_start_index is based on the original start_index + total collected.
+        next_page_start_index = start_index + total_videos_fetched_across_pages
+    # else: next_page_start_index remains None (API exhausted before num_results)
+
+    # st.write(f"Returning: {len(all_fetched_videos)} videos, next_page_start_index: {next_page_start_index}") # Debugging
+    return (all_fetched_videos, next_page_start_index)
 # --- Helper Function: Simple Hash ---
 def simple_hash(s):
     """Creates a simple, short hash string from an input string for UI keys."""
@@ -2223,11 +2249,20 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
                 videos = search_youtube(youtube_api_key_secret, term, count)
 
             elif is_tiktok:
+                # search_tiktok_links_google now returns (videos_list, next_page_start_index)
+                # For the initial search, start_index is 1.
+                # 'count' is item['Video Results'] which is the total num_results desired for this query.
+                videos_list, next_block_start_index = search_tiktok_links_google(
+                    api_keys=youtube_api_key_secret,
+                    cx_id="331dbbc80d31342af",
+                    query=term,
+                    num_results=count, # Total results desired for this topic
+                    start_index=1      # Initial search always starts at 1
+                )
+                videos = videos_list # Assign to 'videos' for consistency with YT path & subsequent logic
 
-                videos = search_tiktok_links_google(youtube_api_key_secret,"331dbbc80d31342af",term,count)
-
-            if videos is None: # Critical API error signalled from search_youtube
-                 st.error(f"Stopping search due to critical API issue.", icon="🚫")
+            if videos is None: # Indicates a critical API error during fetching by the search function
+                 st.error(f"Stopping search due to critical API issue (videos is None).", icon="🚫")
                  api_error_occurred = True
                  break
 
@@ -2275,45 +2310,10 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
                     'tts_voice': tts_voice,
                     'input_search_term': og_term,
                     'platform': platform,
-                    'next_start_index': next_start_index, # Store the calculated next_start_index
-                    'last_start_index': start_index_used_for_the_call # Store the start_index used for this fetch
+                    'next_start_index': next_block_start_index,
+                    'last_start_index': 1 # Initial search used start_index = 1
                 }
 
-            # Common fields for both platforms (already being done, just ensuring context)
-            # results_cache[unique_search_key].update({
-            #     'lang': lang,
-            #     "script_ver": script_ver,
-            #     'original_term': term,
-            #     'bg_music' : bg_music,
-            #     'original_input_count': count,
-            #     'tts_voice' : tts_voice,
-            #     'input_search_term': og_term,
-            #     'platform' : platform
-            # })
-            # This explicit update might be redundant if already set above, but ensures all keys are present.
-            # Re-evaluating, the above individual assignments per platform type are better.
-
-            # Simplified storage - ensure all necessary keys are present in both blocks
-            # The structure is slightly different now, so this common update is removed.
-            # Common data is now set within each platform's specific block.
-
-            # The code was already mostly fine, the main addition is 'next_start_index' for TikTok.
-            # And ensuring other relevant data points like 'original_input_count' (which is 'count' in this loop)
-            # and 'platform' are consistently stored.
-
-            # The following lines were part of the original thought process but are now integrated into the if/elif blocks
-            # results_cache[unique_search_key] = {
-            #     'videos': videos,
-            #     'topic': topic,
-                # 'lang': lang,
-                # "script_ver": script_ver,
-                # 'original_term': term, # Store the actual term used for search
-                # 'bg_music' : bg_music,
-                # 'original_input_count': count,
-                # 'tts_voice' : tts_voice,
-                # 'input_search_term': og_term,
-                # 'platform' : platform
-            # }
             time.sleep(0.1) # Brief pause
 
         progress_bar.progress((i + 1) / len(search_items))
@@ -2552,41 +2552,37 @@ if st.session_state.api_search_results:
             # --- "Show More TikTok Results" Button ---
             if platfrom == 'tk' and result_data.get('next_start_index') is not None:
                 current_next_start_index = result_data.get('next_start_index')
-                if st.button("Show More TikTok Results", key=f"show_more_tk_{search_key}", use_container_width=True):
+                requested_batch_size = result_data.get('original_input_count', 10) # Get the batch size for the label
+
+                if st.button(f"Show More {requested_batch_size} TikTok Results", key=f"show_more_tk_{search_key}", use_container_width=True):
                     if current_next_start_index: # Ensure it's not None one last time
                         # Retrieve necessary data from result_data for the API call
                         original_query_term = result_data.get('original_term')
-                        # original_input_count is the 'num_results' user wants per page for this topic
-                        num_results_per_page = result_data.get('original_input_count', 10) # Default to 10 if not found
+                        # original_input_count is the total num_results user wants for this topic/search_key
+                        total_results_desired_for_topic = result_data.get('original_input_count', 10)
 
-                        with st.spinner("Fetching more TikTok results..."):
-                            new_videos = search_tiktok_links_google(
-                                api_keys=youtube_api_key_secret, # Global API keys
-                                cx_id="331dbbc80d31342af",       # Hardcoded CX ID
+                        with st.spinner(f"Fetching more TikTok results for '{original_query_term}'..."):
+                            # current_next_start_index is where the *next block* of results should start
+                            new_videos_block, new_block_next_start_index = search_tiktok_links_google(
+                                api_keys=youtube_api_key_secret,
+                                cx_id="331dbbc80d31342af",
                                 query=original_query_term,
-                                num_results=num_results_per_page, # How many to fetch in this call
+                                num_results=total_results_desired_for_topic, # Ask for another full block
                                 start_index=current_next_start_index
                             )
 
-                            if new_videos:
-                                st.session_state.api_search_results[search_key]['videos'].extend(new_videos)
-                                num_newly_fetched = len(new_videos)
+                            if new_videos_block:
+                                st.session_state.api_search_results[search_key]['videos'].extend(new_videos_block)
+                                num_newly_fetched = len(new_videos_block)
 
-                                # Determine how many were requested in this specific API call
-                                # (search_tiktok_links_google caps 'num' at 10 internally via max_per_page)
-                                requested_in_call = min(num_results_per_page, 10)
-
-                                if num_newly_fetched == requested_in_call:
-                                    new_next_start_index = current_next_start_index + num_newly_fetched
-                                else:
-                                    new_next_start_index = None # No more results or fewer than requested
-
-                                st.session_state.api_search_results[search_key]['next_start_index'] = new_next_start_index
+                                # Update the next_start_index for the *next* "Show More" click
+                                st.session_state.api_search_results[search_key]['next_start_index'] = new_block_next_start_index
+                                # Update the last_start_index to the one used for *this* fetch
                                 st.session_state.api_search_results[search_key]['last_start_index'] = current_next_start_index
-                                st.toast(f"Added {num_newly_fetched} more results.", icon="✅")
-                            else:
-                                st.session_state.api_search_results[search_key]['next_start_index'] = None
-                                st.toast("No more results found or API error.", icon="ℹ️")
+                                st.toast(f"Added {num_newly_fetched} more results. Total for this search: {len(st.session_state.api_search_results[search_key]['videos'])}", icon="✅")
+                            else: # No videos returned from this "Show More" call
+                                st.session_state.api_search_results[search_key]['next_start_index'] = None # No more pages
+                                st.toast("No more results found or API error during 'Show More'.", icon="ℹ️")
 
                         st.rerun()
                     else:
@@ -3133,4 +3129,3 @@ else: # If selected_videos dict is empty or doesn't exist
 
 # Footer notes
 st.sidebar.caption("Each 'Select' click queues one job. URL Fetch after selection. Video Gen uses direct URL.")
- 
