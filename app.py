@@ -2613,13 +2613,29 @@ if st.session_state.api_search_results:
                                 if platform == 'yt':
                                     new_videos = search_youtube(youtube_api_key_secret, new_ai_generated_terms, count_from_editor)
                                 elif platform == 'tk':
+                                    # Call the refactored search_tiktok_links_google
+                                    # It now returns (videos_list, next_block_start_index)
+                                    # For a new "auto" search, always start at index 1
+                                    videos_list, next_block_start_index = search_tiktok_links_google(
+                                        api_keys=youtube_api_key_secret,
+                                        cx_id="331dbbc80d31342af",
+                                        query=new_ai_generated_terms,
+                                        num_results=count_from_editor, # User's desired items per batch
+                                        start_index=1 
+                                    )
+                                    new_videos = videos_list # Keep 'new_videos' name for the common logic below
 
-                                    new_videos = search_tiktok_links_google(youtube_api_key_secret,"331dbbc80d31342af",new_ai_generated_terms,count_from_editor)
-                                if new_videos is not None: # search_youtube returns [] for no results, None for critical error
-                                    st.session_state.api_search_results[search_key]['videos'] = new_videos
-                                    st.session_state.api_search_results[search_key]['original_term'] = new_ai_generated_terms # Update displayed term
+                                if new_videos is not None: 
+                                    st.session_state.api_search_results[search_key]['videos'] = new_videos # Replace with new results
+                                    st.session_state.api_search_results[search_key]['original_term'] = new_ai_generated_terms
+                                    if platform == 'tk': # Specific updates for TikTok pagination
+                                        st.session_state.api_search_results[search_key]['next_start_index'] = next_block_start_index
+                                        st.session_state.api_search_results[search_key]['last_start_index'] = 1
+                                    # For YouTube, 'next_start_index' etc. are not currently used in this 'auto search more' block.
+                                    # If YT were to have a similar "show more blocks" feature, this would need adjustment.
+
                                     st.toast(f"Fetched new 'auto' results for '{topic_for_group}' using fresh AI terms.", icon="🔄")
-                                else:
+                                else: # new_videos is None, indicating critical API error from search function
                                     st.toast(f"Failed to fetch new 'auto' results for '{topic_for_group}'. Search API error.", icon="⚠️")
                                 st.rerun()
                         except Exception as e:
@@ -2653,16 +2669,26 @@ if st.session_state.api_search_results:
                             if platform == 'yt':
                                 new_videos = search_youtube(youtube_api_key_secret, new_manual_term, count_from_editor)
                             elif platform == 'tk':
-
-                                new_videos = search_tiktok_links_google(youtube_api_key_secret,"331dbbc80d31342af",new_manual_term,count_from_editor)
-
-                            
+                                # Call the refactored search_tiktok_links_google
+                                # For a new manual search, always start at index 1
+                                videos_list, next_block_start_index = search_tiktok_links_google(
+                                    api_keys=youtube_api_key_secret,
+                                    cx_id="331dbbc80d31342af",
+                                    query=new_manual_term,
+                                    num_results=count_from_editor, # User's desired items per batch
+                                    start_index=1
+                                )
+                                new_videos = videos_list # Keep 'new_videos' name for common logic
 
                             if new_videos is not None:
-                                st.session_state.api_search_results[search_key]['videos'] = new_videos
-                                st.session_state.api_search_results[search_key]['original_term'] = new_manual_term # Update displayed term
+                                st.session_state.api_search_results[search_key]['videos'] = new_videos # Replace with new results
+                                st.session_state.api_search_results[search_key]['original_term'] = new_manual_term
+                                if platform == 'tk': # Specific updates for TikTok pagination
+                                    st.session_state.api_search_results[search_key]['next_start_index'] = next_block_start_index
+                                    st.session_state.api_search_results[search_key]['last_start_index'] = 1
+                                # Similar to 'auto search more', YT doesn't use these pagination fields in this block yet.
                                 st.toast(f"Updated results for '{topic_for_group}' with new term.", icon="🔄")
-                            else:
+                            else: # new_videos is None
                                 st.toast(f"Search with new term failed for '{topic_for_group}'. API error.", icon="⚠️")
 
                             st.session_state.search_more_manual_input_visible[search_key] = False # Hide after submit
