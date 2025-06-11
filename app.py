@@ -649,7 +649,7 @@ def search_youtube(api_key, query, max_results_per_term=5,max_retries = 5):
     #             break  # this term exhausted
 
     # return video_links_info
-def search_tiktok_links_google(api_keys, cx_id, query, num_results=20, max_retries=6):
+def search_tiktok_links_google(api_keys, cx_id, query, num_results=20, start_index=1, max_retries=6):
     """
     Searches for TikTok video pages using Google Custom Search API, supporting pagination for more than 10 results.
     Args:
@@ -672,23 +672,27 @@ def search_tiktok_links_google(api_keys, cx_id, query, num_results=20, max_retri
 
     st.write(f"\nSearching Google for TikTok links with: '{search_query_on_google}'...")
 
-    for start in range(1, num_results + 1, max_per_page):
-        tries = 0
-        while tries < max_retries:
-            
-            try:
-                api_key = random.choice(api_keys)
-                params = {
-                    'key': api_key,
-                    'cx': cx_id,
-                    'q': search_query_on_google,
-                    'num': min(max_per_page, num_results - len(video_links_info)),
-                    'start': start,
-                    'searchType' :'image',
-                    'gl' : 'us'
-                }
+    # Removed the loop: for start in range(1, num_results + 1, max_per_page):
+    tries = 0
+    while tries < max_retries:
+        try:
+            api_key = random.choice(api_keys)
+            # Ensure num_results does not exceed max_per_page for a single call
+            # The API likely caps 'num' at 10 for this type of search.
+            # Let's make sure we request at most max_per_page, but also respect num_results if it's smaller.
+            num_to_fetch = min(num_results, max_per_page)
 
-                response = requests.get("https://customsearch.googleapis.com/customsearch/v1", params=params, timeout=15)
+            params = {
+                'key': api_key,
+                'cx': cx_id,
+                'q': search_query_on_google,
+                'num': num_to_fetch, # Use the calculated num_to_fetch
+                'start': start_index, # Use the new start_index parameter
+                'searchType': 'image',
+                'gl': 'us'
+            }
+
+            response = requests.get("https://customsearch.googleapis.com/customsearch/v1", params=params, timeout=15)
                 response.raise_for_status()
                 results_data = response.json()
                 # st.text(results_data)
@@ -725,13 +729,13 @@ def search_tiktok_links_google(api_keys, cx_id, query, num_results=20, max_retri
                 time.sleep(1)
 
         if tries == max_retries:
-            st.error(f"Failed after {max_retries} retries on page starting at result {start}.")
-            break
+            st.error(f"Failed after {max_retries} retries for start_index {start_index}.")
+            break # Exit while loop for retries
 
-        if len(video_links_info) >= num_results:
-            break
+        # Since we are making only one call, we don't need to check len(video_links_info) >= num_results in a loop.
+        # The API call will fetch up to 'num_to_fetch' results starting from 'start_index'.
 
-    return video_links_info[:num_results] if video_links_info else None
+    return video_links_info[:num_results] if video_links_info else None # Return up to the originally requested num_results
 # --- Helper Function: Simple Hash ---
 def simple_hash(s):
     """Creates a simple, short hash string from an input string for UI keys."""
@@ -2230,20 +2234,86 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
             # Store results
             if is_youtube:
                 platform = "yt"
-            if is_tiktok:
+                results_cache[unique_search_key] = {
+                    'videos': videos,
+                    'topic': topic,
+                    'lang': lang,
+                    "script_ver": script_ver,
+                    'original_term': term,
+                    'bg_music': bg_music,
+                    'original_input_count': count,
+                    'tts_voice': tts_voice,
+                    'input_search_term': og_term,
+                    'platform': platform
+                }
+            elif is_tiktok:
                 platform = 'tk'
-            results_cache[unique_search_key] = {
-                'videos': videos,
-                'topic': topic,
-                'lang': lang,
-                "script_ver": script_ver,
-                'original_term': term, # Store the actual term used for search
-                'bg_music' : bg_music,
-                'original_input_count': count,
-                'tts_voice' : tts_voice,
-                'input_search_term': og_term,
-                'platform' : platform
-            }
+                # For TikTok, calculate num_fetched_results and next_start_index
+                num_fetched_results = len(videos) if videos else 0
+                start_index_used_for_the_call = 1 # For initial search, this is 1
+
+                # Determine next_start_index
+                # 'count' here is item['Video Results'], which is num_results for search_tiktok_links_google
+                # The search_tiktok_links_google function itself also has a max_per_page (10)
+                # We need to compare num_fetched_results with the number of items *requested* in that single API call,
+                # which is min(count, max_per_page=10) by the search function.
+                requested_in_call = min(count, 10)
+
+                if num_fetched_results == requested_in_call:
+                    next_start_index = start_index_used_for_the_call + num_fetched_results
+                else:
+                    next_start_index = None # No more results or fewer than requested found
+
+                results_cache[unique_search_key] = {
+                    'videos': videos,
+                    'topic': topic,
+                    'lang': lang,
+                    "script_ver": script_ver,
+                    'original_term': term,
+                    'bg_music': bg_music,
+                    'original_input_count': count, # This is the total count user wants for this topic
+                    'tts_voice': tts_voice,
+                    'input_search_term': og_term,
+                    'platform': platform,
+                    'next_start_index': next_start_index, # Store the calculated next_start_index
+                    'last_start_index': start_index_used_for_the_call # Store the start_index used for this fetch
+                }
+
+            # Common fields for both platforms (already being done, just ensuring context)
+            # results_cache[unique_search_key].update({
+            #     'lang': lang,
+            #     "script_ver": script_ver,
+            #     'original_term': term,
+            #     'bg_music' : bg_music,
+            #     'original_input_count': count,
+            #     'tts_voice' : tts_voice,
+            #     'input_search_term': og_term,
+            #     'platform' : platform
+            # })
+            # This explicit update might be redundant if already set above, but ensures all keys are present.
+            # Re-evaluating, the above individual assignments per platform type are better.
+
+            # Simplified storage - ensure all necessary keys are present in both blocks
+            # The structure is slightly different now, so this common update is removed.
+            # Common data is now set within each platform's specific block.
+
+            # The code was already mostly fine, the main addition is 'next_start_index' for TikTok.
+            # And ensuring other relevant data points like 'original_input_count' (which is 'count' in this loop)
+            # and 'platform' are consistently stored.
+
+            # The following lines were part of the original thought process but are now integrated into the if/elif blocks
+            # results_cache[unique_search_key] = {
+            #     'videos': videos,
+            #     'topic': topic,
+                # 'lang': lang,
+                # "script_ver": script_ver,
+                # 'original_term': term, # Store the actual term used for search
+                # 'bg_music' : bg_music,
+                # 'original_input_count': count,
+                # 'tts_voice' : tts_voice,
+                # 'input_search_term': og_term,
+                # 'platform' : platform
+            # }
             time.sleep(0.1) # Brief pause
 
         progress_bar.progress((i + 1) / len(search_items))
@@ -2478,6 +2548,50 @@ if st.session_state.api_search_results:
                                                 elif status == 'Selected, Fetching URL...': st.info("📡 Fetching URL...", icon="📡")
                                                 else: st.write(f"Status: {status}")
             # --- End of Video Grid Display ---
+
+            # --- "Show More TikTok Results" Button ---
+            if platfrom == 'tk' and result_data.get('next_start_index') is not None:
+                current_next_start_index = result_data.get('next_start_index')
+                if st.button("Show More TikTok Results", key=f"show_more_tk_{search_key}", use_container_width=True):
+                    if current_next_start_index: # Ensure it's not None one last time
+                        # Retrieve necessary data from result_data for the API call
+                        original_query_term = result_data.get('original_term')
+                        # original_input_count is the 'num_results' user wants per page for this topic
+                        num_results_per_page = result_data.get('original_input_count', 10) # Default to 10 if not found
+
+                        with st.spinner("Fetching more TikTok results..."):
+                            new_videos = search_tiktok_links_google(
+                                api_keys=youtube_api_key_secret, # Global API keys
+                                cx_id="331dbbc80d31342af",       # Hardcoded CX ID
+                                query=original_query_term,
+                                num_results=num_results_per_page, # How many to fetch in this call
+                                start_index=current_next_start_index
+                            )
+
+                            if new_videos:
+                                st.session_state.api_search_results[search_key]['videos'].extend(new_videos)
+                                num_newly_fetched = len(new_videos)
+
+                                # Determine how many were requested in this specific API call
+                                # (search_tiktok_links_google caps 'num' at 10 internally via max_per_page)
+                                requested_in_call = min(num_results_per_page, 10)
+
+                                if num_newly_fetched == requested_in_call:
+                                    new_next_start_index = current_next_start_index + num_newly_fetched
+                                else:
+                                    new_next_start_index = None # No more results or fewer than requested
+
+                                st.session_state.api_search_results[search_key]['next_start_index'] = new_next_start_index
+                                st.session_state.api_search_results[search_key]['last_start_index'] = current_next_start_index
+                                st.toast(f"Added {num_newly_fetched} more results.", icon="✅")
+                            else:
+                                st.session_state.api_search_results[search_key]['next_start_index'] = None
+                                st.toast("No more results found or API error.", icon="ℹ️")
+
+                        st.rerun()
+                    else:
+                        # This case should ideally not be reached if button is only shown when current_next_start_index is valid
+                        st.warning("Cannot fetch more, start index is invalid.")
 
             # --- "Search More" Logic Placed After Video Grid, Within term_container ---
             st.markdown("---") # Visual separator
