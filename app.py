@@ -1071,6 +1071,7 @@ def generate_audio_with_timestamps(text, client, voice_id="sage"):
             'redneck': {'instructions':'talk like an older ameircan redneck heavy accent. deep voice, enthusiastic','voice' :'ash'},
             'announcer': {'instructions':'Polished announcer voice, American accent','voice' :'ash'},
             'sage uk': {'instructions':'Polished announcer voice, British accent','voice' :'sage'},
+            'sage': {'instructions': 'high energy enthusiastic', 'voice': 'sage'},
             'announcer uk': {'instructions':'Polished announcer voice, British accent','voice' :'ash'}
 
 
