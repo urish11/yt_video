@@ -693,29 +693,29 @@ def search_tiktok_links_google(api_keys, cx_id, query, num_results=20, start_ind
             }
 
             response = requests.get("https://customsearch.googleapis.com/customsearch/v1", params=params, timeout=15)
-                response.raise_for_status()
-                results_data = response.json()
-                # st.text(results_data)
- 
-                if 'items' in results_data:
-                    for item in results_data['items']:
-                        title = item.get("title", "")
-                        url = item['image'].get("contextLink", "")
-                        video_id = url.split("/")[-1]
-                        thumbnail_url = item['image'].get("thumbnailLink", "")
-                        # thumbnail_url = item.get("link", "")
+            response.raise_for_status()
+            results_data = response.json()
+            # st.text(results_data)
+
+            if 'items' in results_data:
+                for item in results_data['items']:
+                    title = item.get("title", "")
+                    url = item['image'].get("contextLink", "")
+                    video_id = url.split("/")[-1]
+                    thumbnail_url = item['image'].get("thumbnailLink", "")
+                    # thumbnail_url = item.get("link", "")
 
 
-                        if 'video' in url:
-                            video_links_info.append({
-                                'title': title,
-                                'url': url,
-                                'thumbnail_url': thumbnail_url,
-                                'videoId': video_id,
-                                'platform': 'tk'
-                            })
+                    if 'video' in url:
+                        video_links_info.append({
+                            'title': title,
+                            'url': url,
+                            'thumbnail_url': thumbnail_url,
+                            'videoId': video_id,
+                            'platform': 'tk'
+                        })
 
-                break  # success, break retry loop
+            break  # success, break retry loop
 
             except requests.exceptions.RequestException as e:
                 st.warning(f"[Attempt {tries+1}] Request error: {e}")
