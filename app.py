@@ -717,23 +717,23 @@ def search_tiktok_links_google(api_keys, cx_id, query, num_results=20, start_ind
 
             break  # success, break retry loop
 
-            except requests.exceptions.RequestException as e:
-                st.warning(f"[Attempt {tries+1}] Request error: {e}")
-            except Exception as e:
-                st.error(f"Unexpected error: {e}")
-                import traceback
-                st.error(traceback.format_exc())
+        except requests.exceptions.RequestException as e:
+            st.warning(f"[Attempt {tries+1}] Request error: {e}")
+        except Exception as e:
+            st.error(f"Unexpected error: {e}")
+            import traceback
+            st.error(traceback.format_exc())
 
-            tries += 1
-            if tries < max_retries:
-                time.sleep(1)
+        tries += 1
+        if tries < max_retries:
+            time.sleep(1)
 
-        if tries == max_retries:
-            st.error(f"Failed after {max_retries} retries for start_index {start_index}.")
-            break # Exit while loop for retries
+    if tries == max_retries:
+        st.error(f"Failed after {max_retries} retries for start_index {start_index}.")
+        # break # Exit while loop for retries
 
-        # Since we are making only one call, we don't need to check len(video_links_info) >= num_results in a loop.
-        # The API call will fetch up to 'num_to_fetch' results starting from 'start_index'.
+    # Since we are making only one call, we don't need to check len(video_links_info) >= num_results in a loop.
+    # The API call will fetch up to 'num_to_fetch' results starting from 'start_index'.
 
     return video_links_info[:num_results] if video_links_info else None # Return up to the originally requested num_results
 # --- Helper Function: Simple Hash ---
