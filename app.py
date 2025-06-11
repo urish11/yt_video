@@ -3133,3 +3133,4 @@ else: # If selected_videos dict is empty or doesn't exist
 
 # Footer notes
 st.sidebar.caption("Each 'Select' click queues one job. URL Fetch after selection. Video Gen uses direct URL.")
+ 
