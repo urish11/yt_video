@@ -2592,7 +2592,7 @@ if st.session_state.api_search_results:
             
             # --- "Search More" Logic Placed After Video Grid, Within term_container ---
             st.markdown("---") # Visual separator
-            if input_search_term_from_editor.lower() == 'auto':
+            if input_search_term_from_editor.lower() == 'auto' or 1==1:
                 if st.button("🔎 Search More Auto Terms", key=f"search_more_btn_auto_{search_key}"):
                     # st.text(input_search_term_from_editor.lower() +'ss')
                     
