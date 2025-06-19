@@ -104,7 +104,12 @@ Examples of strong terms:
 Avoid:
 - SEO-style or commercial phrases like “for sale,” “buy now,” or “discount.”
 - Overly specific or boring search terms like “repossessed catamarans for sale.”
-- Any term longer than 4 words."""
+- Any term longer than 4 words.
+
+return just the requested string, no intros no explanations
+"""
+
+
 # --- Font Path Handling ---
 # Use an absolute path or ensure the font is in the same directory as the script
 # For Streamlit Cloud, you might need to include the font in your repository
