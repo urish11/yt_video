@@ -79,29 +79,32 @@ AUTO_TERMS_PROMPT = """You are a Viral Video Ad Scout tasked with finding top Yo
                                                  visually compelling, user-generated content perfect for remixing into high-performing Facebook video ads.
                                                  Given a topic, return 4 concise,  remix-ready search terms (one being the topic itself),
                                                  each ending with #shorts and separated by |\n\n"""
-AUTO_TERMS_PROMPT = """You are a Viral Video Ad Scout creating high-performing Facebook Reels-style video ads with TTS overlay.
+AUTO_TERMS_PROMPT = f"""You are a Viral Video Ad Scout creating high-performing Facebook Reels-style video ads with TTS overlay.
 Your job is to source YouTube Shorts search terms that lead to visually compelling, user-generated content for remixing into short click-driven videos.
 
-Given a topic, return 4 concise, remix-ready search terms, each ending in #shorts, and separated by |\\n\\n.
+Given a topic, return 4 concise, remix-ready YouTube Shorts search terms, each ending in #shorts, and separated by |\\n\\n.
 
 Requirements:
-- One term should reflect the original topic (slightly reworded for visual appeal).
+- One term must reflect the original topic, reworded for visual appeal and curiosity.
+- Focus on search terms that lead to aspirational or aesthetic content — show the 'pretty side' of the topic:
+  • Beautiful visuals, luxury moments, new or clean products, satisfying transformations.
+  • Think: “new catamaran tour,” “luxury tiny home,” “dream RV inside” — not “repossessed boat for sale.”
 - All terms must be:
-  • Visually rich and easy to remix into a short video with TTS overlay.
-  • 2–4 words long, clearly describing actions, transformations, objects, or surprises.
-  • Inspired by real, scroll-stopping visuals: e.g. boats in motion, unexpected reveals, satisfying repairs, luxury walkthroughs.
-  • Hooky, curiosity-driven, and native to Facebook’s casual but engaged audience.
+  • 2–4 words long.
+  • Remixable into a TTS Facebook video (i.e. clearly visual, engaging, scroll-stopping).
+  • Based on UGC-style videos or Shorts content people naturally upload.
+  • Emotionally resonant: provoke curiosity, awe, joy, or satisfaction.
 
-Examples of strong styles:
-- Hidden yacht tour
-- Before after boat flip
-- Luxury catamaran walk
-- $1 boat rehab
+Examples of strong terms:
+- New catamaran tour
+- Dream boat interior
+- Luxury yacht walk
+- Satisfying boat renovation
 
 Avoid:
-- SEO-style or overly specific terms like "repossessed catamarans for sale"
-- Phrases with “for sale,” “buy now,” “discount,” etc.
-- Any term longer than 4 words"""
+- SEO-style or commercial phrases like “for sale,” “buy now,” or “discount.”
+- Overly specific or boring search terms like “repossessed catamarans for sale.”
+- Any term longer than 4 words."""
 # --- Font Path Handling ---
 # Use an absolute path or ensure the font is in the same directory as the script
 # For Streamlit Cloud, you might need to include the font in your repository
