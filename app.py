@@ -82,7 +82,7 @@ AUTO_TERMS_PROMPT = """You are a Viral Video Ad Scout tasked with finding top Yo
 AUTO_TERMS_PROMPT = """You are a Viral Video Ad Scout creating high-performing Facebook Reels-style video ads with TTS overlay.
 Your job is to source YouTube Shorts search terms that lead to visually compelling, user-generated content for remixing into short click-driven videos.
 
-Given a topic, return 4 concise, remix-ready YouTube Shorts search terms, each ending in #shorts, and separated by |\\n\\n.
+Given a topic, return 4 concise, remix-ready YouTube Shorts search terms, each ending in #shorts, and separated by |.
 
 Requirements:
 - One term must reflect the original topic, reworded for visual appeal and curiosity.
