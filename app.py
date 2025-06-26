@@ -26,6 +26,9 @@ import itertools
 import numpy as np
 import cv2
 import pytesseract
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+
 
 # --- Try importing moviepy components with error handling ---
 # Cache for resolved yt-dlp direct URLs to avoid refetching for the same video ID within a session
@@ -208,7 +211,31 @@ except Exception as e:
 
 # --- Helper Function: create_topic_summary_dataframe ---
 
+def google_sheets_append_df(spreadsheet_id,range_name, df_data_input ):
+    # Load credentials from Streamlit secrets
+    credentials_dict = st.secrets["gcp_service_account"]
+    creds = service_account.Credentials.from_service_account_info(
+        credentials_dict,
+        scopes=["https://www.googleapis.com/auth/spreadsheets"]
+    )
 
+
+    service = build("sheets", "v4", credentials=creds)
+    
+    body = {"values": df_data_input.values.tolist()}
+    try:
+        # Append the row
+        result = service.spreadsheets().values().append(
+            spreadsheetId=spreadsheet_id,
+            range=range_name,
+            valueInputOption="RAW",
+            insertDataOption="INSERT_ROWS",
+            body=body
+        ).execute()
+
+        st.success(f"Row added: {result['updates']['updatedRange']}")
+    except Exception as e:
+        st.text(f"error google_sheets_append_row:  {e}")
 def blur_subtitles_in_video_unified(
     video_path,
     output_path, # This MUST be different from video_path
@@ -3163,6 +3190,8 @@ if 'selected_videos' in st.session_state and st.session_state.selected_videos:
                  },
                  hide_index=True
             )
+            google_sheets_append_df("13TOgYTYpVV0ysvKqufS2Q5RDdgTP097x1hH_eMtCL4w","yt_video!A1",df_topic_summary  )
+
             # Download Button for summary
             try:
                 csv_summary_data = convert_df_to_csv(df_topic_summary)
