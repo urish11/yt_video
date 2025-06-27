@@ -2944,7 +2944,7 @@ You are an expert scriptwriter for high-performing short-form video ads. Generat
 * Exclude: Fake urgency or scarcity.
 * Exclude: Geographic limitations.
 * Exclude: Complex jargon. Keep words simple.
-CTA in the likes of: 'Click to explore options or 'Tap to see how it works.'.but still engaging not generic. dont use 'to see models\what's available ... etc'
+CTA in the likes of: 'Click to explore options or 'Tap to see how it works.'.but still highly engaging high CTR not generic. dont use 'to see models\what's available ... etc'
 NO ('get approved') 'See what's available near you' ' 'available this weekend\month' etc!!!
 **Output Requirement:** Return *only* the final script text.
                             
@@ -2954,7 +2954,7 @@ NO ('get approved') 'See what's available near you' ' 'available this weekend\mo
 """
 
                         elif script_ver_temp == "default":
-                            script_prompt = f"""Create a short, engaging voiceover script for FB viral   video (roughly 15-20 seconds long, maybe 2-3 sentences) about '{topic}' in language {lang}. The tone should be informative yet conversational, '.  smooth flow. Just provide the script text, nothing else. create intriguing and engaging script, sell the topic to the audience . be very causal and not 'advertisement' style vibe. end with a call to action 'tap to....'  .the text needs to be retentive.Don't say 'we' or 'our' .NOTE:: DO NOT dont use senetional words and phrasing and DONT make false promises , use Urgency Language, Avoid geographically suggestive terms (e.g., "Near you," "In your area"). Do not use "we" or "our".CTA in the likes of: 'Click to explore options or 'Tap to see how it works.' but still engaging not generic . dont use 'to see models\what's available ... etc'. in end if video use something "Tap now to.." with a clear, non-committal phrase !!! NO ('get approved') 'See what's available near you' ' 'available this weekend\month' etc!!!  """
+                            script_prompt = f"""Create a short, engaging voiceover script for FB viral   video (roughly 15-20 seconds long, maybe 2-3 sentences) about '{topic}' in language {lang}. The tone should be informative yet conversational, '.  smooth flow. Just provide the script text, nothing else. create intriguing and engaging script, sell the topic to the audience . be very causal and not 'advertisement' style vibe. end with a call to action 'tap to....'  .the text needs to be retentive.Don't say 'we' or 'our' .NOTE:: DO NOT dont use senetional words and phrasing and DONT make false promises , use Urgency Language, Avoid geographically suggestive terms (e.g., "Near you," "In your area"). Do not use "we" or "our".CTA in the likes of: 'Click to explore options or 'Tap to see how it works.' but still highly engaging high CTR not generic . dont use 'to see models\what's available ... etc'. in end if video use something "Tap now to.." with a clear, non-committal phrase !!! NO ('get approved') 'See what's available near you' ' 'available this weekend\month' etc!!!  """
                         # script_text = chatGPT(script_prompt,model="o1", client=openai_client)
 
                         elif script_ver_temp == '1st_person':
@@ -2980,7 +2980,7 @@ NO ('get approved') 'See what's available near you' ' 'available this weekend\mo
                                             - No "we" or "our" language - keep it personal
                                             - End with "Tap to..." followed by a clear, non-committal action
                                             * **NO:** DONT make false promises.NO ('get approved') 'See what's available near you' ' 'available this weekend\month' etc!!!
-                                            CTA in the likes of: 'Click to explore options or 'Tap to see how it works.' but still engaging not generic.. dont use 'to see models\what's available ... etc'
+                                            CTA in the likes of: 'Click to explore options or 'Tap to see how it works.' but highly engaging high CTR not generic.. dont use 'to see models\what's available ... etc'
                                             Return only the script text itself, nothing else.
                                             """
 
