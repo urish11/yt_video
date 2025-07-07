@@ -2225,8 +2225,6 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
 
                 #   - Avoid abstract or advice-based phrases (like “tips,” “hacks,” or “secrets”)
 
-                #   - Avoid using non visual\describing words that are not likely to be relevent (like 'On credit', "Financing", etc)
-
                 #   - Add '#shorts' to the end of each search term and separate terms with ' | '
 
                 #   - if the topic is a service (like lawyer) that is intangible, think of something else that can be used (like "Veterans Benefits Lawyer free consultation" give "veteran shares #shorts ")
@@ -2369,7 +2367,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
                     "script_ver": script_ver,
                     'original_term': term,
                     'bg_music': bg_music,
-                    'original_input_count': count, # This is the total count user wants for this topic
+                    'original_input_count': count, # This is the total num_results user wants for this topic
                     'tts_voice': tts_voice,
                     'input_search_term': og_term,
                     'platform': platform,
@@ -2393,106 +2391,109 @@ st.divider() # Separator before results
 if st.session_state.api_search_results:
     st.subheader("Search Results & Video Selection (Grid View)")
 
-    # The search_key should uniquely identify an input configuration from your data editor
-    for search_key, result_data in st.session_state.api_search_results.items():
-        videos = result_data.get('videos', []) # List of video dicts
-        topic_for_group = result_data['topic']
-        lang_for_group = result_data['lang']
-        script_ver_for_group = result_data["script_ver"]
-        # This is the term (or pipe-separated terms) that were *actually* used for the most recent search for this group.
-        # It will be updated if "Search More" is used.
-        current_search_terms_for_group_display = result_data['original_term']
-        bg_music_for_group = result_data.get('bg_music', False) # Default if not present
-        tts_voice_for_group = result_data.get('tts_voice', 'sage') # Default if not present
-        platfrom = result_data.get('platform')
-        # These are from the original data editor input for this topic/row
-        # Ensure these keys ('input_search_term', 'original_input_count') were stored when api_search_results was populated
-        input_search_term_from_editor = result_data.get('input_search_term', current_search_terms_for_group_display)
-        count_from_editor = result_data.get('original_input_count', MAX_RESULTS_PER_QUERY) # Fallback to global max
+    # Wrap the search results display in a container
+    search_results_container = st.container(border=True)
+    with search_results_container:
+        # The search_key should uniquely identify an input configuration from your data editor
+        for search_key, result_data in st.session_state.api_search_results.items():
+            videos = result_data.get('videos', []) # List of video dicts
+            topic_for_group = result_data['topic']
+            lang_for_group = result_data['lang']
+            script_ver_for_group = result_data["script_ver"]
+            # This is the term (or pipe-separated terms) that were *actually* used for the most recent search for this group.
+            # It will be updated if "Search More" is used.
+            current_search_terms_for_group_display = result_data['original_term']
+            bg_music_for_group = result_data.get('bg_music', False) # Default if not present
+            tts_voice_for_group = result_data.get('tts_voice', 'sage') # Default if not present
+            platfrom = result_data.get('platform')
+            # These are from the original data editor input for this topic/row
+            # Ensure these keys ('input_search_term', 'original_input_count') were stored when api_search_results was populated
+            input_search_term_from_editor = result_data.get('input_search_term', current_search_terms_for_group_display)
+            count_from_editor = result_data.get('original_input_count', MAX_RESULTS_PER_QUERY) # Fallback to global max
 
-        # Initialize state for this specific search group's "Search More" manual input, if not already
-        st.session_state.search_more_manual_input_visible.setdefault(search_key, False)
-        st.session_state.search_more_manual_query.setdefault(search_key, "")
+            # Initialize state for this specific search group's "Search More" manual input, if not already
+            st.session_state.search_more_manual_input_visible.setdefault(search_key, False)
+            st.session_state.search_more_manual_query.setdefault(search_key, "")
 
-        term_container = st.container(border=True)
-        with term_container:
-            st.subheader(f"Results for Search: \"{current_search_terms_for_group_display}\"")
-            st.caption(f"(Original Topic: \"{topic_for_group}\", Lang: {lang_for_group}, Angle: {script_ver_for_group}, Input Term: '{input_search_term_from_editor}')")
+            term_container = st.container(border=True)
+            with term_container:
+                st.subheader(f"Results for Search: \"{current_search_terms_for_group_display}\"")
+                st.caption(f"(Original Topic: \"{topic_for_group}\", Lang: {lang_for_group}, Angle: {script_ver_for_group}, Input Term: '{input_search_term_from_editor}')")
 
-            if not videos:
-                st.write("No videos found for this search.")
-            else:
-                num_videos = len(videos)
-                num_cols = 3 # Adjust number of columns as desired
-                if platfrom == 'tk':
-                    num_cols = 5  
-                for i in range(0, num_videos, num_cols):
-                    cols = st.columns(num_cols)
-                    for j in range(num_cols):
-                        video_index = i + j
-                        if video_index < num_videos:
-                            video = videos[video_index]
-                            with cols[j]:
-                                # st.text(video)
-                                video_id = video['videoId']
-                                video_title = video['title']
-                                thumbnail = video.get('thumbnail_url',"")
-                                standard_video_url = video.get('url') # Standard YT URL
-                                grid_instance_key = f"vid_{video_id}_{search_key}_{i}_{j}" # More specific key
-                                platform = video['platform']
-                                show_video_key = f"show_player_{grid_instance_key}"
-                                st.session_state.setdefault(show_video_key, False)
+                if not videos:
+                    st.write("No videos found for this search.")
+                else:
+                    num_videos = len(videos)
+                    num_cols = 3 # Adjust number of columns as desired
+                    if platfrom == 'tk':
+                        num_cols = 5  
+                    for i in range(0, num_videos, num_cols):
+                        cols = st.columns(num_cols)
+                        for j in range(num_cols):
+                            video_index = i + j
+                            if video_index < num_videos:
+                                video = videos[video_index]
+                                with cols[j]:
+                                    # st.text(video)
+                                    video_id = video['videoId']
+                                    video_title = video['title']
+                                    thumbnail = video.get('thumbnail_url',"")
+                                    standard_video_url = video.get('url') # Standard YT URL
+                                    grid_instance_key = f"vid_{video_id}_{search_key}_{i}_{j}" # More specific key
+                                    platform = video['platform']
+                                    show_video_key = f"show_player_{grid_instance_key}"
+                                    st.session_state.setdefault(show_video_key, False)
 
-                                st.write(f"**{textwrap.shorten(video_title, width=50, placeholder='...')}**")
-                                st.caption(f"ID: {video_id}")
+                                    st.write(f"**{textwrap.shorten(video_title, width=50, placeholder='...')}**")
+                                    st.caption(f"ID: {video_id}")
 
-                                if st.session_state[show_video_key]:
-                                    try:
-                                        if platform == 'yt':
-                                            iframe_code = f"""
-                                            <iframe width="350" height="560"
-                                            src="https://www.youtube.com/embed/{video_id}"
-                                            title="YouTube video player" frameborder="0"
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media;
-                                            gyroscope; picture-in-picture; web-share"
-                                            allowfullscreen></iframe>"""
-                                        if platform == 'tk':
-                                                original_width = 300
-                                                original_height = 560
-                                                target_width = 210
-                                                scale = target_width / original_width
-                                                scaled_height = int(original_height * scale)                                            
+                                    if st.session_state[show_video_key]:
+                                        try:
+                                            if platform == 'yt':
                                                 iframe_code = f"""
-                                                <!-- Visible wrapper: clips excess space -->
-                                                <div style="width: {target_width}px; height: {scaled_height}px; overflow: hidden;">
+                                                <iframe width=\"350\" height=\"560\"
+                                                src=\"https://www.youtube.com/embed/{video_id}"
+                                                title=\"YouTube video player\" frameborder=\"0\"
+                                                allow=\"accelerometer; autoplay; clipboard-write; encrypted-media;
+                                                gyroscope; picture-in-picture; web-share\"
+                                                allowfullscreen></iframe>"""
+                                            if platform == 'tk':
+                                                    original_width = 300
+                                                    original_height = 560
+                                                    target_width = 210
+                                                    scale = target_width / original_width
+                                                    scaled_height = int(original_height * scale)                                            
+                                                    iframe_code = f"""
+                                                    <!-- Visible wrapper: clips excess space -->
+                                                    <div style=\"width: {target_width}px; height: {scaled_height}px; overflow: hidden;\">
 
-                                                <!-- Inner container: real TikTok player size scaled down -->
-                                                <div style="width: {original_width}px; height: {original_height}px; transform: scale({scale}); transform-origin: top left;">
-                                                    <iframe 
-                                                    src="https://www.tiktok.com/embed/v2/{video_id}" 
-                                                    allow="autoplay"
-                                                    width="100%" 
-                                                    height="100%" 
-                                                    allowfullscreen 
-                                                    scrolling="no" 
-                                                    loading="lazy"
-                                                    style="border:none; border-radius: 12px;">
-                                                    </iframe>
-                                                </div>
+                                                    <!-- Inner container: real TikTok player size scaled down -->
+                                                    <div style=\"width: {original_width}px; height: {original_height}px; transform: scale({scale}); transform-origin: top left;\">
+                                                        <iframe 
+                                                        src=\"https://www.tiktok.com/embed/v2/{video_id}\" 
+                                                        allow=\"autoplay\"
+                                                        width=\"100%\" 
+                                                        height=\"100%\" 
+                                                        allowfullscreen 
+                                                        scrolling=\"no\" 
+                                                        loading=\"lazy\"
+                                                        style=\"border:none; border-radius: 12px;\">
+                                                        </iframe>
+                                                    </div>
 
-                                                </div>
-                                                """
+                                                    </div>
+                                                    """
 #                                                 iframe_code = f"""
 #                                             <iframe 
-#                                             height="400" 
-#                                             loading="lazy"
-#                                             width="220" 
-#                                             src="https://www.tiktok.com/embed/v3/{video_id}?autoplay=1"
+#                                             height=\"400\" 
+#                                             loading=\"lazy\"
+#                                             width=\"220\" 
+#                                             src=\"https://www.tiktok.com/embed/v3/{video_id}?autoplay=1\"
 #                                             allowfullscreen 
-#                                             allow="encrypted-media"
-#                                             scrolling="no"
-#                                             style="overflow: hidden; border: none;"
-#                                             title="TikTok Embed"
+#                                             allow=\"encrypted-media\"
+#                                             scrolling=\"no\"
+#                                             style=\"overflow: hidden; border: none;\"
+#                                             title=\"TikTok Embed\"
 #                                             ></iframe>
 
 
@@ -2505,111 +2506,111 @@ if st.session_state.api_search_results:
                                         st.markdown(iframe_code, unsafe_allow_html=True)
                                     except Exception as e:
                                         st.error(f"Video preview failed: {e}")
-                                else:
-                                    if platform == 'yt':
-                                        thumbnail_url = f"https://i.ytimg.com/vi/{video_id}/mqdefault.jpg"
-
-                                    if platform == 'tk':
-                                        thumbnail_url = thumbnail
-
-                                    try:
+                                    else:
                                         if platform == 'yt':
-                                            st.image(thumbnail_url, use_container_width=False, caption="Video Thumbnail",width=200)
+                                            thumbnail_url = f"https://i.ytimg.com/vi/{video_id}/mqdefault.jpg"
+
                                         if platform == 'tk':
-                                            st.markdown(
-                                                            f"""
-                                                            <div style="text-align: center;">
-                                                                <img src="{thumbnail_url}" alt="Video Thumbnail" width="200"
-                                                                    style="margin:auto; display:block; border-radius: 8px;" />
-                                                                <p style="font-size: small; color: gray;">Video Thumbnail</p>
-                                                            </div>
-                                                            """,
-                                                            unsafe_allow_html=True
+                                            thumbnail_url = thumbnail
+
+                                        try:
+                                            if platform == 'yt':
+                                                st.image(thumbnail_url, use_container_width=False, caption="Video Thumbnail",width=200)
+                                            if platform == 'tk':
+                                                st.markdown(
+                                                                f"""
+                                                                <div style=\"text-align: center;\">
+                                                                    <img src=\"{thumbnail_url}\" alt=\"Video Thumbnail\" width=\"200\"
+                                                                        style=\"margin:auto; display:block; border-radius: 8px;\" />
+                                                                    <p style=\"font-size: small; color: gray;\">Video Thumbnail</p>
+                                                                </div>
+                                                                """,
+                                                                unsafe_allow_html=True
 
 
-                                                        ) 
+                                                            ) 
 
 
 
     
-                                    except:pass
+                                        except:pass
 
-                                toggle_label = "🔼 Hide" if st.session_state[show_video_key] else "▶️ Show"
-                                if st.button(f"{toggle_label} Preview", key=f"toggle_vid_btn_{grid_instance_key}", help="Show/hide video preview", use_container_width=True):
-                                    st.session_state[show_video_key] = not st.session_state[show_video_key]
-                                    st.rerun()
+                                    toggle_label = "🔼 Hide" if st.session_state[show_video_key] else "▶️ Show"
+                                    if st.button(f"{toggle_label} Preview", key=f"toggle_vid_btn_{grid_instance_key}", help="Show/hide video preview", use_container_width=True):
+                                        st.session_state[show_video_key] = not st.session_state[show_video_key]
+                                        st.rerun()
 
-                                if st.button("➕ Select (Queue Job)", key=f"select_btn_{grid_instance_key}", type="primary", use_container_width=True, disabled=st.session_state.batch_processing_active):
-                                    base_video_id = video_id
-                                    base_lang_string = lang_for_group.strip() # Use lang_for_group
-                                    langs_to_process = [l.strip() for l in base_lang_string.split(',') if l.strip()]
-                                    if not langs_to_process:
-                                        langs_to_process = ["default"] # Fallback language
-                                        st.warning("Could not parse languages for job, using default.")
+                                    if st.button("➕ Select (Queue Job)", key=f"select_btn_{grid_instance_key}", type="primary", use_container_width=True, disabled=st.session_state.batch_processing_active):
+                                        base_video_id = video_id
+                                        base_lang_string = lang_for_group.strip() # Use lang_for_group
+                                        langs_to_process = [l.strip() for l in base_lang_string.split(',') if l.strip()]
+                                        if not langs_to_process:
+                                            langs_to_process = ["default"] # Fallback language
+                                            st.warning("Could not parse languages for job, using default.")
 
-                                    for current_lang_for_job in langs_to_process:
-                                        base_key_prefix = f"{base_video_id}_{current_lang_for_job}_"
-                                        existing_copy_numbers = [
-                                            int(k[len(base_key_prefix):])
-                                            for k in st.session_state.selected_videos.keys()
-                                            if k.startswith(base_key_prefix) and k[len(base_key_prefix):].isdigit()
-                                        ]
-                                        next_copy_number = max(existing_copy_numbers) + 1 if existing_copy_numbers else 1
-                                        job_key = f"{base_key_prefix}{next_copy_number}"
+                                        for current_lang_for_job in langs_to_process:
+                                            base_key_prefix = f"{base_video_id}_{current_lang_for_job}_"
+                                            existing_copy_numbers = [
+                                                int(k[len(base_key_prefix):])
+                                                for k in st.session_state.selected_videos.keys()
+                                                if k.startswith(base_key_prefix) and k[len(base_key_prefix):].isdigit()
+                                            ]
+                                            next_copy_number = max(existing_copy_numbers) + 1 if existing_copy_numbers else 1
+                                            job_key = f"{base_key_prefix}{next_copy_number}"
 
-                                        st.session_state.selected_videos[job_key] = {
-                                            'Job Key': job_key,
-                                            'Search Term': current_search_terms_for_group_display, # Terms used for this result set
-                                            'Topic': topic_for_group,
-                                            'Language': current_lang_for_job, # Specific language for this job
-                                            'Video Title': video_title,
-                                            'Video ID': base_video_id,
-                                            'Copy Number': next_copy_number,
-                                            'Standard URL': standard_video_url,
-                                            'fetching_dlp': True,
-                                            'Direct URL': None,
-                                            'Format Details': None,
-                                            'yt_dlp_error': None,
-                                            'Generated S3 URL': None,
-                                            'Generation Error': None,
-                                            'Status': 'Selected, Fetching URL...',
-                                            'Script Angle': script_ver_for_group, # Use script_ver_for_group
-                                            'BG Music' : bg_music_for_group,    # Use bg_music_for_group
-                                            'TTS Voice' : tts_voice_for_group,   # Use tts_voice_for_group
-                                            'platform' :platform
-                                        }
-                                        st.toast(f"Queued Job #{next_copy_number} ({current_lang_for_job}) for: {video_title}", icon="➕")
-                                    st.rerun()
+                                            st.session_state.selected_videos[job_key] = {
+                                                'Job Key': job_key,
+                                                'Search Term': current_search_terms_for_group_display, # Terms used for this result set
+                                                'Topic': topic_for_group,
+                                                'Language': current_lang_for_job, # Specific language for this job
+                                                'Video Title': video_title,
+                                                'Video ID': base_video_id,
+                                                'Copy Number': next_copy_number,
+                                                'Standard URL': standard_video_url,
+                                                'fetching_dlp': True,
+                                                'Direct URL': None,
+                                                'Format Details': None,
+                                                'yt_dlp_error': None,
+                                                'Generated S3 URL': None,
+                                                'Generation Error': None,
+                                                'Status': 'Selected, Fetching URL...',
+                                                'Script Angle': script_ver_for_group, # Use script_ver_for_group
+                                                'BG Music' : bg_music_for_group,    # Use bg_music_for_group
+                                                'TTS Voice' : tts_voice_for_group,   # Use tts_voice_for_group
+                                                'platform' :platform
+                                            }
+                                            st.toast(f"Queued Job #{next_copy_number} ({current_lang_for_job}) for: {video_title}", icon="➕")
+                                        st.rerun()
 
-                                # --- Display Status for Existing Jobs for THIS video ---
-                                related_job_keys = [
-                                    k for k, v_data in st.session_state.selected_videos.items()
-                                    if v_data.get('Video ID') == video_id and v_data.get('Language') in [l.strip() for l in lang_for_group.split(',') if l.strip()]
-                                ]
-                                if related_job_keys:
-                                    status_expander_key = f"status_expander_{grid_instance_key}"
-                                    status_expander = st.expander(f"Show Status for {len(related_job_keys)} Queued Job(s)")
-                                    with status_expander:
-                                        sorted_job_keys = sorted(related_job_keys, key=lambda k_sort: (st.session_state.selected_videos.get(k_sort, {}).get('Language', ''), st.session_state.selected_videos.get(k_sort, {}).get('Copy Number', 0)))
-                                        for r_job_key in sorted_job_keys:
-                                            job_data = st.session_state.selected_videos.get(r_job_key)
-                                            if job_data:
-                                                copy_num = job_data.get('Copy Number', '?')
-                                                job_lang = job_data.get('Language', '?')
-                                                status = job_data.get('Status', 'Unknown')
-                                                s3_url = job_data.get('Generated S3 URL')
-                                                error_msg = job_data.get('Generation Error') or job_data.get('yt_dlp_error')
-                                                st.markdown(f"**Job #{copy_num} ({job_lang})** (`{r_job_key}`)")
-                                                if status == 'Processing': st.info("⚙️ Processing...", icon="⏳")
-                                                elif status == 'Queued': st.info("🕒 Queued", icon="🕒")
-                                                elif status == 'Completed' and s3_url:
-                                                    st.success("✔️ Generated!", icon="🎉")
-                                                    st.link_button("View on S3", url=s3_url, type="secondary")
-                                                elif status == 'Failed' and error_msg: st.error(f"❌ Failed: {error_msg[:60]}...", icon="🔥")
-                                                elif status.startswith('Error:') and error_msg: st.error(f"⚠️ URL Error: {error_msg[:60]}...", icon="⚠️")
-                                                elif status == 'Ready': st.success("✅ Ready to Process", icon="👍")
-                                                elif status == 'Selected, Fetching URL...': st.info("📡 Fetching URL...", icon="📡")
-                                                else: st.write(f"Status: {status}")
+                                    # --- Display Status for Existing Jobs for THIS video ---
+                                    related_job_keys = [
+                                        k for k, v_data in st.session_state.selected_videos.items()
+                                        if v_data.get('Video ID') == video_id and v_data.get('Language') in [l.strip() for l in lang_for_group.split(',') if l.strip()]
+                                    ]
+                                    if related_job_keys:
+                                        status_expander_key = f"status_expander_{grid_instance_key}"
+                                        status_expander = st.expander(f"Show Status for {len(related_job_keys)} Queued Job(s)")
+                                        with status_expander:
+                                            sorted_job_keys = sorted(related_job_keys, key=lambda k_sort: (st.session_state.selected_videos.get(k_sort, {}).get('Language', ''), st.session_state.selected_videos.get(k_sort, {}).get('Copy Number', 0)))
+                                            for r_job_key in sorted_job_keys:
+                                                job_data = st.session_state.selected_videos.get(r_job_key)
+                                                if job_data:
+                                                    copy_num = job_data.get('Copy Number', '?')
+                                                    job_lang = job_data.get('Language', '?')
+                                                    status = job_data.get('Status', 'Unknown')
+                                                    s3_url = job_data.get('Generated S3 URL')
+                                                    error_msg = job_data.get('Generation Error') or job_data.get('yt_dlp_error')
+                                                    st.markdown(f"**Job #{copy_num} ({job_lang})** (`{r_job_key}`)")
+                                                    if status == 'Processing': st.info("⚙️ Processing...", icon="⏳")
+                                                    elif status == 'Queued': st.info("🕒 Queued", icon="🕒")
+                                                    elif status == 'Completed' and s3_url:
+                                                        st.success("✔️ Generated!", icon="🎉")
+                                                        st.link_button("View on S3", url=s3_url, type="secondary")
+                                                    elif status == 'Failed' and error_msg: st.error(f"❌ Failed: {error_msg[:60]}...", icon="🔥")
+                                                    elif status.startswith('Error:') and error_msg: st.error(f"⚠️ URL Error: {error_msg[:60]}...", icon="⚠️")
+                                                    elif status == 'Ready': st.success("✅ Ready to Process", icon="👍")
+                                                    elif status == 'Selected, Fetching URL...': st.info("📡 Fetching URL...", icon="📡")
+                                                    else: st.write(f"Status: {status}")
             # --- End of Video Grid Display ---
 
             # --- "Show More TikTok Results" Button ---
@@ -2630,7 +2631,7 @@ if st.session_state.api_search_results:
                                 api_keys=youtube_api_key_secret,
                                 cx_id="331dbbc80d31342af",
                                 query=original_query_term,
-                                num_results=total_results_desired_for_topic, # Ask for another full block
+                                num_results=total_results_desired_for_topic, # User's desired items per batch
                                 start_index=current_next_start_index 
                             )
 
@@ -2679,7 +2680,7 @@ if st.session_state.api_search_results:
                                     # Call the refactored search_tiktok_links_google
                                     # It now returns (videos_list, next_block_start_index)
                                     # For a new "auto" search, always start at index 1
-                                    videos_list, next_block_start_index = search_tiktok_links_google(
+                                    videos_list, next_block_next_start_index = search_tiktok_links_google(
                                         api_keys=youtube_api_key_secret,
                                         cx_id="331dbbc80d31342af",
                                         query=new_ai_generated_terms,
@@ -2692,7 +2693,7 @@ if st.session_state.api_search_results:
                                     st.session_state.api_search_results[search_key]['videos'] = new_videos # Replace with new results
                                     st.session_state.api_search_results[search_key]['original_term'] = new_ai_generated_terms
                                     if platform == 'tk': # Specific updates for TikTok pagination
-                                        st.session_state.api_search_results[search_key]['next_start_index'] = next_block_start_index
+                                        st.session_state.api_search_results[search_key]['next_start_index'] = next_block_next_start_index
                                         st.session_state.api_search_results[search_key]['last_start_index'] = 1
                                     # For YouTube, 'next_start_index' etc. are not currently used in this 'auto search more' block.
                                     # If YT were to have a similar "show more blocks" feature, this would need adjustment.
@@ -2734,7 +2735,7 @@ if st.session_state.api_search_results:
                             elif platform == 'tk':
                                 # Call the refactored search_tiktok_links_google
                                 # For a new manual search, always start at index 1
-                                videos_list, next_block_start_index = search_tiktok_links_google(
+                                videos_list, next_block_next_start_index = search_tiktok_links_google(
                                     api_keys=youtube_api_key_secret,
                                     cx_id="331dbbc80d31342af",
                                     query=new_manual_term,
@@ -2747,7 +2748,7 @@ if st.session_state.api_search_results:
                                 st.session_state.api_search_results[search_key]['videos'] = new_videos # Replace with new results
                                 st.session_state.api_search_results[search_key]['original_term'] = new_manual_term
                                 if platform == 'tk': # Specific updates for TikTok pagination
-                                    st.session_state.api_search_results[search_key]['next_start_index'] = next_block_start_index
+                                    st.session_state.api_search_results[search_key]['next_start_index'] = next_block_next_start_index
                                     st.session_state.api_search_results[search_key]['last_start_index'] = 1
                                 # Similar to 'auto search more', YT doesn't use these pagination fields in this block yet.
                                 st.toast(f"Updated results for '{topic_for_group}' with new term.", icon="🔄")
@@ -2833,14 +2834,14 @@ if not st.session_state.batch_processing_active:
                         current_state['Format Details'] = dlp_info.get('format_details', 'N/A')
                         current_state['yt_dlp_error'] = None
                         current_state['Status'] = 'Ready' # Ready for processing
-                        st.toast(f"Direct URL loaded for job '{fetch_job_key}'", icon="✅")
+                        st.toast(f"Direct URL loaded for job '{fetch_job_to_process}'", icon="✅")
                     else: # Handle errors or missing URL from dlp_info
                         error_detail = dlp_info.get('error', "Could not get direct URL") if dlp_info else "yt-dlp fetch failed critically"
                         current_state['Direct URL'] = None
                         current_state['Format Details'] = "Error"
                         current_state['yt_dlp_error'] = error_detail
                         current_state['Status'] = f"Error: {error_detail}" # Update status to reflect error
-                        st.toast(f"yt-dlp failed for job '{fetch_job_key}': {error_detail}", icon="⚠️")
+                        st.toast(f"yt-dlp failed for job '{fetch_job_to_process}': {error_detail}", icon="⚠️")
 
             # Save updated state
             st.session_state.selected_videos[fetch_job_key] = current_state
@@ -2859,45 +2860,48 @@ if st.session_state.batch_processing_active and st.session_state.generation_queu
     if video_data and video_data.get('Direct URL') and not video_data.get('yt_dlp_error'):
         processed_count_display = st.session_state.batch_processed_count + 1
         total_count_display = st.session_state.batch_total_count
-        st.header(f"⚙️ Processing Job {processed_count_display}/{total_count_display}: {video_data['Video Title']} (Copy #{video_data.get('Copy Number', '?')} platform {video_data.get('platform' , "na")})")
-        gen_placeholder = st.container() # Container for logs of this specific job run
+        # Wrap the processing job display in a container
+        processing_job_container = st.container(border=True)
+        with processing_job_container:
+            st.header(f"⚙️ Processing Job {processed_count_display}/{total_count_display}: {video_data['Video Title']} (Copy #{video_data.get('Copy Number', '?')} platform {video_data.get('platform' , "na")})")
+            gen_placeholder = st.container() # Container for logs of this specific job run
 
-        try:
-            # --- Update Status ---
-            st.session_state.selected_videos[job_key_to_process]['Status'] = 'Processing'
+            try:
+                # --- Update Status ---
+                st.session_state.selected_videos[job_key_to_process]['Status'] = 'Processing'
 
-            # --- Generation Steps (run once per job key) ---
-            with gen_placeholder:
-                st.info(f"Starting video generation process for job: {job_key_to_process}")
-                with st.status("Running generation steps...", state="running", expanded=True) as status_log:
-                    try:
-                        # --- 1. Get Job Data ---
-                        topic = video_data.get('Topic', 'video topic')
-                        lang = video_data.get('Language', 'English')
-                        script_ver = video_data.get("Script Angle", "default")
-                        bg_music = video_data.get('BG Music', False)
-                        tts_voice = video_data.get('TTS Voice', 'sage')
-                        base_video_direct_url = video_data.get("Direct URL") # Use the fetched direct URL
-                        copy_num = video_data.get('Copy Number', 0),
-                        platform = video_data.get('platform' , "na")
+                # --- Generation Steps (run once per job key) ---
+                with gen_placeholder:
+                    st.info(f"Starting video generation process for job: {job_key_to_process}")
+                    with st.status("Running generation steps...", state="running", expanded=True) as status_log:
+                        try:
+                            # --- 1. Get Job Data ---
+                            topic = video_data.get('Topic', 'video topic')
+                            lang = video_data.get('Language', 'English')
+                            script_ver = video_data.get("Script Angle", "default")
+                            bg_music = video_data.get('BG Music', False)
+                            tts_voice = video_data.get('TTS Voice', 'sage')
+                            base_video_direct_url = video_data.get("Direct URL") # Use the fetched direct URL
+                            copy_num = video_data.get('Copy Number', 0),
+                            platform = video_data.get('platform' , "na")
 
-                        if not base_video_direct_url:
-                            raise ValueError("Direct video URL missing.")
+                            if not base_video_direct_url:
+                                raise ValueError("Direct video URL missing.")
 
-                        # --- 2. Generate Script ---
-                        st.write(f"1/5: Generating script (Angle: {script_ver})...")
-                        if script_ver == "mix":
-                            script_ver_temp = random.choice([opt for opt in SCRIPT_VER_OPTIONS if opt != 'mix'])
-                        if ',' in script_ver:
-                            script_ver_temp = random.choice(script_ver.split(","))
-                        else:
-                            script_ver_temp = script_ver
-                        # --- Construct the full script prompt based on script_ver_temp ---
-                        # (Insert your actual prompt logic here, using f-strings)
-                        if  script_ver_temp == 'default_v2' :
+                            # --- 2. Generate Script ---
+                            st.write(f"1/5: Generating script (Angle: {script_ver})...")
+                            if script_ver == "mix":
+                                script_ver_temp = random.choice([opt for opt in SCRIPT_VER_OPTIONS if opt != 'mix'])
+                            if ',' in script_ver:
+                                script_ver_temp = random.choice(script_ver.split(","))
+                            else:
+                                script_ver_temp = script_ver
+                            # --- Construct the full script prompt based on script_ver_temp ---
+                            # (Insert your actual prompt logic here, using f-strings)
+                            if  script_ver_temp == 'default_v2' :
                             
 
-                            script_prompt = f"""Generate a short voiceover script (approx. 15-20 seconds, typically 2-3 concise sentences) for a social media video ad about '{topic}' in {lang}.
+                                script_prompt = f"""Generate a short voiceover script (approx. 15-20 seconds, typically 2-3 concise sentences) for a social media video ad about '{topic}' in {lang}.
 
 **Goal:** Create an intriguing and engaging script that captures attention quickly, holds it (retentive), and encourages clicks, suitable for platforms like Facebook/Instagram Reels/TikTok.
 
@@ -2919,8 +2923,8 @@ NO ('get approved') 'See what's available near you' ' 'available this weekend\mo
 
 **Output:** Provide ONLY the raw script text, with no extra explanations or formatting.  """
 
-                        elif 'v3' in lang:
-                            script_prompt = f"""
+                            elif 'v3' in lang:
+                                script_prompt = f"""
 You are an expert scriptwriter for high-performing short-form video ads. Generate a voiceover script based on the following parameters:
 
 **Topic:** {topic}
@@ -2944,8 +2948,7 @@ You are an expert scriptwriter for high-performing short-form video ads. Generat
 * Exclude: Fake urgency or scarcity.
 * Exclude: Geographic limitations.
 * Exclude: Complex jargon. Keep words simple.
-CTA in the likes of: 'Click to explore options or 'Tap to see how it works.'.but still highly engaging high CTR not generic. dont use 'to see models\what's available ... etc'
-NO ('get approved') 'See what's available near you' ' 'available this weekend\month' etc!!!
+CTA in the likes of: 'Click to explore options or 'Tap to see how it works.'.but still highly engaging high CTR not generic . dont use 'to see models\what's available ... etc'
 **Output Requirement:** Return *only* the final script text.
                             
 
@@ -2953,18 +2956,19 @@ NO ('get approved') 'See what's available near you' ' 'available this weekend\mo
 
 """
 
-                        elif script_ver_temp == "default":
-                            script_prompt = f"""Create a short, engaging voiceover script for FB viral   video (roughly 15-20 seconds long, maybe 2-3 sentences) about '{topic}' in language {lang}. The tone should be informative yet conversational, '.  smooth flow. Just provide the script text, nothing else. create intriguing and engaging script, sell the topic to the audience . be very causal and not 'advertisement' style vibe. end with a call to action 'tap to....'  .the text needs to be retentive.Don't say 'we' or 'our' .NOTE:: DO NOT dont use senetional words and phrasing and DONT make false promises , use Urgency Language, Avoid geographically suggestive terms (e.g., "Near you," "In your area"). Do not use "we" or "our".CTA in the likes of: 'Click to explore options or 'Tap to see how it works.' but still highly engaging high CTR not generic . dont use 'to see models\what's available ... etc'. in end if video use something "Tap now to.." with a clear, non-committal phrase !!! NO ('get approved') 'See what's available near you' ' 'available this weekend\month' etc!!!  """
-                        # script_text = chatGPT(script_prompt,model="o1", client=openai_client)
+                            elif script_ver_temp == 'default':
+                                script_prompt = f"""Create a short, engaging voiceover script for FB viral   video (roughly 15-20 seconds long, maybe 2-3 sentences) about '{topic}' in language {lang}. The tone should be informative yet conversational, '.  smooth flow. Just provide the script text, nothing else. create intriguing and engaging script, sell the topic to the audience . be very causal and not 'advertisement' style vibe. end with a call to action 'tap to....'  .the text needs to be retentive.Don't say 'we' or 'our' .NOTE:: DO NOT dont use senetional words and phrasing and DONT make false promises , use Urgency Language, Avoid geographically suggestive terms (e.g., "Near you," "In your area"). Do not use "we" or "our".CTA in the likes of: 'Click to explore options or 'Tap to see how it works.' but still highly engaging high CTR not generic . dont use 'to see models\what's available ... etc'. in end if video use something "Tap now to.." with a clear, non-committal phrase !!! NO ('get approved') 'See what's available near you' ' 'available this weekend\month' etc!!!  """
+                            # script_text = chatGPT(script_prompt,model="o1", client=openai_client)
 
-                        elif script_ver_temp == '1st_person':
-                            script_prompt = f"""
+                            elif script_ver_temp == '1st_person':
+                                script_prompt = f"""
                                             Create a brief, captivating first-person voiceover script for a viral FB video about '{topic}' in {lang}. 
                                             Keep it concise (15-20 seconds when spoken, about 2-3 sentences) with these guidelines:
 
                                             - Start with an immediate hook in the first 3-5 seconds to grab attention
                                             - The hook should be intriguing but honest - NO false promises or misleading claims
                                             - Use first-person perspective throughout
+
                                             - Make the tone authentic and conversational, like a friend sharing a discovery
                                             - Focus on creating genuine interest in the topic with real value
                                             - Maintain a natural flow that keeps viewers watching
@@ -2985,136 +2989,117 @@ NO ('get approved') 'See what's available near you' ' 'available this weekend\mo
                                             """
 
 
-                        st.text(f"using script: {script_ver_temp}")
+                            st.text(f"using script: {script_ver_temp}")
 
-                        # --- Choose LLM ---
-                        # script_text = chatGPT(script_prompt, client=openai_client)
-                        script_text  = claude(script_prompt,is_thinking=True) # Assumes claude function uses API key from secrets
+                            # --- Choose LLM ---
+                            # script_text = chatGPT(script_prompt, client=openai_client)
+                            script_text  = claude(script_prompt,is_thinking=True) # Assumes claude function uses API key from secrets
 
-                        if not script_text: raise ValueError("Failed to generate script text.")
-                        st.text_area("Generated Script:", script_text, height=100, disabled=True, key=f"script_{job_key_to_process}")
-
-
-                         # --- 3. select voice id ---
+                            if not script_text: raise ValueError("Failed to generate script text.")
+                            st.text_area("Generated Script:", script_text, height=100, disabled=True, key=f"script_{job_key_to_process}")
 
 
+                             # --- 3. select voice id ---
 
-                        # --- 3. Generate TTS ---
-                        if ',' in tts_voice:
-                            tts_voice_temp = random.choice(tts_voice.split(","))
-                        else: tts_voice_temp = tts_voice
-                        st.write(f"2/5: Generating TTS audio & timestamps...")
-                        audio_path, word_timings = generate_audio_with_timestamps(
-                            script_text, client=openai_client, voice_id=tts_voice_temp
-                        )
-                        if audio_path is None or word_timings is None: # Check both for failure
-                            raise ValueError("Failed to generate TTS audio or timestamps.")
 
-                        # --- 4. Process Video ---
-                        st.write(f"3/5: Processing base video & adding audio/subtitles...")
-                        current_with_music = bg_music
-                        if current_with_music == 'mix': current_with_music = random.choice([True, False])
 
-                        # Pass Direct URL and other necessary data
-                        # This function now downloads the direct url, processes, and returns temp output path
+                            # --- 3. Generate TTS ---
+                            if ',' in tts_voice:
+                                tts_voice_temp = random.choice(tts_voice.split(","))
+                            else: tts_voice_temp = tts_voice
+                            st.write(f"2/5: Generating TTS audio & timestamps...")
+                            audio_path, word_timings = generate_audio_with_timestamps(
+                                script_text, client=openai_client, voice_id=tts_voice_temp
+                            )
+                            if audio_path is None or word_timings is None: # Check both for failure
+                                raise ValueError("Failed to generate TTS audio or timestamps.")
 
-                        
-                        final_video_path = process_video_with_tts(
-                            base_video_url=base_video_direct_url, # Pass the direct URL
-                            audio_path=audio_path,
-                            word_timings=word_timings,
-                            topic=topic,
-                            lang=lang,
-                            copy_num=copy_num,
-                            with_music=current_with_music,
-                            platform= platform
-                        )
-                        if not final_video_path: raise ValueError("Video processing (MoviePy) failed.")
+                            # --- 4. Process Video ---
+                            st.write(f"3/5: Processing base video & adding audio/subtitles...")
+                            current_with_music = bg_music
+                            if current_with_music == 'mix': current_with_music = random.choice([True, False])
 
-                        # --- 5. Construct Unique S3 Filename ---
-                        safe_topic = urllib.parse.quote(topic.replace(' ', '_')[:30], safe='')
-                        timestamp = int(datetime.datetime.now().timestamp())
-                        final_s3_object_name = f"final_{safe_topic}_{lang}_copy{copy_num}_{timestamp}.mp4"
+                            # Pass Direct URL and other necessary data
+                            # This function now downloads the direct url, processes, and returns temp output path
 
-                        # --- 6. Upload to S3 ---
-                        st.write(f"4/5: Uploading '{final_s3_object_name}' to S3...")
-                        s3_url = upload_vid_to_s3(
-                            s3_cli=s3_client, video_path=final_video_path,
-                            bucket_name=s3_bucket_name, object_name=final_s3_object_name,
-                            region_name=s3_region
-                        )
-                        if not s3_url: raise ValueError("Failed to upload video to S3.")
+                            
+                            final_video_path = process_video_with_tts(
+                                base_video_url=base_video_direct_url, # Pass the direct URL
+                                audio_path=audio_path,
+                                word_timings=word_timings,
+                                topic=topic,
+                                lang=lang,
+                                copy_num=copy_num,
+                                with_music=current_with_music,
+                                platform= platform
+                            )
+                            if not final_video_path: raise ValueError("Video processing (MoviePy) failed.")
 
-                        # --- 7. Success ---
-                        st.write(f"5/5: Generation Complete!")
-                        status_log.update(label="Generation Complete!", state="complete", expanded=False)
-                        if job_key_to_process in st.session_state.selected_videos:
-                            st.session_state.selected_videos[job_key_to_process]['Generated S3 URL'] = s3_url
-                            st.session_state.selected_videos[job_key_to_process]['Generation Error'] = None
-                            st.session_state.selected_videos[job_key_to_process]['Status'] = 'Completed'
-                            st.success(f"✅ Job '{job_key_to_process}' completed!", icon="🎉")
-                            st.video(s3_url) # Show the final video
-                        else: st.warning(f"Job key {job_key_to_process} missing after completion.")
+                            # --- 5. Construct Unique S3 Filename ---
+                            safe_topic = urllib.parse.quote(topic.replace(' ', '_')[:30], safe='')
+                            timestamp = int(datetime.datetime.now().timestamp())
+                            final_s3_object_name = f"final_{safe_topic}_{lang}_copy{copy_num}_{timestamp}.mp4"
 
-                    # --- Error Handling within Status Log ---
-                    except Exception as e:
-                        st.error(f"Error processing job '{job_key_to_process}': {e}", icon="🔥")
-                        status_log.update(label=f"Generation Failed: {str(e)[:100]}", state="error", expanded=True)
-                        if job_key_to_process in st.session_state.selected_videos:
-                            st.session_state.selected_videos[job_key_to_process]['Generation Error'] = str(e)[:200]
-                            st.session_state.selected_videos[job_key_to_process]['Generated S3 URL'] = None
-                            st.session_state.selected_videos[job_key_to_process]['Status'] = 'Failed'
-                        # Allow finally block to handle queue/rerun
+                            # --- 6. Upload to S3 ---
+                            st.write(f"4/5: Uploading '{final_s3_object_name}' to S3...")
+                            s3_url = upload_vid_to_s3(
+                                s3_cli=s3_client, video_path=final_video_path,
+                                bucket_name=s3_bucket_name, object_name=final_s3_object_name,
+                                region_name=s3_region
+                            )
+                            if not s3_url: raise ValueError("Failed to upload video to S3.")
 
-        # --- Finally block for cleanup and queue management ---
-        finally:
-            st.write(f"--- Cleaning up temporary files for job {job_key_to_process} ---")
-            # Clean up TTS audio file
-            if audio_path and os.path.exists(audio_path):
-                try: os.remove(audio_path)
-                except Exception as rm_err: st.warning(f"Could not delete temp audio: {audio_path} ({rm_err})")
-            # Clean up final processed video temp file (returned by process_video_with_tts)
-            if final_video_path and os.path.exists(final_video_path):
-                try: os.remove(final_video_path)
-                except Exception as rm_err: st.warning(f"Could not delete final temp video: {final_video_path} ({rm_err})")
-            # Note: process_video_with_tts handles its internal temp files (downloaded base, moviepy temps)
+                            # --- 7. Success ---
+                            st.write(f"5/5: Generation Complete!")
+                            status_log.update(label="Generation Complete!", state="complete", expanded=False)
+                            if job_key_to_process in st.session_state.selected_videos:
+                                st.session_state.selected_videos[job_key_to_process]['Generated S3 URL'] = s3_url
+                                st.session_state.selected_videos[job_key_to_process]['Generation Error'] = None
+                                st.session_state.selected_videos[job_key_to_process]['Status'] = 'Completed'
+                                st.success(f"✅ Job '{job_key_to_process}' completed!", icon="🎉")
+                                st.video(s3_url) # Show the final video
+                            else: st.warning(f"Job key {job_key_to_process} missing after completion.")
 
-            # Manage Queue
-            if st.session_state.generation_queue and st.session_state.generation_queue[0] == job_key_to_process:
-                 st.session_state.generation_queue.pop(0)
-                 st.session_state.batch_processed_count += 1
-            elif st.session_state.generation_queue: # Log unexpected queue state
-                 st.warning(f"Queue state unexpected. Expected {job_key_to_process}, found {st.session_state.generation_queue[0]}. Popping front.")
-                 st.session_state.generation_queue.pop(0)
-                 st.session_state.batch_processed_count += 1
+                        # --- Error Handling within Status Log ---
+                        except Exception as e:
+                            st.error(f"Error processing job '{job_key_to_process}': {e}", icon="🔥")
+                            status_log.update(label=f"Generation Failed: {str(e)[:100]}", state="error", expanded=True)
+                            if job_key_to_process in st.session_state.selected_videos:
+                                st.session_state.selected_videos[job_key_to_process]['Generation Error'] = str(e)[:200]
+                                st.session_state.selected_videos[job_key_to_process]['Generated S3 URL'] = None
+                                st.session_state.selected_videos[job_key_to_process]['Status'] = 'Failed'
+                            # Allow finally block to handle queue/rerun
 
-            # Check if batch is finished
-            if not st.session_state.generation_queue:
-                st.session_state.batch_processing_active = False
-                st.balloons()
-                st.success("🎉 Batch processing finished!")
+            # --- Finally block for cleanup and queue management ---
+            finally:
+                st.write(f"--- Cleaning up temporary files for job {job_key_to_process} ---")
+                # Clean up TTS audio file
+                if audio_path and os.path.exists(audio_path):
+                    try: os.remove(audio_path)
+                    except Exception as rm_err: st.warning(f"Could not delete temp audio: {audio_path} ({rm_err})")
+                # Clean up final processed video temp file (returned by process_video_with_tts)
+                if final_video_path and os.path.exists(final_video_path):
+                    try: os.remove(final_video_path)
+                    except Exception as rm_err: st.warning(f"Could not delete final temp video: {final_video_path} ({rm_err})")
+                # Note: process_video_with_tts handles its internal temp files (downloaded base, moviepy temps)
 
-            # Rerun to process next item or update UI
-            st.rerun()
+                # Manage Queue
+                if st.session_state.generation_queue and st.session_state.generation_queue[0] == job_key_to_process:
+                     st.session_state.generation_queue.pop(0)
+                     st.session_state.batch_processed_count += 1
+                elif st.session_state.generation_queue: # Log unexpected queue state
+                     st.warning(f"Queue state unexpected. Expected {job_key_to_process}, found {st.session_state.generation_queue[0]}. Popping front.")
+                     st.session_state.generation_queue.pop(0)
+                     st.session_state.batch_processed_count += 1
 
-    # --- Logic for skipping invalid jobs ---
-    elif job_key_to_process in st.session_state.selected_videos:
-         st.warning(f"Skipping job {job_key_to_process}. Invalid Direct URL or previous error.", icon="❓")
-         # Update status to Skipped
-         st.session_state.selected_videos[job_key_to_process]['Status'] = 'Skipped (Invalid Data/URL)'
-         st.session_state.selected_videos[job_key_to_process]['Generation Error'] = 'Skipped - Invalid data or URL before processing'
-         # Manage Queue
-         if st.session_state.generation_queue: st.session_state.generation_queue.pop(0)
-         st.session_state.batch_processed_count += 1
-         if not st.session_state.generation_queue: st.session_state.batch_processing_active = False
-         st.rerun()
-    else: # Job key somehow disappeared
-        st.error(f"Job key {job_key_to_process} in queue but not found. Removing.", icon="❓")
-        if st.session_state.generation_queue: st.session_state.generation_queue.pop(0)
-        st.session_state.batch_processed_count += 1
-        if not st.session_state.generation_queue: st.session_state.batch_processing_active = False
-        st.rerun()
+                # Check if batch is finished
+                if not st.session_state.generation_queue:
+                    st.session_state.batch_processing_active = False
+                    st.balloons()
+                    st.success("🎉 Batch processing finished!")
 
+                # Rerun to process next item or update UI
+                st.rerun()
 
 # --- Display Selected Jobs Table & Summary (Sidebar) ---
 # (Use the corrected display logic from the previous response)
@@ -3154,32 +3139,34 @@ if 'selected_videos' in st.session_state and st.session_state.selected_videos:
              df_selected_display.sort_values(by='Job Key', inplace=True)
 
 
-        # Display the detailed DataFrame
-        st.sidebar.dataframe(
-            df_selected_display,
-            column_config={
-                 "Generated S3 URL": st.column_config.LinkColumn("S3 Link"),
-                 "yt_dlp_error": st.column_config.TextColumn("URL Fetch Status", width="small", help="Status of fetching direct video URL"),
-                 "Generation Error": st.column_config.TextColumn("Generation Status", width="small", help="Status of the video generation process"),
-                 "Copy Number": st.column_config.NumberColumn("Copy #", width="small"),
-            },
-            use_container_width=True,
-            hide_index=True
-        )
+        # Wrap the detailed job status table in an expander
+        with st.sidebar.expander("Detailed Job Status", expanded=False):
+            # Display the detailed DataFrame
+            st.dataframe(
+                df_selected_display,
+                column_config={
+                     "Generated S3 URL": st.column_config.LinkColumn("S3 Link"),
+                     "yt_dlp_error": st.column_config.TextColumn("URL Fetch Status", width="small", help="Status of fetching direct video URL"),
+                     "Generation Error": st.column_config.TextColumn("Generation Status", width="small", help="Status of the video generation process"),
+                     "Copy Number": st.column_config.NumberColumn("Copy #", width="small"),
+                },
+                use_container_width=True,
+                hide_index=True
+            )
 
-        # Download Button for detailed status
-        # try:
-        #     csv_data = convert_df_to_csv(df_selected_display) # Use cached conversion
-        #     st.sidebar.download_button(
-        #          label="📥 Download Job Status (CSV)",
-        #          data=csv_data,
-        #          file_name='video_generation_job_status.csv',
-        #          mime='text/csv',
-        #          use_container_width=True,
-        #          disabled=st.session_state.batch_processing_active
-        #     )
-        # except Exception as e:
-        #     st.sidebar.warning(f"Could not generate detailed CSV: {e}")
+            # Download Button for detailed status
+            # try:
+            #     csv_data = convert_df_to_csv(df_selected_display) # Use cached conversion
+            #     st.sidebar.download_button(
+            #          label="📥 Download Job Status (CSV)",
+            #          data=csv_data,
+            #          file_name='video_generation_job_status.csv',
+            #          mime='text/csv',
+            #          use_container_width=True,
+            #          disabled=st.session_state.batch_processing_active
+            #     )
+            # except Exception as e:
+            #     st.sidebar.warning(f"Could not generate detailed CSV: {e}")
 
         # --- Topic Summary DataFrame Section ---
         st.sidebar.divider()
@@ -3222,3 +3209,140 @@ else: # If selected_videos dict is empty or doesn't exist
 
 # Footer notes
 st.sidebar.caption("Each 'Select' click queues one job. URL Fetch after selection. Video Gen uses direct URL.")
+
+# --- Custom CSS for improved UI/UX ---
+st.markdown("""
+<style>
+    /* General body styling */
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #333;
+        background-color: #f4f4f4;
+    }
+
+    /* Main content area padding */
+    .main .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    /* Sidebar styling */
+    .sidebar .sidebar-content {
+        background-color: #ffffff;
+        padding: 1.5rem;
+        border-right: 1px solid #ddd;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+    }
+
+    /* Headers */
+    h1, h2, h3, h4, h5, h6 {
+        color: #1a1a1a;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+
+    h1 { font-size: 2.5rem; }
+    h2 { font-size: 2rem; }
+    h3 { font-size: 1.75rem; }
+
+    /* Buttons */
+    .stButton>button {
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        margin: 0.25rem 0;
+        transition: all 0.2s ease-in-out;
+    }
+    .stButton>button:hover {
+        opacity: 0.9;
+    }
+
+    /* Primary Button */
+    .stButton>button.css-1by37b4 {
+        background-color: #4CAF50; /* Green */
+        color: white;
+        border: none;
+    }
+    .stButton>button.css-1by37b4:hover {
+         background-color: #45a049;
+    }
+
+    /* Secondary Button */
+    .stButton>button.css-1q8dd3e {
+        background-color: #f0f2f6; /* Light gray */
+        color: #333;
+        border: 1px solid #ccc;
+    }
+    .stButton>button.css-1q8dd3e:hover {
+         background-color: #e0e0e0;
+    }
+
+    /* Text Inputs and Selectboxes */
+    .stTextInput>div>div>input, .stSelectbox>div>div>select {
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        padding: 0.5rem;
+    }
+
+    /* Data Editor */
+    .stDataFrame {
+        margin-bottom: 1.5rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        overflow: hidden; /* Ensures border radius is applied */
+    }
+
+    /* Containers with borders */
+    .stContainer {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        background-color: #fff;
+        box-shadow: 2px 2px 10px rgba(0,0,0,0.05);
+    }
+
+    /* Status messages */
+    .stAlert {
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    /* Expander */
+    .streamlit-expanderHeader {
+        background-color: #f8f8f8;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.5rem;
+    }
+    .streamlit-expanderContent {
+        padding-top: 0.5rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    /* Video Player */
+    iframe {
+        border-radius: 8px;
+        box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+    }
+
+    /* Captions */
+    .stCaption {
+        color: #666;
+        font-size: 0.9rem;
+        margin-top: -0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Separators */
+    hr {
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+        border-top: 1px solid #eee;
+    }
+
+</style>
+""", unsafe_allow_html=True)
