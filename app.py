@@ -2147,7 +2147,7 @@ if process_all_button:
         st.sidebar.warning("No selected video jobs are ready for processing (need Direct URL).", icon="⚠️")
 
 st.sidebar.info("Use '➕ Select' to queue a generation job. Each click adds one job.", icon="ℹ️")
-st.sidebar.info(f"{st.session_state}", icon="ℹ️")
+st.sidebar.info(f"{type(st.session_state)}", icon="ℹ️")
 st.sidebar.warning("Video generation can take several minutes per job.", icon="⏱️")
 
 # --- Processing Logic ---
