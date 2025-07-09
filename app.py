@@ -2150,7 +2150,7 @@ show_player_list=[]
 
 for item in st.session_state:
   if "show_player_" in item:
-    show_player_list.append(item)
+    show_player_list.append((item,st.session_state[item]))
 
 st.text(show_player_list)
 
