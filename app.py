@@ -119,6 +119,10 @@ return just the requested string, no intros no explanations
 # and reference it relative to the script's location.
 # If running locally, ensure the path is correct.
 MONTSSERAT_FONT_FILENAME = "Montserrat-Bold.ttf"
+
+if 'sheet_appended' not in st.session_state:
+    st.session_state.sheet_appended = False
+
 # Try to find the font in the current directory or a subdirectory
 if os.path.exists(MONTSSERAT_FONT_FILENAME):
     SUBTITLE_FONT_PATH = MONTSSERAT_FONT_FILENAME
@@ -2125,8 +2129,7 @@ process_all_button = st.sidebar.button(
 )
 
 if process_all_button:
-  if "sheet_appended" not in st.session_state or st.session_state.sheet_appended:
-    st.session_state.sheet_appended = False
+  st.session_state.sheet_appended = False
 
 
   
