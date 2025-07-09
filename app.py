@@ -3111,15 +3111,15 @@ NO ('get approved') 'See what's available near you' ' 'available this weekend\mo
                 st.session_state.batch_processing_active = False
                 st.balloons()
                 st.success("🎉 Batch processing finished!")
-                    if not st.session_state.get("sheet_appended", False):
-                      df_topic_summary = create_topic_summary_dataframe(st.session_state.selected_videos)
-                      if not df_topic_summary.empty:
-                          google_sheets_append_df(
-                              "13TOgYTYpVV0ysvKqufS2Q5RDdgTP097x1hH_eMtCL4w",
-                              "yt_video!A1",
-                              df_topic_summary
-                          )
-                      st.session_state.sheet_appended = True
+                if not st.session_state.get("sheet_appended", False):
+                    df_topic_summary = create_topic_summary_dataframe(st.session_state.selected_videos)
+                    if not df_topic_summary.empty:
+                        google_sheets_append_df(
+                            "13TOgYTYpVV0ysvKqufS2Q5RDdgTP097x1hH_eMtCL4w",
+                            "yt_video!A1",
+                            df_topic_summary
+                        )
+                    st.session_state.sheet_appended = True
 
 
             # Rerun to process next item or update UI
