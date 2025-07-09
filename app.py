@@ -1969,7 +1969,7 @@ def sync_search_data():
         for col in expected_cols: # Ensure all columns exist
              if col not in current_df.columns:
                   if col == "Language": current_df[col] = "English"
-                  elif col == "Script Angle": current_df[col] = "default"
+                  # elif col == "Script Angle": current_df[col] = "default"
                   elif col == "Video Results": current_df[col] = 5
                   else: current_df[col] = ""
         current_df = current_df[expected_cols] # Enforce column order
