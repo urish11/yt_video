@@ -2152,7 +2152,7 @@ for item in st.session_state:
   if "show_player_" in item:
     show_player_list.append(item)
 
-st.test(show_player_list)
+st.text(show_player_list)
 
 st.sidebar.info("Use '➕ Select' to queue a generation job. Each click adds one job.", icon="ℹ️")
 st.sidebar.info(f"{type(st.session_state)}", icon="ℹ️")
