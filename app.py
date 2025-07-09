@@ -1966,8 +1966,6 @@ def sync_search_data():
 
         # Final cleanup and validation of the entire DataFrame
         expected_cols = ["Topic",  "Language", "Search Term","Script Angle", "Video Results","BG Music","TTS Voice"]
-        st.text(f"actual : {st.text(current_df.columns)}")
-        input()
         for col in expected_cols: # Ensure all columns exist
              if col not in current_df.columns:
                   if col == "Language": current_df[col] = "English"
