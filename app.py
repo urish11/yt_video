@@ -2146,7 +2146,7 @@ if process_all_button:
     else:
         st.sidebar.warning("No selected video jobs are ready for processing (need Direct URL).", icon="⚠️")
 
-if st.sidebar.button("Close all previews ✖",use_container_width=True,disabled=ready_jobs_count == 0 or st.session_state.batch_processing_active):
+if st.sidebar.button("Close all previews ✖",use_container_width=True,disabled= st.session_state.batch_processing_active):
   show_player_list=[]
   for item in st.session_state:
     if "show_player_" in item and st.session_state[item] == True:
