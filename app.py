@@ -2291,7 +2291,7 @@ if st.session_state.search_triggered and 'current_search_df' in st.session_state
                 #                 model = "gemini-2.5-flash-preview-04-17"
                 #                 # client=openai_client
                 #                 ) 
-                generated_term= gemini_text_lib(f"""{AUTO_TERMS_PROMPT} {topic}""", model ='gemini-2.5-flash-preview-04-17')
+                generated_term= claude(f"""{AUTO_TERMS_PROMPT} {topic}""") #, model ='gemini-2.5-flash-preview-04-17'
                 if not generated_term:
                     st.warning(f"Failed to generate search terms for '{topic}'. Skipping.", icon="🤖")
                     continue
