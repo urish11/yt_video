@@ -2152,10 +2152,13 @@ for item in st.session_state:
   if "show_player_" in item and st.session_state[item] == True:
     show_player_list.append((item,st.session_state[item]))
 
-st.text(show_player_list)
+# st.text(show_player_list)
 
 st.sidebar.info("Use '➕ Select' to queue a generation job. Each click adds one job.", icon="ℹ️")
 st.sidebar.info(f"{type(st.session_state)}", icon="ℹ️")
+if st.button("Close all previews ✖"):
+  for item in show_player_list:
+    st.session_state[item[0]] = False
 st.sidebar.warning("Video generation can take several minutes per job.", icon="⏱️")
 
 # --- Processing Logic ---
