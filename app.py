@@ -2149,7 +2149,7 @@ if process_all_button:
 show_player_list=[]
 
 for item in st.session_state:
-  if "show_player_" in item and st.session_state[item] == False:
+  if "show_player_" in item and st.session_state[item] == True:
     show_player_list.append((item,st.session_state[item]))
 
 st.text(show_player_list)
