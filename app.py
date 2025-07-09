@@ -2146,11 +2146,13 @@ if process_all_button:
     else:
         st.sidebar.warning("No selected video jobs are ready for processing (need Direct URL).", icon="⚠️")
 
-show_player_dict=[]
+show_player_list=[]
 
 for item in st.session_state:
-  if "show_player_" in item.key:
-    show_player_dict.append(item)
+  if "show_player_" in item:
+    show_player_list.append(item)
+
+st.test(show_player_list)
 
 st.sidebar.info("Use '➕ Select' to queue a generation job. Each click adds one job.", icon="ℹ️")
 st.sidebar.info(f"{type(st.session_state)}", icon="ℹ️")
