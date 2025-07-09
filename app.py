@@ -2129,7 +2129,7 @@ process_all_button = st.sidebar.button(
 )
 
 if process_all_button:
-  st.session_state.sheet_appended = False
+    st.session_state.sheet_appended = False
 
 
   
