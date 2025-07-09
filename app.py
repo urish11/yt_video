@@ -2895,7 +2895,7 @@ if st.session_state.batch_processing_active and st.session_state.generation_queu
                         # --- 1. Get Job Data ---
                         topic = video_data.get('Topic', 'video topic')
                         lang = video_data.get('Language', 'English')
-                        script_ver = video_data.get("Script Angle", "default")
+                        script_ver = video_data.get("Script Angle")
                         bg_music = video_data.get('BG Music', False)
                         tts_voice = video_data.get('TTS Voice', 'sage')
                         base_video_direct_url = video_data.get("Direct URL") # Use the fetched direct URL
