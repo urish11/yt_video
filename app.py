@@ -1952,12 +1952,12 @@ def sync_search_data():
                       for col in expected_cols:
                            val = row_dict.get(col)
                            # Set defaults or convert type
-                           if col == "Language": new_row[col] = str(val).strip() if pd.notna(val) and str(val).strip() else "English"
-                           elif col == "Script Angle": new_row[col] = str(val).strip() if pd.notna(val) and str(val).strip() else "default"
-                           elif col == "Video Results":
-                                try: new_row[col] = int(val) if pd.notna(val) else 5
-                                except (ValueError, TypeError): new_row[col] = 5
-                           else: new_row[col] = str(val).strip() if pd.notna(val) else ""
+                           # if col == "Language": new_row[col] = str(val).strip() if pd.notna(val) and str(val).strip() else "English"
+                           # elif col == "Script Angle": new_row[col] = str(val).strip() if pd.notna(val) and str(val).strip() else "default"
+                           # elif col == "Video Results":
+                           #      try: new_row[col] = int(val) if pd.notna(val) else 5
+                           #      except (ValueError, TypeError): new_row[col] = 5
+                           # else: new_row[col] = str(val).strip() if pd.notna(val) else ""
                       processed_adds.append(new_row)
             if processed_adds:
                  add_df = pd.DataFrame(processed_adds)
