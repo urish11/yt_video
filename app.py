@@ -1969,7 +1969,7 @@ def sync_search_data():
         for col in expected_cols: # Ensure all columns exist
              if col not in current_df.columns:
                   if col == "Language": current_df[col] = "English"
-                  # elif col == "Script Angle": current_df[col] = "default"
+                  elif col == "Script Angle": current_df[col] = "default"
                   elif col == "Video Results": current_df[col] = 5
                   else: current_df[col] = ""
         current_df = current_df[expected_cols] # Enforce column order
@@ -1985,7 +1985,7 @@ def sync_search_data():
         current_df['Script Angle'] = current_df['Script Angle'].fillna('default').astype(str).str.strip()
 
         # Ensure 'Script Angle' values are valid options
-        current_df['Script Angle'] = current_df['Script Angle'].apply(lambda x: x if x in SCRIPT_VER_OPTIONS else 'default')
+        # current_df['Script Angle'] = current_df['Script Angle'].apply(lambda x: x if x in SCRIPT_VER_OPTIONS else 'default')
 
 
         # Remove rows where both Topic and Search Term are empty, unless it's the only row left
