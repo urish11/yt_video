@@ -3012,7 +3012,7 @@ NO ('get approved') 'See what's available near you' ' 'available this weekend\mo
                                             - No "we" or "our" language - keep it personal
                                             - End with "Tap to..." followed by a clear, non-committal action
                                             * **NO:** DONT make false promises.NO ('get approved') 'See what's available near you' ' 'available this weekend\month' etc!!!
-                                            end with CTA in the likes of: 'Click to explore options or 'Tap to see how it works.' but highly engaging high CTR not generic.. dont use 'to see models\what's available ... etc'
+                                            end with CTA in the likes of: 'Click to explore options or 'Tap to see how it works.' or similar!!!! but highly engaging high CTR not generic.. dont use 'to see models\what's available ... etc'
                                             Return only the script text itself, nothing else.
                                             """
 
