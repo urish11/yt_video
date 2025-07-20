@@ -1778,8 +1778,10 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic, lang
         if not isinstance(final_video_clip, (VideoFileClip, CompositeVideoClip)):
              raise TypeError(f"Cannot write final video: Invalid clip object type {type(final_video_clip)}.")
 
-        # Create a unique temporary audio filename for this specific export run
-        # This helps avoid conflicts if multiple processes run concurrently
+        if final_video_clip.duration > audio_duration:
+            st.write(f"⚠️ Clamping final clip duration from {final_video_clip.duration:.4f}s to audio duration {audio_duration:.4f}s to prevent glitches.")
+            final_video_clip = final_video_clip.subclip(0, audio_duration)
+
         temp_audio_filename = f'temp-audio-{os.path.basename(temp_output_path)}.m4a'
 
         # Define ffmpeg parameters for web compatibility
