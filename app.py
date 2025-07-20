@@ -1726,7 +1726,15 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic, lang
                 text = sub_data['text']
                 start = sub_data['start']
                 end = sub_data['end']
+                
+                  
                 sub_duration = end - start
+
+                if i == len(grouped_subs) +1 :
+                  sub_duration = 5
+
+                
+                  
 
                 # Ensure start/end are within the final video duration
                 if start >= audio_duration: continue # Skip subs starting after video ends
