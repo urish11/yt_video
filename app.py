@@ -1717,7 +1717,7 @@ def process_video_with_tts(base_video_url, audio_path, word_timings, topic, lang
         subtitle_clips_list = [] # Renamed to avoid conflict
         grouped_subs = group_words_with_timing(word_timings, words_per_group=SUBTITLE_WORDS_PER_GROUP)
         if grouped_subs:
-            grouped_subs[-1]['end'] = audio_duration
+            grouped_subs[-1]['end'] = audio_duration+1.5
             # ... (Subtitle generation loop using create_text_image, same as before) ...
             total_subs = len(grouped_subs)
             sub_progress_bar = st.progress(0)
