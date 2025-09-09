@@ -480,6 +480,7 @@ def create_topic_summary_dataframe(selected_videos_dict):
         topic = str(video_data.get('Topic', '')).strip().lower()
         lang = str(video_data.get('Language', '')).strip().lower()
         s3_url = video_data.get('Generated S3 URL')
+        base_url = video_data.get('Base Vid URL')
 
         if topic and lang and s3_url:
             grouping_key = f"{topic}_{lang}"
@@ -3066,7 +3067,7 @@ NO ('get approved') 'See what's available near you' ' 'available this weekend\mo
                         # --- 5. Construct Unique S3 Filename ---
                         safe_topic = urllib.parse.quote(topic.replace(' ', '_')[:30], safe='')
                         timestamp = int(datetime.datetime.now().timestamp())
-                        final_s3_object_name = f"final_{safe_topic}_{lang}_copy{copy_num}_{timestamp}.mp4"
+                        final_s3_object_name = f"final_{safe_topic}_{lang}_copy{copy_num}_{timestamp}_base_{base_video_direct_url}.mp4"
 
                         # --- 6. Upload to S3 ---
                         st.write(f"4/5: Uploading '{final_s3_object_name}' to S3...")
@@ -3084,6 +3085,7 @@ NO ('get approved') 'See what's available near you' ' 'available this weekend\mo
                             st.session_state.selected_videos[job_key_to_process]['Generated S3 URL'] = s3_url
                             st.session_state.selected_videos[job_key_to_process]['Generation Error'] = None
                             st.session_state.selected_videos[job_key_to_process]['Status'] = 'Completed'
+                            st.session_state.selected_videos[job_key_to_process]['Base Vid URL'] = base_video_direct_url
                             st.success(f"✅ Job '{job_key_to_process}' completed!", icon="🎉")
                             st.video(s3_url) # Show the final video
                         else: st.warning(f"Job key {job_key_to_process} missing after completion.")
@@ -3096,6 +3098,7 @@ NO ('get approved') 'See what's available near you' ' 'available this weekend\mo
                             st.session_state.selected_videos[job_key_to_process]['Generation Error'] = str(e)[:200]
                             st.session_state.selected_videos[job_key_to_process]['Generated S3 URL'] = None
                             st.session_state.selected_videos[job_key_to_process]['Status'] = 'Failed'
+                            st.session_state.selected_videos[job_key_to_process]['Base Vid URL'] = base_video_direct_url
                         # Allow finally block to handle queue/rerun
 
         # --- Finally block for cleanup and queue management ---
