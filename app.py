@@ -2555,8 +2555,8 @@ if st.session_state.api_search_results:
                                                                 <div style="width:220px; height:320px; 
                                                                             border-radius:8px; background:#111; 
                                                                             overflow:hidden; text-align:center;"
-                                                                            padding-bottom:40px;
-                                                                            >
+                                                                            padding-bottom:40px;>
+                                                                            
 
                                                                 <img src="{thumbnail_url}" alt="Video Thumbnail" 
                                                                     style="width:100%; height:100%; object-fit:cover; 
