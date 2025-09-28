@@ -2457,7 +2457,7 @@ if st.session_state.api_search_results:
                 num_videos = len(videos)
                 num_cols = 3 # Adjust number of columns as desired
                 if platfrom == 'tk':
-                    num_cols = 6  
+                    num_cols = 5
 
                 for i in range(0, num_videos, num_cols):
                     cols = st.columns(num_cols, gap="small", vertical_alignment="top")
