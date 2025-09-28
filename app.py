@@ -2552,17 +2552,14 @@ if st.session_state.api_search_results:
                                           # st.image(thumbnail, caption="Video Thumbnail",width = "stretch")
                                           st.markdown(
                                                             f"""
-                                                                    <div style="width:220px; height:320px; 
-                                                                                border-radius:8px; background:#111; 
-                                                                                overflow:hidden; text-align:center; 
-                                                                                padding-bottom:80px;">
-
-                                                                    <img src="{thumbnail_url}" alt="Video Thumbnail" 
-                                                                        style="width:100%; height:100%; object-fit:cover; 
-                                                                                border-radius:6px; display:block;"/>
-
-                                                                    </div>
-                                                            """,
+<div style="display:flex; justify-content:center;">
+  <div style="width:220px; height:280px; background:#111; border-radius:8px;
+              padding:8px 8px 16px; /* bottom padding */
+              overflow:hidden;">
+    <img src="{thumbnail_url}" alt="Video Thumbnail"
+         style="width:100%; height:100%; object-fit:cover; border-radius:6px; display:block;"/>
+  </div>
+</div>                                                            """,
                                                             unsafe_allow_html=True) 
 
 
