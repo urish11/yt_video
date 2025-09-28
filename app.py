@@ -2553,11 +2553,11 @@ if st.session_state.api_search_results:
                                           st.markdown(
                                                             f"""
                                                         <div style="display:flex; justify-content:center;">
-                                                        <div style="width:220px; height:380x; background:#111; border-radius:8px;
+                                                        <div style="width:220px; height:340px; background:#111; border-radius:8px;
                                                                     padding:8px 8px 16px; /* bottom padding */
                                                                     overflow:hidden;">
                                                             <img src="{thumbnail_url}" alt="Video Thumbnail"
-                                                                style="width:100%; height:130%; object-fit:cover; border-radius:6px; display:block;"/>
+                                                                style="width:100%; height:100%; object-fit:cover; border-radius:6px; display:block;"/>
                                                         </div>
                                                         </div>                                                            """,
                                                             unsafe_allow_html=True) 
