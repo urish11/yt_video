@@ -2556,7 +2556,7 @@ if st.session_state.api_search_results:
                                                                style="width:100%; height:auto; display:block; border-radius:8px; margin:0"/>
                                                           <p style="font-size:12px; color:gray; margin:4px 0 0; text-align:center">Video Thumbnail</p>
                                                         </div>
-                                                        """, unsafe_allow_html=True)
+                                        
                                                             """,
                                                             unsafe_allow_html=True
 
