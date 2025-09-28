@@ -2549,6 +2549,7 @@ if st.session_state.api_search_results:
                                         if platform == 'yt':
                                             st.image(thumbnail_url, use_container_width=False, caption="Video Thumbnail",width=200)
                                         if platform == 'tk':
+                                          st.image(thumbnail, caption="Video Thumbnail",width = "stretch")
                                           st.markdown(
                                                             f"""
                                                               <style>
@@ -2567,7 +2568,7 @@ if st.session_state.api_search_results:
 
                                                         
 
-                                          st.image(thumbnail, caption="Video Thumbnail",width = "stretch")
+                                          
 
 
 
