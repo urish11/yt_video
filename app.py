@@ -2551,7 +2551,7 @@ if st.session_state.api_search_results:
                                             st.markdown(
                                                             f"""
                                                             <div style="text-align: center;">
-                                                                <img src="{thumbnail_url}" alt="Video Thumbnail" width="200"
+                                                                <img src="{thumbnail_url}" alt="Video Thumbnail" width="300"
                                                                     style="margin:auto; display:block; border-radius: 8px;" />
                                                                 <p style="font-size: small; color: gray;">Video Thumbnail</p>
                                                             </div>
