@@ -2496,30 +2496,33 @@ if st.session_state.api_search_results:
                                                 scale = target_width / original_width
                                                 scaled_height = int(original_height * scale)                                            
                                                 iframe_code = f"""
-                                                                        <!-- Outer flexbox centers the player horizontally & vertically -->
-                                                                        <div style="min-height:80vh; display:flex; align-items:center; justify-content:center;">
+<div style="min-height:70vh; display:flex; align-items:center; justify-content:center; padding:24px;">
+  <!-- outer card: padding + subtle shadow -->
+  <div style="padding:10px; border-radius:16px; box-sizing:border-box;
+              background:transparent; display:inline-block; box-shadow:0 8px 24px rgba(0,0,0,0.18);">
 
-                                                                        <!-- Visible wrapper: clips excess space and adds bottom padding -->
-                                                                        <div style="width:{target_width}px; height:{scaled_height}px; overflow:hidden; 
-                                                                                    padding-bottom:16px;">
+    <!-- visible wrapper: clips excess space and defines final visible size -->
+    <div style="width:{target_width}px; height:{scaled_height}px; overflow:hidden; border-radius:12px; box-sizing:border-box;">
 
-                                                                            <!-- Inner container: real TikTok player scaled down -->
-                                                                            <div style="width:{original_width}px; height:{original_height}px; 
-                                                                                        transform:scale({scale}); transform-origin:top left;">
-                                                                            <iframe 
-                                                                                src="https://www.tiktok.com/embed/v2/{video_id}" 
-                                                                                allow="autoplay"
-                                                                                width="100%" 
-                                                                                height="100%" 
-                                                                                allowfullscreen 
-                                                                                scrolling="no" 
-                                                                                loading="lazy"
-                                                                                style="border:none; border-radius:12px;">
-                                                                            </iframe>
-                                                                            </div>
+      <!-- inner container: real TikTok player size scaled down -->
+      <div style="width:{original_width}px; height:{original_height}px; transform:scale({scale}); transform-origin: top left;">
 
-                                                                        </div>
-                                                                        </div>
+        <iframe
+          src="https://www.tiktok.com/embed/v2/{video_id}"
+          allow="autoplay"
+          width="100%"
+          height="100%"
+          allowfullscreen
+          scrolling="no"
+          loading="lazy"
+          style="border:none; border-radius:12px; display:block; box-sizing:border-box;">
+        </iframe>
+
+      </div>
+    </div>
+  </div>
+</div>
+
                                                 """
 #                                                 iframe_code = f"""
 #                                             <iframe 
