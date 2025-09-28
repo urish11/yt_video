@@ -2551,13 +2551,12 @@ if st.session_state.api_search_results:
                                         if platform == 'tk':
                                             st.markdown(
                                                             f"""
-                                                        <div style="max-width:400px; margin:auto; text-align:center;">
-                                                          <img src="{thumbnail_url}" 
-                                                               alt="Video Thumbnail" 
-                                                               style="width:100%; height:auto; border-radius: 8px;" />
-                                                          <p style="font-size: small; color: gray;">Video Thumbnail</p>
+                                                        <div style="margin:0">
+                                                          <img src="{thumbnail_url}" alt="Video Thumbnail"
+                                                               style="width:100%; height:auto; display:block; border-radius:8px; margin:0"/>
+                                                          <p style="font-size:12px; color:gray; margin:4px 0 0; text-align:center">Video Thumbnail</p>
                                                         </div>
-
+                                                        """, unsafe_allow_html=True)
                                                             """,
                                                             unsafe_allow_html=True
 
