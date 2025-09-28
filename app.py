@@ -2552,7 +2552,7 @@ if st.session_state.api_search_results:
                                           # st.image(thumbnail, caption="Video Thumbnail",width = "stretch")
                                           st.markdown(
                                                             f"""
-                                                                  <div style="width:220px; height:280px; 
+                                                                  <div style="width:220px; height:350px; 
                                                                               border-radius:8px; background:#111; 
                                                                               padding:8px; display:flex; flex-direction:column; 
                                                                               justify-content:flex-start; text-align:center;">
