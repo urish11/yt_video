@@ -2549,21 +2549,26 @@ if st.session_state.api_search_results:
                                         if platform == 'yt':
                                             st.image(thumbnail_url, use_container_width=False, caption="Video Thumbnail",width=200)
                                         if platform == 'tk':
+                                          st.markdown(
+                                                            f"""
+                                                              <style>
+                                                              /* Lock cards to a fixed height */
+                                                              div[data-testid="column"] > div {
+                                                                height: 420px;  /* tweak until it fits your tallest card */
+                                                                display: flex;
+                                                                flex-direction: column;
+                                                                justify-content: space-between;
+                                                              }
+                                                              </style>
+                                                                                                      
+                                                            """,
+                                                            unsafe_allow_html=True) 
+
+
+                                                        
+
                                           st.image(thumbnail, caption="Video Thumbnail",width = "stretch")
 
-                                            # st.markdown(
-                                            #                 f"""
-                                            #             <div style="margin:0">
-                                            #               <img src="{thumbnail_url}" alt="Video Thumbnail"
-                                            #                    style="width:100%; height:auto; display:block; border-radius:8px; margin:0"/>
-                                            #               <p style="font-size:12px; color:gray; margin:4px 0 0; text-align:center">Video Thumbnail</p>
-                                            #             </div>
-                                        
-                                            #                 """,
-                                            #                 unsafe_allow_html=True
-
-
-                                            #             ) 
 
 
 
